@@ -1,0 +1,64 @@
+# Build
+target/
+out/
+build/
+*.class
+*.jar
+!**/src/main/resources/**/*.jar
+
+# Maven
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+release.properties
+dependency-reduced-pom.xml
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+.vscode/
+*.code-workspace
+
+# Cursor / editor
+.cursor/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# App data (desarrollo) – no versionar BD ni datos locales
+data/inventory.db
+data/*.sql
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Logs
+*.log
+error.log
+
+# JavaFX / instalador (descargas y artefactos generados)
+target/fx-jmods/
+target/fx-sdk/
+target/runtime-jre/
+target/installer/
+target/*.zip
+
+# Temporales
+*.tmp
+*.temp
+*.swp
+*~
+*.bak
+
+# Prompts y notas locales (opcional)
+super_prompt*.md

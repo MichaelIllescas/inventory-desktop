@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.ferreteria.controllers.InventoryController"
+            styleClass="inventory-view-root">
+
+    <top>
+        <VBox spacing="10">
+            <children>
+                <Label text="Inventario" styleClass="view-title"/>
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <children>
+                        <TextField fx:id="searchField" promptText="Buscar por código o nombre... (Enter)" prefWidth="240" onAction="#onSearch"/>
+                        <Button text="Buscar" onAction="#onSearch" styleClass="primary-button"/>
+                        <RadioButton fx:id="radioAll" text="Todos" selected="true"/>
+                        <RadioButton fx:id="radioLowStock" text="Solo bajo stock"/>
+                        <Button text="Ajustar stock" onAction="#onAdjustStock" styleClass="secondary-button"/>
+                    </children>
+                </HBox>
+            </children>
+            <padding>
+                <Insets top="0" right="0" bottom="12" left="0"/>
+            </padding>
+        </VBox>
+    </top>
+
+    <center>
+        <VBox spacing="12">
+            <Label text="Stock actual" styleClass="view-title"/>
+            <TableView fx:id="stockTable" prefHeight="220.0">
+                <columns>
+                    <TableColumn fx:id="colCode" text="Código" prefWidth="100.0"/>
+                    <TableColumn fx:id="colName" text="Producto" prefWidth="200.0"/>
+                    <TableColumn fx:id="colStock" text="Stock" prefWidth="70.0" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colMinStock" text="Stock mín." prefWidth="80.0" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colSupplier" text="Proveedor" prefWidth="140.0"/>
+                </columns>
+            </TableView>
+            <Label text="Lista de reposición (productos con bajo stock y contacto del proveedor)" styleClass="view-title"/>
+            <TableView fx:id="replenishmentTable" prefHeight="180.0">
+                <columns>
+                    <TableColumn fx:id="repColCode" text="Código" prefWidth="90.0"/>
+                    <TableColumn fx:id="repColName" text="Producto" prefWidth="160.0"/>
+                    <TableColumn fx:id="repColStock" text="Stock" prefWidth="55.0" styleClass="numeric-column"/>
+                    <TableColumn fx:id="repColMin" text="Mín." prefWidth="50.0" styleClass="numeric-column"/>
+                    <TableColumn fx:id="repColSupplier" text="Proveedor" prefWidth="120.0"/>
+                    <TableColumn fx:id="repColPhone" text="Teléfono" prefWidth="100.0"/>
+                    <TableColumn fx:id="repColEmail" text="Email" prefWidth="140.0"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+
+    <padding>
+        <Insets top="16" right="16" bottom="16" left="16"/>
+    </padding>
+
+</BorderPane>

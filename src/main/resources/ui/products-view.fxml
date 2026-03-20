@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.ferreteria.controllers.ProductsController"
+            styleClass="products-view-root">
+
+    <top>
+        <VBox spacing="10">
+            <children>
+                <Label text="Productos" styleClass="view-title"/>
+                <HBox spacing="8">
+                    <children>
+                        <TextField fx:id="searchField" promptText="Buscar por código, nombre o descripción..." HBox.hgrow="ALWAYS"/>
+                        <Button text="Buscar" onAction="#onSearch" styleClass="primary-button"/>
+                        <Button text="Nuevo" onAction="#onNewProduct" styleClass="secondary-button"/>
+                        <Button text="Editar" onAction="#onEditProduct" styleClass="secondary-button"/>
+                        <Button text="Eliminar" onAction="#onDeleteProduct" styleClass="danger-button"/>
+                    </children>
+                </HBox>
+            </children>
+            <padding>
+                <Insets top="0" right="0" bottom="12" left="0"/>
+            </padding>
+        </VBox>
+    </top>
+
+    <center>
+        <TableView fx:id="productsTable" prefHeight="400.0">
+            <columns>
+                <TableColumn fx:id="colCode" text="Código" prefWidth="100.0"/>
+                <TableColumn fx:id="colName" text="Nombre" prefWidth="160.0"/>
+                <TableColumn fx:id="colDescription" text="Descripción" prefWidth="220.0"/>
+                <TableColumn fx:id="colPrice" text="Precio ($)" prefWidth="90.0" styleClass="numeric-column"/>
+                <TableColumn fx:id="colStock" text="Stock" prefWidth="80.0" styleClass="numeric-column"/>
+                <TableColumn fx:id="colMinStock" text="Stock mín." prefWidth="90.0" styleClass="numeric-column"/>
+                <TableColumn fx:id="colSupplier" text="Proveedor" prefWidth="140.0"/>
+            </columns>
+        </TableView>
+    </center>
+
+    <padding>
+        <Insets top="16" right="16" bottom="16" left="16"/>
+    </padding>
+
+</BorderPane>
+

@@ -1,0 +1,230 @@
+.root {
+  -fx-font-family: "Segoe UI", system-ui, sans-serif;
+  -fx-background-color: #f4f5f7;
+}
+
+.sidebar {
+  -fx-background-color: linear-gradient(to bottom, #1f2933, #111827);
+  -fx-pref-width: 220;
+}
+
+.sidebar-title {
+  -fx-text-fill: white;
+  -fx-font-size: 20px;
+  -fx-font-weight: bold;
+  -fx-padding: 0 0 24 4;
+}
+
+.sidebar-button {
+  -fx-background-color: transparent;
+  -fx-text-fill: #e5e7eb;
+  -fx-alignment: CENTER_LEFT;
+  -fx-padding: 8 12 8 12;
+  -fx-font-size: 17px;
+}
+
+.sidebar-button:hover {
+  -fx-background-color: rgba(55, 65, 81, 0.9);
+}
+
+.sidebar-footer-label {
+  -fx-text-fill: #9ca3af;
+  -fx-font-size: 13px;
+  -fx-padding: 4 0 0 0;
+}
+
+.sidebar-logo-button {
+  -fx-background-color: transparent;
+  -fx-background-insets: 0;
+    -fx-padding: 6 0 0 0;
+    -fx-cursor: hand;
+    -fx-alignment: CENTER;
+}
+
+.sidebar-logo-button:hover {
+  -fx-opacity: 0.9;
+}
+
+.topbar {
+  -fx-background-color: white;
+  -fx-border-color: #e5e7eb;
+  -fx-border-width: 0 0 1 0;
+}
+
+.topbar-title {
+  -fx-font-size: 18px;
+  -fx-font-weight: 600;
+}
+
+.content-area {
+  -fx-padding: 16;
+}
+
+.view-title {
+  -fx-font-size: 18px;
+  -fx-font-weight: 600;
+}
+
+.primary-button {
+  -fx-background-color: #2563eb;
+  -fx-text-fill: white;
+}
+
+.primary-button:hover {
+  -fx-background-color: #1d4ed8;
+}
+
+.secondary-button {
+  -fx-background-color: #e5e7eb;
+  -fx-text-fill: #111827;
+}
+
+.secondary-button:hover {
+  -fx-background-color: #d1d5db;
+}
+
+.danger-button {
+  -fx-background-color: #dc2626;
+  -fx-text-fill: white;
+}
+
+.danger-button:hover {
+  -fx-background-color: #b91c1c;
+}
+
+TableView {
+  -fx-background-color: white;
+  -fx-border-color: #e5e7eb;
+}
+
+TableColumn {
+  -fx-alignment: CENTER_LEFT;
+}
+
+.dashboard-card {
+  -fx-background-color: white;
+  -fx-background-radius: 8;
+  -fx-border-color: #e5e7eb;
+  -fx-border-radius: 8;
+  -fx-border-width: 1;
+  -fx-padding: 12;
+}
+
+.dashboard-card-title {
+  -fx-font-size: 13px;
+  -fx-text-fill: #6b7280;
+}
+
+.dashboard-card-value {
+  -fx-font-size: 24px;
+  -fx-font-weight: bold;
+  -fx-text-fill: #111827;
+}
+
+.chart-container {
+  -fx-background-color: white;
+  -fx-background-radius: 8;
+  -fx-padding: 16;
+  -fx-border-color: #e5e7eb;
+  -fx-border-radius: 8;
+  -fx-border-width: 1;
+}
+
+.dashboard-chart .chart-plot-background {
+  -fx-background-color: #fafafa;
+}
+
+.dashboard-chart .chart-bar {
+  -fx-bar-fill: #2563eb;
+  -fx-background-insets: 0 3 0 0;
+}
+
+.dashboard-chart .chart-title {
+  -fx-font-size: 14px;
+  -fx-font-weight: bold;
+}
+
+.dashboard-chart .axis-label {
+  -fx-font-size: 12px;
+  -fx-text-fill: #4b5563;
+}
+
+.dashboard-chart .axis-tick-mark {
+  -fx-stroke: #e5e7eb;
+}
+
+.dashboard-chart .axis-minor-tick-mark {
+  -fx-stroke: #f3f4f6;
+}
+
+.report-summary {
+  -fx-font-size: 16px;
+  -fx-font-weight: bold;
+  -fx-text-fill: #111827;
+  -fx-background-color: #e0f2fe;
+  -fx-background-radius: 6;
+  -fx-padding: 10 14;
+  -fx-border-color: #0ea5e9;
+  -fx-border-width: 1;
+  -fx-border-radius: 6;
+}
+
+/* ===========================
+   Vistas principales (tipografía más grande)
+   =========================== */
+.products-view-root,
+.inventory-view-root,
+.sales-view-root,
+.suppliers-view-root,
+.reports-view-root,
+.dashboard-view-root {
+  -fx-font-size: 14px; /* texto general un poco más grande */
+}
+
+.products-view-root .button,
+.inventory-view-root .button,
+.sales-view-root .button,
+.suppliers-view-root .button,
+.reports-view-root .button,
+.dashboard-view-root .button {
+  -fx-font-size: 14px;
+  -fx-padding: 8 16;
+}
+
+.products-view-root .text-field,
+.inventory-view-root .text-field,
+.sales-view-root .text-field,
+.suppliers-view-root .text-field,
+.reports-view-root .text-field {
+  -fx-font-size: 14px;
+  -fx-padding: 6 10;
+}
+
+.products-view-root .table-view .column-header,
+.products-view-root .table-view .table-cell,
+.inventory-view-root .table-view .column-header,
+.inventory-view-root .table-view .table-cell,
+.sales-view-root .table-view .column-header,
+.sales-view-root .table-view .table-cell,
+.suppliers-view-root .table-view .column-header,
+.suppliers-view-root .table-view .table-cell,
+.reports-view-root .table-view .column-header,
+.reports-view-root .table-view .table-cell {
+  -fx-font-size: 13px;
+}
+
+.sales-view-root #totalLabel {
+  -fx-font-size: 22px;
+  -fx-font-weight: bold;
+}
+
+/* Columnas numéricas centradas en tablas */
+.table-view .column-header.numeric-column,
+.table-view .table-cell.numeric-column {
+  -fx-alignment: CENTER;
+}
+
+.products-view-root .table-view .column-header,
+.products-view-root .table-view .table-cell {
+  -fx-font-size: 13px;
+}

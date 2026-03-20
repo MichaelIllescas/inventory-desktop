@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.ferreteria.controllers.DashboardController"
+            styleClass="dashboard-view-root">
+
+    <top>
+        <VBox spacing="8">
+            <Label text="Dashboard" styleClass="view-title"/>
+            <padding>
+                <Insets bottom="8"/>
+            </padding>
+        </VBox>
+    </top>
+
+    <center>
+        <VBox spacing="20">
+            <GridPane fx:id="cardsGrid" hgap="16" vgap="16">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="25"/>
+                    <ColumnConstraints percentWidth="25"/>
+                    <ColumnConstraints percentWidth="25"/>
+                    <ColumnConstraints percentWidth="25"/>
+                </columnConstraints>
+                <rowConstraints>
+                    <RowConstraints minHeight="80" prefHeight="80"/>
+                </rowConstraints>
+                <VBox styleClass="dashboard-card" GridPane.columnIndex="0" GridPane.rowIndex="0" spacing="4">
+                    <Label text="Total productos" styleClass="dashboard-card-title"/>
+                    <Label fx:id="labelTotalProducts" text="0" styleClass="dashboard-card-value"/>
+                    <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+                </VBox>
+                <VBox styleClass="dashboard-card" GridPane.columnIndex="1" GridPane.rowIndex="0" spacing="4">
+                    <Label text="Productos con bajo stock" styleClass="dashboard-card-title"/>
+                    <Label fx:id="labelLowStock" text="0" styleClass="dashboard-card-value"/>
+                    <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+                </VBox>
+                <VBox styleClass="dashboard-card" GridPane.columnIndex="2" GridPane.rowIndex="0" spacing="4">
+                    <Label text="Ventas de hoy ($)" styleClass="dashboard-card-title"/>
+                    <Label fx:id="labelTodaySales" text="0.00" styleClass="dashboard-card-value"/>
+                    <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+                </VBox>
+                <VBox styleClass="dashboard-card" GridPane.columnIndex="3" GridPane.rowIndex="0" spacing="4">
+                    <Label text="Ventas del mes ($)" styleClass="dashboard-card-title"/>
+                    <Label fx:id="labelMonthSales" text="0.00" styleClass="dashboard-card-value"/>
+                    <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+                </VBox>
+            </GridPane>
+            <HBox alignment="CENTER_LEFT" spacing="8">
+                <Label text="Ventas últimos 7 días" styleClass="view-title"/>
+            </HBox>
+            <VBox fx:id="chartContainer" minHeight="260" prefHeight="260" styleClass="chart-container"/>
+        </VBox>
+    </center>
+
+    <padding>
+        <Insets top="16" right="16" bottom="16" left="16"/>
+    </padding>
+
+</BorderPane>

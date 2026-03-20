@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.ferreteria.controllers.ReportsController"
+            styleClass="reports-view-root">
+
+    <top>
+        <VBox spacing="12">
+            <Label text="Reportes" styleClass="view-title"/>
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <Label text="Desde:"/>
+                <DatePicker fx:id="dateFrom" prefWidth="140"/>
+                <Label text="Hasta:"/>
+                <DatePicker fx:id="dateTo" prefWidth="140"/>
+                <ComboBox fx:id="reportTypeCombo" prefWidth="200" promptText="Tipo de reporte"/>
+                <Button text="Esta semana" onAction="#onThisWeek" styleClass="secondary-button"/>
+                <Button text="Este mes" onAction="#onThisMonth" styleClass="secondary-button"/>
+                <Button text="Generar" onAction="#onGenerate" styleClass="primary-button"/>
+                <Button fx:id="btnDeleteSale" text="Eliminar venta" onAction="#onDeleteSale" styleClass="danger-button" disable="true"/>
+            </HBox>
+            <Label fx:id="summaryLabel" styleClass="report-summary" visible="false"/>
+            <padding>
+                <Insets bottom="8"/>
+            </padding>
+        </VBox>
+    </top>
+
+    <center>
+        <StackPane fx:id="tableStack">
+            <TableView fx:id="tableByDay" maxWidth="Infinity" maxHeight="Infinity">
+                <columns>
+                    <TableColumn fx:id="colDay" text="Día" prefWidth="200" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDayTotal" text="Total ($)" prefWidth="130" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDayCash" text="Efectivo ($)" prefWidth="110" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDayTransfer" text="Transferencia ($)" prefWidth="130" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDayDebit" text="Débito ($)" prefWidth="110" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDayCredit" text="Crédito ($)" prefWidth="110" styleClass="numeric-column"/>
+                </columns>
+            </TableView>
+            <TableView fx:id="tableProducts" visible="false" maxWidth="Infinity" maxHeight="Infinity">
+                <columns>
+                    <TableColumn fx:id="colCode" text="Código" prefWidth="100"/>
+                    <TableColumn fx:id="colProductName" text="Producto" prefWidth="220"/>
+                    <TableColumn fx:id="colQty" text="Cant. vendida" prefWidth="120" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colRevenue" text="Monto total ($)" prefWidth="140" styleClass="numeric-column"/>
+                </columns>
+            </TableView>
+            <TableView fx:id="tableDetail" visible="false" maxWidth="Infinity" maxHeight="Infinity">
+                <columns>
+                    <TableColumn fx:id="colDetailDate" text="Fecha" prefWidth="100" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDetailSaleId" text="Nº Venta" prefWidth="80" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDetailCode" text="Código" prefWidth="90"/>
+                    <TableColumn fx:id="colDetailProduct" text="Producto" prefWidth="180"/>
+                    <TableColumn fx:id="colDetailQty" text="Cant." prefWidth="60" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDetailPrice" text="P. unit. ($)" prefWidth="100" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDetailSubtotal" text="Subtotal ($)" prefWidth="110" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDetailPayment" text="Medio pago" prefWidth="110"/>
+                </columns>
+            </TableView>
+        </StackPane>
+    </center>
+
+    <padding>
+        <Insets top="16" right="16" bottom="16" left="16"/>
+    </padding>
+
+</BorderPane>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="httpfx.com/fxml"
+            fx:controller="com.ferreteria.controllers.SuppliersController"
+            styleClass="suppliers-view-root">
+
+    <top>
+        <VBox spacing="10">
+            <children>
+                <Label text="Proveedores" styleClass="view-title"/>
+                <HBox spacing="8">
+                    <children>
+                        <TextField fx:id="searchField" promptText="Buscar por nombre, teléfono, email o dirección..." HBox.hgrow="ALWAYS"/>
+                        <Button text="Buscar" onAction="#onSearch" styleClass="primary-button"/>
+                        <Button text="Nuevo" onAction="#onNewSupplier" styleClass="secondary-button"/>
+                        <Button text="Editar" onAction="#onEditSupplier" styleClass="secondary-button"/>
+                        <Button text="Eliminar" onAction="#onDeleteSupplier" styleClass="danger-button"/>
+                    </children>
+                </HBox>
+            </children>
+            <padding>
+                <Insets top="0" right="0" bottom="12" left="0"/>
+            </padding>
+        </VBox>
+    </top>
+
+    <center>
+        <TableView fx:id="suppliersTable" prefHeight="400.0">
+            <columns>
+                <TableColumn fx:id="colName" text="Nombre" prefWidth="180.0"/>
+                <TableColumn fx:id="colPhone" text="Teléfono" prefWidth="120.0"/>
+                <TableColumn fx:id="colEmail" text="Email" prefWidth="180.0"/>
+                <TableColumn fx:id="colAddress" text="Dirección" prefWidth="220.0"/>
+            </columns>
+        </TableView>
+    </center>
+
+    <padding>
+        <Insets top="16" right="16" bottom="16" left="16"/>
+    </padding>
+
+</BorderPane>

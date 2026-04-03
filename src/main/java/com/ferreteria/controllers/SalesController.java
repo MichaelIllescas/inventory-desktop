@@ -81,7 +81,7 @@ public class SalesController {
 
         scanField.setPromptText("Escanee o escriba código y pulse Enter");
 
-        // Click en la tabla devuelve el foco al campo de escaneo (si no está editando una celda)
+        // Click en la tabla devuelve el foco al campo de escaneo (si no estÃƒÂ¡ editando una celda)
         itemsTable.addEventFilter(javafx.scene.input.MouseEvent.MOUSE_CLICKED, e -> {
             if (itemsTable.getEditingCell() == null) {
                 Platform.runLater(() -> scanField.requestFocus());
@@ -91,15 +91,18 @@ public class SalesController {
         Platform.runLater(() -> {
             scanField.requestFocus();
             if (scanField.getScene() != null) {
-                // FILTER (no handler) para capturar Enter antes que la tabla lo consuma
+                // FILTER (no handler) para capturar Enter antes que la tabla lo consuma.
+                // Verificamos que scanField siga en la escena: si el usuario navegó a otra
+                // vista, getScene() devuelve null y el filtro se ignora sin efectos.
                 scanField.getScene().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-                    if (event.getCode() == KeyCode.ENTER) {
-                        if (scanField.isFocused()) return;
-                        if (totalField.isFocused()) return;
-                        if (!items.isEmpty()) {
-                            event.consume();
-                            confirmAndRegisterSale();
-                        }
+                    if (event.getCode() != KeyCode.ENTER) return;
+                    if (scanField.getScene() == null) return; // vista de ventas ya no está activa
+                    if (scanField.isFocused()) return;
+                    if (totalField.isFocused()) return;
+                    if (itemsTable.getEditingCell() != null) return; // hay una celda en edición
+                    if (!items.isEmpty()) {
+                        event.consume();
+                        confirmAndRegisterSale();
                     }
                 });
             }
@@ -107,7 +110,7 @@ public class SalesController {
 
         if (paymentMethodCombo != null) {
             paymentMethodCombo.setItems(FXCollections.observableArrayList(
-                    "Efectivo", "Transferencia", "Débito", "Crédito"
+                    "Efectivo", "Transferencia", "D\u00E9bito", "Cr\u00E9dito"
             ));
             paymentMethodCombo.getSelectionModel().selectFirst();
         }
@@ -121,10 +124,10 @@ public class SalesController {
                     com.ferreteria.database.DatabaseManager.VARIOS_CODE, 1.5, 50));
         }
 
-        // Acepta dígitos, punto (separador de miles al mostrar) y coma decimal
+        // Acepta dÃƒÂ­gitos, punto (separador de miles al mostrar) y coma decimal
         totalField.setTextFormatter(new TextFormatter<>(change -> {
             String newText = change.getControlNewText();
-            // Solo números, punto de miles y coma decimal
+            // Solo nÃƒÂºmeros, punto de miles y coma decimal
             if (newText.matches("[0-9.]*[,]?[0-9]*")) return change;
             return null;
         }));
@@ -140,14 +143,14 @@ public class SalesController {
 
         totalField.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
             if (isFocused) {
-                // Al entrar: quita puntos de miles para edición limpia
+                // Al entrar: quita puntos de miles para ediciÃƒÂ³n limpia
                 syncingTotal = true;
                 String raw = totalField.getText().replace(".", "");
                 totalField.setText(raw);
                 syncingTotal = false;
                 Platform.runLater(() -> { totalField.end(); totalField.deselect(); });
             } else {
-                // Al salir: restaura si vacío, luego formatea con miles
+                // Al salir: restaura si vacÃƒÂ­o, luego formatea con miles
                 String text = totalField.getText();
                 if (text == null || text.isBlank()) {
                     double calculated = items.stream().mapToDouble(SaleLineItem::getSubtotal).sum();
@@ -524,11 +527,15 @@ public class SalesController {
 
     private void addProductByCode(String code) {
         if (code == null || code.isBlank()) return;
-        AppLogger.info("SalesController", "addProductByCode", "Buscando código: " + code.trim());
-        Optional<Product> opt = saleService.findProductByCode(code.trim());
+        String normalizedCode = code.trim();
+        if ("0".equals(normalizedCode)) {
+            normalizedCode = com.ferreteria.database.DatabaseManager.VARIOS_CODE;
+        }
+        AppLogger.info("SalesController", "addProductByCode", "Buscando código: " + normalizedCode);
+        Optional<Product> opt = saleService.findProductByCode(normalizedCode);
         if (opt.isEmpty()) {
-            AppLogger.warn("SalesController", "addProductByCode", "Código no encontrado: " + code.trim());
-            showWarning("No se encontró ningún producto con código: " + code.trim());
+            AppLogger.warn("SalesController", "addProductByCode", "Código no encontrado: " + normalizedCode);
+            showWarning("No se encontró ningún producto con código: " + normalizedCode);
             return;
         }
         AppLogger.info("SalesController", "addProductByCode", "Producto encontrado: id=" + opt.get().getId() + " nombre=" + opt.get().getName());
@@ -550,7 +557,7 @@ public class SalesController {
                 updateTotal();
                 updateSummary();
                 if (isVarios) {
-                    // Abrir edición del precio directamente para que el usuario lo ingrese
+                    // Abrir ediciÃƒÂ³n del precio directamente para que el usuario lo ingrese
                     int row = items.size() - 1;
                     itemsTable.getSelectionModel().select(row);
                     itemsTable.scrollTo(row);
@@ -574,7 +581,7 @@ public class SalesController {
         if (selected != null) {
             items.remove(selected);
         } else {
-            showWarning("Seleccione una línea para quitar.");
+            showWarning("Seleccione una l\u00EDnea para quitar.");
         }
     }
 
@@ -585,7 +592,7 @@ public class SalesController {
 
     private void confirmAndRegisterSale() {
         if (items.isEmpty()) {
-            showWarning("No hay ítems en la venta.");
+            showWarning("No hay \u00EDtems en la venta.");
             return;
         }
         String payment = paymentMethodCombo != null ? paymentMethodCombo.getSelectionModel().getSelectedItem() : null;
@@ -609,8 +616,8 @@ public class SalesController {
 
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Confirmar venta");
-        confirm.setHeaderText("¿Registrar la venta?");
-        confirm.setContentText(totalInfo + "\n\n¿Desea confirmar?");
+        confirm.setHeaderText("\u00BFRegistrar la venta?");
+        confirm.setContentText(totalInfo + "\n\n\u00BFDesea confirmar?");
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isEmpty() || result.get() != ButtonType.OK) {
             AppLogger.info("SalesController", "confirmAndRegisterSale", "Venta cancelada por el usuario");
@@ -632,11 +639,11 @@ public class SalesController {
             showInfo("Venta registrada correctamente.");
             scanField.requestFocus();
         } catch (IllegalArgumentException e) {
-            AppLogger.warn("SalesController", "confirmAndRegisterSale", "Validación fallida: " + e.getMessage());
+            AppLogger.warn("SalesController", "confirmAndRegisterSale", "ValidaciÃƒÂ³n fallida: " + e.getMessage());
             showError(e.getMessage());
         } catch (Exception e) {
             AppLogger.error("SalesController", "confirmAndRegisterSale", "Error inesperado al registrar venta", e);
-            showError("Error inesperado al registrar la venta. Revisá el log para más detalles.");
+            showError("Error inesperado al registrar la venta. Revis\u00E1 el log para m\u00E1s detalles.");
         } finally {
             AppLogger.endOperation();
         }
@@ -671,10 +678,11 @@ public class SalesController {
 
     private void showInfo(String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Información");
+        alert.setTitle("Informaci\u00F3n");
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
     }
 
 }
+

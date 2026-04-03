@@ -2,6 +2,7 @@ package com.ferreteria.controllers;
 
 import com.ferreteria.models.Product;
 import com.ferreteria.models.Supplier;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
@@ -96,6 +97,11 @@ public class ProductFormDialog extends Dialog<Product> {
             }
             return null;
         });
+
+        setOnShown(event -> Platform.runLater(() -> {
+            codeField.requestFocus();
+            codeField.selectAll();
+        }));
     }
 
     private Product buildProductFromFields() {
@@ -152,4 +158,3 @@ public class ProductFormDialog extends Dialog<Product> {
     }
 
 }
-

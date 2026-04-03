@@ -22,11 +22,15 @@ public class DashboardService {
     }
 
     public int getTotalProducts() {
-        return productService.getAllProducts().size();
+        return (int) productService.getAllProducts().stream()
+                .filter(product -> !product.isSkipStock())
+                .count();
     }
 
     public int getLowStockCount() {
-        return productService.getLowStockProducts().size();
+        return (int) productService.getLowStockProducts().stream()
+                .filter(product -> !product.isSkipStock())
+                .count();
     }
 
     public double getTodaySalesTotal() {

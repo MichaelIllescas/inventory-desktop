@@ -1,5 +1,6 @@
 package com.ferreteria.services;
 
+import com.ferreteria.database.DatabaseManager;
 import com.ferreteria.models.Product;
 import com.ferreteria.models.ReplenishmentItem;
 import com.ferreteria.repositories.ProductRepository;
@@ -15,14 +16,18 @@ public class ProductService {
     }
 
     public List<Product> getAllProducts() {
-        return repository.findAll();
+        return repository.findAll().stream()
+                .filter(this::isVisibleProduct)
+                .toList();
     }
 
     public List<Product> searchProducts(String query) {
         if (query == null || query.isBlank()) {
-            return repository.findAll();
+            return getAllProducts();
         }
-        return repository.search(query.trim());
+        return repository.search(query.trim()).stream()
+                .filter(this::isVisibleProduct)
+                .toList();
     }
 
     public Product saveProduct(Product product) {
@@ -37,16 +42,40 @@ public class ProductService {
     }
 
     public List<Product> getLowStockProducts() {
-        return repository.findLowStock();
+        return repository.findLowStock().stream()
+                .filter(this::isVisibleProduct)
+                .toList();
     }
 
     public List<ReplenishmentItem> getReplenishmentList() {
-        return repository.findReplenishmentList();
+        return repository.findReplenishmentList().stream()
+                .filter(this::isVisibleReplenishmentItem)
+                .toList();
     }
 
     private void validateProduct(Product product) {
         if (product.getName() == null || product.getName().isBlank()) {
             throw new IllegalArgumentException("El nombre del producto es obligatorio.");
+        }
+        if (product.getCode() != null) {
+            String code = product.getCode().trim();
+            if (!code.isEmpty()) {
+                boolean duplicated = repository.findAll().stream().anyMatch(existing -> {
+                    if (existing.getCode() == null) {
+                        return false;
+                    }
+                    if (!code.equalsIgnoreCase(existing.getCode().trim())) {
+                        return false;
+                    }
+                    if (product.getId() == null) {
+                        return true;
+                    }
+                    return !product.getId().equals(existing.getId());
+                });
+                if (duplicated) {
+                    throw new IllegalArgumentException("Ya existe un producto con ese código.");
+                }
+            }
         }
         if (product.getPrice() < 0) {
             throw new IllegalArgumentException("El precio no puede ser negativo.");
@@ -58,5 +87,15 @@ public class ProductService {
             throw new IllegalArgumentException("El stock mínimo no puede ser negativo.");
         }
     }
-}
 
+    private boolean isVisibleProduct(Product product) {
+        return product != null
+                && !product.isSkipStock()
+                && !DatabaseManager.VARIOS_CODE.equals(product.getCode());
+    }
+
+    private boolean isVisibleReplenishmentItem(ReplenishmentItem item) {
+        return item != null
+                && !DatabaseManager.VARIOS_CODE.equals(item.getProductCode());
+    }
+}

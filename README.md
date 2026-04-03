@@ -8,14 +8,21 @@ Aplicación de escritorio para gestión de inventario, ventas, proveedores y rep
 
 - **Dashboard**: total de productos, productos con bajo stock, ventas del día y del mes (en $), y gráfico de ventas de los últimos 7 días.
 - **Productos**: alta, edición, baja y listado con búsqueda; código, nombre, precio, stock mínimo y proveedor. Soporta **stock decimal** (ej. kg de carne, metros de cable).
-- **Ventas**: registro de ventas con selección de productos y **cantidades decimales**, atajos con lector de código de barras, total siempre visible y confirmación rápida con Enter.
+- **Ventas**:
+  - Registro con selección de productos y **cantidades decimales**, atajos con lector de código de barras.
+  - **Precio unitario y subtotal editables** directamente en la tabla (el subtotal se puede sobrescribir independientemente del precio unitario, por ejemplo para aplicar descuentos).
+  - **Total a cobrar** editable con formato de miles (`1.500,00`); se edita con doble clic y muestra la diferencia ("Ajuste") si se modifica manualmente.
+  - **Panel de resumen** lateral con cantidad de productos distintos, unidades totales y total calculado.
+  - Confirmación rápida con **Enter** y limpieza de la venta con un click.
+  - **Producto "Varios / Sin código"** (`__VARIOS__`): se crea automáticamente al iniciar la app, no afecta el inventario, precio comienza en 0 y se abre para editar al agregarlo. Incluye **código de barras Code 128** en la pantalla de ventas para escanearlo directamente con un lector.
 - **Medios de pago**: selección de **Efectivo, Transferencia, Débito y Crédito** al registrar la venta; cada venta queda asociada a su medio de pago.
 - **Proveedores**: CRUD de proveedores (nombre, teléfono, email, dirección).
 - **Inventario**: vista de stock y ajuste de cantidades con diálogos dedicados.
-- **Reportes**: 
-  - **Ventas por día** con totales discriminados por medio de pago (Total, Efectivo, Transferencia, Débito, Crédito).
-  - **Productos más vendidos** (cantidad y monto).
-  - **Ventas con detalle** (cada ítem con precio, subtotal y medio de pago). 
+- **Reportes**:
+  - **Por día**: totales discriminados por medio de pago (Total, Efectivo, Transferencia, Débito, Crédito) y promedio diario.
+  - **Productos más vendidos**: cantidad vendida, monto total y total de unidades.
+  - **Con detalle**: cada ítem con precio cobrado, subtotal, **total de la venta** y medio de pago. Permite eliminar ventas (devuelve el stock).
+  - Barra de resumen con totales y métricas clave en todos los reportes.
 
 La base de datos es **SQLite**; en instalación los datos se guardan en la carpeta de usuario (por usuario de Windows). La aplicación se distribuye como **instalador .exe** para Windows (sin necesidad de instalar Java en el cliente).
 
@@ -40,7 +47,8 @@ DESKTOP INVENTIORY/
 │   ├── controllers/                # Controladores FXML (vistas)
 │   ├── models/                     # Modelos de datos
 │   ├── repositories/               # Acceso a datos (SQLite)
-│   └── services/                   # Lógica de negocio
+│   ├── services/                   # Lógica de negocio
+│   └── util/                       # Utilidades (ej. Code128Generator)
 ├── src/main/resources/
 │   ├── database/
 │   │   └── schema.sql              # Definición de tablas

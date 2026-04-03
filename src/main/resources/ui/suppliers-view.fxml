@@ -7,27 +7,46 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="httpfx.com/fxml"
+            xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.ferreteria.controllers.SuppliersController"
             styleClass="suppliers-view-root">
 
     <top>
-        <VBox spacing="10">
+        <VBox spacing="12">
             <children>
                 <Label text="Proveedores" styleClass="view-title"/>
-                <HBox spacing="8">
+                <FlowPane hgap="8" vgap="8" prefWrapLength="900" styleClass="suppliers-toolbar">
                     <children>
-                        <TextField fx:id="searchField" promptText="Buscar por nombre, teléfono, email o dirección..." HBox.hgrow="ALWAYS"/>
-                        <Button text="Buscar" onAction="#onSearch" styleClass="primary-button"/>
-                        <Button text="Nuevo" onAction="#onNewSupplier" styleClass="secondary-button"/>
-                        <Button text="Editar" onAction="#onEditSupplier" styleClass="secondary-button"/>
-                        <Button text="Eliminar" onAction="#onDeleteSupplier" styleClass="danger-button"/>
+                        <TextField fx:id="searchField" promptText="Buscar por nombre, teléfono, email o dirección..." prefWidth="280"/>
+                        <Button text="Buscar" onAction="#onSearch" styleClass="suppliers-search-button"/>
+                        <Button text="Restablecer" onAction="#onResetFilter" styleClass="suppliers-secondary-button"/>
+                        <Button text="Nuevo" onAction="#onNewSupplier" styleClass="suppliers-secondary-button"/>
+                        <Button text="Editar" onAction="#onEditSupplier" styleClass="suppliers-secondary-button"/>
+                        <Button text="Eliminar" onAction="#onDeleteSupplier" styleClass="suppliers-danger-button"/>
                     </children>
-                </HBox>
+                </FlowPane>
+                <GridPane hgap="14" vgap="14" styleClass="suppliers-summary-grid">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="50"/>
+                        <ColumnConstraints percentWidth="50"/>
+                    </columnConstraints>
+                    <VBox styleClass="suppliers-summary-card-primary" GridPane.columnIndex="0" spacing="4">
+                        <Label text="Proveedores mostrados" styleClass="suppliers-summary-title"/>
+                        <Label fx:id="summaryTotalSuppliersLabel" text="0" styleClass="suppliers-summary-value"/>
+                        <Label text="Cantidad visible según el filtro actual" styleClass="suppliers-summary-note" wrapText="true"/>
+                    </VBox>
+                    <VBox styleClass="suppliers-summary-card-neutral" GridPane.columnIndex="1" spacing="4">
+                        <Label text="Búsqueda actual" styleClass="suppliers-summary-title"/>
+                        <Label fx:id="summaryCurrentFilterLabel" text="Todos" styleClass="suppliers-summary-value"/>
+                        <Label text="Muestra si estás viendo todos los proveedores o un filtro puntual" styleClass="suppliers-summary-note" wrapText="true"/>
+                    </VBox>
+                </GridPane>
             </children>
             <padding>
                 <Insets top="0" right="0" bottom="12" left="0"/>
@@ -36,7 +55,7 @@
     </top>
 
     <center>
-        <TableView fx:id="suppliersTable" prefHeight="400.0">
+        <TableView fx:id="suppliersTable" prefHeight="400.0" styleClass="suppliers-table">
             <columns>
                 <TableColumn fx:id="colName" text="Nombre" prefWidth="180.0"/>
                 <TableColumn fx:id="colPhone" text="Teléfono" prefWidth="120.0"/>

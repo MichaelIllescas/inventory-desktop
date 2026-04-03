@@ -7,7 +7,9 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns="http://javafx.com/javafx"
@@ -16,18 +18,35 @@
             styleClass="products-view-root">
 
     <top>
-        <VBox spacing="10">
+        <VBox spacing="12">
             <children>
                 <Label text="Productos" styleClass="view-title"/>
-                <HBox spacing="8">
+                <FlowPane hgap="8" vgap="8" prefWrapLength="900" styleClass="products-toolbar">
                     <children>
-                        <TextField fx:id="searchField" promptText="Buscar por código, nombre o descripción..." HBox.hgrow="ALWAYS"/>
-                        <Button text="Buscar" onAction="#onSearch" styleClass="primary-button"/>
-                        <Button text="Nuevo" onAction="#onNewProduct" styleClass="secondary-button"/>
-                        <Button text="Editar" onAction="#onEditProduct" styleClass="secondary-button"/>
-                        <Button text="Eliminar" onAction="#onDeleteProduct" styleClass="danger-button"/>
+                        <TextField fx:id="searchField" promptText="Buscar por código, nombre o descripción..." prefWidth="260"/>
+                        <Button text="Buscar" onAction="#onSearch" styleClass="products-search-button"/>
+                        <Button text="Restablecer" onAction="#onResetFilter" styleClass="products-secondary-button"/>
+                        <Button text="Nuevo" onAction="#onNewProduct" styleClass="products-secondary-button"/>
+                        <Button text="Editar" onAction="#onEditProduct" styleClass="products-secondary-button"/>
+                        <Button text="Eliminar" onAction="#onDeleteProduct" styleClass="products-danger-button"/>
                     </children>
-                </HBox>
+                </FlowPane>
+                <GridPane hgap="14" vgap="14" styleClass="products-summary-grid">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="50"/>
+                        <ColumnConstraints percentWidth="50"/>
+                    </columnConstraints>
+                    <VBox styleClass="products-summary-card-primary" GridPane.columnIndex="0" spacing="4">
+                        <Label text="Productos mostrados" styleClass="products-summary-title"/>
+                        <Label fx:id="summaryTotalProductsLabel" text="0" styleClass="products-summary-value"/>
+                        <Label text="Cantidad visible según el filtro actual" styleClass="products-summary-note" wrapText="true"/>
+                    </VBox>
+                    <VBox styleClass="products-summary-card-neutral" GridPane.columnIndex="1" spacing="4">
+                        <Label text="Búsqueda actual" styleClass="products-summary-title"/>
+                        <Label fx:id="summaryCurrentFilterLabel" text="Todos" styleClass="products-summary-value"/>
+                        <Label text="Muestra si estás viendo todos los productos o un filtro puntual" styleClass="products-summary-note" wrapText="true"/>
+                    </VBox>
+                </GridPane>
             </children>
             <padding>
                 <Insets top="0" right="0" bottom="12" left="0"/>
@@ -36,7 +55,7 @@
     </top>
 
     <center>
-        <TableView fx:id="productsTable" prefHeight="400.0">
+        <TableView fx:id="productsTable" prefHeight="400.0" styleClass="products-table">
             <columns>
                 <TableColumn fx:id="colCode" text="Código" prefWidth="100.0"/>
                 <TableColumn fx:id="colName" text="Nombre" prefWidth="160.0"/>
@@ -54,4 +73,3 @@
     </padding>
 
 </BorderPane>
-

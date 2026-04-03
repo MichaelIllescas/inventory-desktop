@@ -9,6 +9,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -45,6 +46,10 @@ public class ProductsController {
 
     @FXML
     private TableColumn<Product, String> colSupplier;
+    @FXML
+    private Label summaryTotalProductsLabel;
+    @FXML
+    private Label summaryCurrentFilterLabel;
 
     private final ProductService productService;
     private final SupplierService supplierService;
@@ -77,6 +82,7 @@ public class ProductsController {
     private void loadProducts() {
         List<Product> products = productService.getAllProducts();
         tableData.setAll(products);
+        updateSummary(products);
     }
 
     @FXML
@@ -84,6 +90,13 @@ public class ProductsController {
         String query = searchField.getText();
         List<Product> result = productService.searchProducts(query);
         tableData.setAll(result);
+        updateSummary(result);
+    }
+
+    @FXML
+    private void onResetFilter() {
+        searchField.clear();
+        loadProducts();
     }
 
     @FXML
@@ -135,5 +148,14 @@ public class ProductsController {
         alert.setContentText(message);
         alert.showAndWait();
     }
-}
 
+    private void updateSummary(List<Product> products) {
+        if (summaryTotalProductsLabel == null || summaryCurrentFilterLabel == null) {
+            return;
+        }
+
+        summaryTotalProductsLabel.setText(String.valueOf(products.size()));
+        String query = searchField != null && searchField.getText() != null ? searchField.getText().trim() : "";
+        summaryCurrentFilterLabel.setText(query.isBlank() ? "Todos" : "Filtrado");
+    }
+}

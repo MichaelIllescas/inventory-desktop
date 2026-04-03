@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -12,11 +13,12 @@
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.ferreteria.controllers.DashboardController"
+            fx:id="dashboardRoot"
             styleClass="dashboard-view-root">
 
     <top>
         <VBox spacing="8">
-            <Label text="Dashboard" styleClass="view-title"/>
+            <Label text="Inicio" styleClass="view-title"/>
             <padding>
                 <Insets bottom="8"/>
             </padding>
@@ -36,28 +38,79 @@
                     <RowConstraints minHeight="80" prefHeight="80"/>
                 </rowConstraints>
                 <VBox styleClass="dashboard-card" GridPane.columnIndex="0" GridPane.rowIndex="0" spacing="4">
-                    <Label text="Total productos" styleClass="dashboard-card-title"/>
+                    <Label text="Productos cargados" styleClass="dashboard-card-title"/>
                     <Label fx:id="labelTotalProducts" text="0" styleClass="dashboard-card-value"/>
                     <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
                 </VBox>
                 <VBox styleClass="dashboard-card" GridPane.columnIndex="1" GridPane.rowIndex="0" spacing="4">
-                    <Label text="Productos con bajo stock" styleClass="dashboard-card-title"/>
+                    <Label text="Productos con poco stock" styleClass="dashboard-card-title"/>
                     <Label fx:id="labelLowStock" text="0" styleClass="dashboard-card-value"/>
                     <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
                 </VBox>
                 <VBox styleClass="dashboard-card" GridPane.columnIndex="2" GridPane.rowIndex="0" spacing="4">
-                    <Label text="Ventas de hoy ($)" styleClass="dashboard-card-title"/>
+                    <Label text="Vendido hoy" styleClass="dashboard-card-title"/>
                     <Label fx:id="labelTodaySales" text="0.00" styleClass="dashboard-card-value"/>
                     <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
                 </VBox>
                 <VBox styleClass="dashboard-card" GridPane.columnIndex="3" GridPane.rowIndex="0" spacing="4">
-                    <Label text="Ventas del mes ($)" styleClass="dashboard-card-title"/>
+                    <Label text="Vendido este mes" styleClass="dashboard-card-title"/>
                     <Label fx:id="labelMonthSales" text="0.00" styleClass="dashboard-card-value"/>
                     <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
                 </VBox>
             </GridPane>
+            <VBox spacing="10">
+                <Label text="Accesos rápidos" styleClass="view-title"/>
+                <GridPane hgap="14" vgap="14">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="25"/>
+                        <ColumnConstraints percentWidth="25"/>
+                        <ColumnConstraints percentWidth="25"/>
+                        <ColumnConstraints percentWidth="25"/>
+                    </columnConstraints>
+                    <Button onAction="#goToSales" styleClass="quick-action-button quick-action-sales" GridPane.columnIndex="0" maxWidth="Infinity">
+                        <graphic>
+                            <VBox spacing="7" fillWidth="true">
+                                <Label text="Ventas" styleClass="quick-action-badge"/>
+                                <Label text="Registrar venta" styleClass="quick-action-title"/>
+                                <Label text="Cobro rápido y carga de productos." styleClass="quick-action-text" wrapText="true"/>
+                                <Label text="Abrir ventas" styleClass="quick-action-link"/>
+                            </VBox>
+                        </graphic>
+                    </Button>
+                    <Button onAction="#goToInventory" styleClass="quick-action-button quick-action-inventory" GridPane.columnIndex="1" maxWidth="Infinity">
+                        <graphic>
+                            <VBox spacing="7" fillWidth="true">
+                                <Label text="Inventario" styleClass="quick-action-badge"/>
+                                <Label text="Gestión de stock" styleClass="quick-action-title"/>
+                                <Label text="Revisa niveles y ajusta cantidades." styleClass="quick-action-text" wrapText="true"/>
+                                <Label text="Abrir inventario" styleClass="quick-action-link"/>
+                            </VBox>
+                        </graphic>
+                    </Button>
+                    <Button onAction="#goToProducts" styleClass="quick-action-button quick-action-products" GridPane.columnIndex="2" maxWidth="Infinity">
+                        <graphic>
+                            <VBox spacing="7" fillWidth="true">
+                                <Label text="Productos" styleClass="quick-action-badge"/>
+                                <Label text="Catálogo" styleClass="quick-action-title"/>
+                                <Label text="Alta, edición y consulta de artículos." styleClass="quick-action-text" wrapText="true"/>
+                                <Label text="Abrir productos" styleClass="quick-action-link"/>
+                            </VBox>
+                        </graphic>
+                    </Button>
+                    <Button onAction="#goToSuppliers" styleClass="quick-action-button quick-action-suppliers" GridPane.columnIndex="3" maxWidth="Infinity">
+                        <graphic>
+                            <VBox spacing="7" fillWidth="true">
+                                <Label text="Proveedores" styleClass="quick-action-badge"/>
+                                <Label text="Contactos clave" styleClass="quick-action-title"/>
+                                <Label text="Gestiona datos y relación comercial." styleClass="quick-action-text" wrapText="true"/>
+                                <Label text="Abrir proveedores" styleClass="quick-action-link"/>
+                            </VBox>
+                        </graphic>
+                    </Button>
+                </GridPane>
+            </VBox>
             <HBox alignment="CENTER_LEFT" spacing="8">
-                <Label text="Ventas últimos 7 días" styleClass="view-title"/>
+                <Label text="Ventas de los últimos 7 días" styleClass="view-title"/>
             </HBox>
             <VBox fx:id="chartContainer" minHeight="260" prefHeight="260" styleClass="chart-container"/>
         </VBox>

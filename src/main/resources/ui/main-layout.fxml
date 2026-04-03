@@ -19,20 +19,25 @@
     <left>
         <VBox spacing="12" styleClass="sidebar">
             <children>
-                <Label text="Inventario" styleClass="sidebar-title"/>
+                <VBox spacing="4" styleClass="sidebar-header">
+                    <children>
+                        <Label text="Panel de control" styleClass="sidebar-title"/>
+                        <Label text="Gestión general del sistema" styleClass="sidebar-subtitle"/>
+                    </children>
+                </VBox>
 
-                <Button text="Dashboard"   styleClass="sidebar-button" onAction="#showDashboard"/>
-                <Button text="Productos"   styleClass="sidebar-button" onAction="#showProducts"/>
-                <Button text="Ventas"      styleClass="sidebar-button" onAction="#showSales"/>
-                <Button text="Proveedores" styleClass="sidebar-button" onAction="#showSuppliers"/>
-                <Button text="Inventario"  styleClass="sidebar-button" onAction="#showInventory"/>
-                <Button text="Reportes"    styleClass="sidebar-button" onAction="#showReports"/>
+                <Button fx:id="btnDashboard" text="Inicio" styleClass="sidebar-button" onAction="#showDashboard"/>
+                <Button fx:id="btnProducts" text="Productos" styleClass="sidebar-button" onAction="#showProducts"/>
+                <Button fx:id="btnSales" text="Ventas" styleClass="sidebar-button" onAction="#showSales"/>
+                <Button fx:id="btnSuppliers" text="Proveedores" styleClass="sidebar-button" onAction="#showSuppliers"/>
+                <Button fx:id="btnInventory" text="Inventario" styleClass="sidebar-button" onAction="#showInventory"/>
+                <Button fx:id="btnReports" text="Reportes" styleClass="sidebar-button" onAction="#showReports"/>
 
                 <Region VBox.vgrow="ALWAYS"/>
                 <Label text="Desarrollado por" styleClass="sidebar-footer-label"/>
                 <Button fx:id="logoImperialNet" styleClass="sidebar-logo-button" onAction="#openImperialNet">
                     <graphic>
-                        <ImageView fitHeight="100" preserveRatio="true" pickOnBounds="true">
+                        <ImageView fitHeight="86" preserveRatio="true" pickOnBounds="true">
                             <image>
                                 <Image url="@../images/logo_imperial_net.png"/>
                             </image>
@@ -48,9 +53,8 @@
 
     <center>
         <StackPane fx:id="contentArea" styleClass="content-area">
-            <!-- Las vistas de cada módulo se cargan dinámicamente aquí -->
+            <!-- Las vistas de cada mÃ³dulo se cargan dinÃ¡micamente aquÃ­ -->
         </StackPane>
     </center>
 
 </BorderPane>
-

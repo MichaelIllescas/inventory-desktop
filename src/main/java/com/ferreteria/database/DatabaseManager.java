@@ -1,5 +1,7 @@
 package com.ferreteria.database;
 
+import com.ferreteria.util.AppLogger;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -8,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -71,18 +74,24 @@ public final class DatabaseManager {
     public static synchronized Connection getConnection() {
         try {
             if (connection == null || connection.isClosed()) {
+                AppLogger.info("DatabaseManager", "getConnection", "Conectando a BD: " + getDbUrl());
                 ensureDatabaseFolder();
                 connection = DriverManager.getConnection(getDbUrl());
                 enableForeignKeys(connection);
                 if (!schemaInitialized) {
+                    AppLogger.info("DatabaseManager", "getConnection", "Inicializando esquema y migraciones");
                     initSchema(connection);
                     migrateToDecimalQuantities(connection);
                     migrateSalesPaymentMethod(connection);
+                    migrateSkipStock(connection);
+                    ensureVariosProduct(connection);
                     schemaInitialized = true;
+                    AppLogger.info("DatabaseManager", "getConnection", "BD inicializada correctamente");
                 }
             }
             return connection;
         } catch (SQLException e) {
+            AppLogger.error("DatabaseManager", "getConnection", "Error al conectar con la BD: " + e.getMessage(), e);
             throw new RuntimeException("Error al conectar con la base de datos", e);
         }
     }
@@ -185,6 +194,54 @@ public final class DatabaseManager {
         }
     }
 
+    /** Agrega columna skip_stock a products si no existe. */
+    private static void migrateSkipStock(Connection conn) {
+        try (Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery("PRAGMA table_info(products)")) {
+            boolean has = false;
+            while (rs.next()) {
+                if ("skip_stock".equalsIgnoreCase(rs.getString("name"))) { has = true; break; }
+            }
+            if (!has) {
+                AppLogger.info("DatabaseManager", "migrateSkipStock", "Aplicando migración: columna skip_stock");
+                try (Statement alter = conn.createStatement()) {
+                    alter.execute("ALTER TABLE products ADD COLUMN skip_stock INTEGER NOT NULL DEFAULT 0");
+                }
+            }
+        } catch (SQLException e) {
+            AppLogger.error("DatabaseManager", "migrateSkipStock", "Error al migrar skip_stock: " + e.getMessage(), e);
+            throw new RuntimeException("Error al migrar columna skip_stock", e);
+        }
+    }
+
+    public static final String VARIOS_CODE = "__VARIOS__";
+
+    /** Inserta el producto 'Varios / Sin código' si no existe. */
+    private static void ensureVariosProduct(Connection conn) {
+        try {
+            boolean exists;
+            try (PreparedStatement st = conn.prepareStatement("SELECT COUNT(*) FROM products WHERE code = ?")) {
+                st.setString(1, VARIOS_CODE);
+                try (ResultSet rs = st.executeQuery()) {
+                    exists = rs.next() && rs.getInt(1) > 0;
+                }
+            }
+            if (!exists) {
+                AppLogger.info("DatabaseManager", "ensureVariosProduct", "Insertando producto Varios por primera vez");
+                try (PreparedStatement st = conn.prepareStatement(
+                        "INSERT INTO products(code, name, description, price, stock, minimum_stock, skip_stock) VALUES (?, ?, ?, 0, 0, 0, 1)")) {
+                    st.setString(1, VARIOS_CODE);
+                    st.setString(2, "Varios / Sin código");
+                    st.setString(3, "Producto genérico para ítems sin código de barras. No descuenta stock.");
+                    st.executeUpdate();
+                }
+            }
+        } catch (SQLException e) {
+            AppLogger.error("DatabaseManager", "ensureVariosProduct", "Error al crear producto Varios: " + e.getMessage(), e);
+            throw new RuntimeException("Error al crear producto Varios", e);
+        }
+    }
+
     private static void ensureDatabaseFolder() {
         try {
             Path folder = Paths.get(DB_FOLDER);
@@ -213,6 +270,7 @@ public final class DatabaseManager {
                 runnable.run();
                 conn.commit();
             } catch (Exception e) {
+                AppLogger.error("DatabaseManager", "runInTransaction", "Rollback por error: " + e.getMessage(), e);
                 conn.rollback();
                 throw e;
             } finally {

@@ -7,6 +7,7 @@ import com.ferreteria.models.SaleDetailRow;
 import com.ferreteria.models.SaleItem;
 import com.ferreteria.models.SalesByDay;
 import com.ferreteria.repositories.SaleRepository;
+import com.ferreteria.util.AppLogger;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -28,8 +29,10 @@ public class SQLiteSaleRepository implements SaleRepository {
                     sale.setId(keys.getInt(1));
                 }
             }
+            AppLogger.info("SQLiteSaleRepository", "saveSale", "Venta insertada en BD: id=" + sale.getId());
             return sale;
         } catch (SQLException e) {
+            AppLogger.error("SQLiteSaleRepository", "saveSale", "Error SQL al guardar venta: " + e.getMessage(), e);
             throw new RuntimeException("Error al guardar venta", e);
         }
     }
@@ -47,7 +50,11 @@ public class SQLiteSaleRepository implements SaleRepository {
                 stmt.addBatch();
             }
             stmt.executeBatch();
+            AppLogger.info("SQLiteSaleRepository", "saveSaleItems",
+                    "Ítems guardados: saleId=" + saleId + " cantidad=" + items.size());
         } catch (SQLException e) {
+            AppLogger.error("SQLiteSaleRepository", "saveSaleItems",
+                    "Error SQL al guardar ítems: saleId=" + saleId + " items=" + items.size(), e);
             throw new RuntimeException("Error al guardar ítems de venta", e);
         }
     }
@@ -171,7 +178,7 @@ public class SQLiteSaleRepository implements SaleRepository {
 
     @Override
     public List<SaleDetailRow> getSaleDetailsInRange(String dateFrom, String dateTo) {
-        String sql = "SELECT s.id AS sale_id, date(s.date) AS sale_date, p.code, p.name, si.quantity, si.price, (si.quantity * si.price) AS subtotal, s.payment_method " +
+        String sql = "SELECT s.id AS sale_id, date(s.date) AS sale_date, p.code, p.name, si.quantity, si.price, (si.quantity * si.price) AS subtotal, s.total AS sale_total, s.payment_method " +
                 "FROM sales s JOIN sale_items si ON s.id = si.sale_id JOIN products p ON si.product_id = p.id " +
                 "WHERE date(s.date) >= ? AND date(s.date) <= ? ORDER BY s.date, s.id, si.id";
         Connection conn = DatabaseManager.getConnection();
@@ -191,6 +198,7 @@ public class SQLiteSaleRepository implements SaleRepository {
                             rs.getDouble("quantity"),
                             rs.getDouble("price"),
                             rs.getDouble("subtotal"),
+                            rs.getDouble("sale_total"),
                             rs.getString("payment_method")
                     ));
                 }

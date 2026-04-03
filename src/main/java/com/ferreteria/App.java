@@ -1,5 +1,6 @@
 package com.ferreteria;
 
+import com.ferreteria.util.AppLogger;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -32,6 +33,7 @@ public class App extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+        AppLogger.info("App", "start", "Iniciando aplicación");
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/main-layout.fxml"));
         Parent root = loader.load();
 
@@ -44,11 +46,17 @@ public class App extends Application {
         primaryStage.centerOnScreen();
         primaryStage.setMaximized(true);
         primaryStage.show();
+        AppLogger.info("App", "start", "Aplicación iniciada correctamente");
+
+        primaryStage.setOnCloseRequest(e -> AppLogger.info("App", "stop", "Aplicación cerrada por el usuario"));
     }
 
     public static void main(String[] args) {
         System.err.println("Sistema de Inventario: iniciando...");
-        Thread.setDefaultUncaughtExceptionHandler((t, e) -> showError("Error no esperado", e));
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+            AppLogger.error("App", "uncaughtException", "Excepción no capturada en hilo: " + t.getName(), e);
+            showError("Error no esperado", e);
+        });
         try {
             launch(args);
         } catch (Throwable e) {

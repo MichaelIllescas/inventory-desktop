@@ -19,17 +19,19 @@
 
     <top>
         <VBox spacing="12">
-            <Label text="Reportes" styleClass="view-title"/>
+            <Label text="Reporte de Ventas" styleClass="view-title"/>
             <HBox spacing="12" alignment="CENTER_LEFT">
                 <Label text="Desde:"/>
                 <DatePicker fx:id="dateFrom" prefWidth="140"/>
                 <Label text="Hasta:"/>
                 <DatePicker fx:id="dateTo" prefWidth="140"/>
-                <ComboBox fx:id="reportTypeCombo" prefWidth="200" promptText="Tipo de reporte"/>
-                <Button text="Esta semana" onAction="#onThisWeek" styleClass="secondary-button"/>
-                <Button text="Este mes" onAction="#onThisMonth" styleClass="secondary-button"/>
-                <Button text="Generar" onAction="#onGenerate" styleClass="primary-button"/>
-                <Button fx:id="btnDeleteSale" text="Eliminar venta" onAction="#onDeleteSale" styleClass="danger-button" disable="true"/>
+                <ComboBox fx:id="reportTypeCombo" prefWidth="150" promptText="Tipo de reporte"/>
+            </HBox>
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <Button text="Esta semana" prefWidth="130" onAction="#onThisWeek" styleClass="report-toolbar-button" style="-fx-background-color: #e5e7eb; -fx-text-fill: #111827; -fx-font-weight: bold;"/>
+                <Button text="Este mes" prefWidth="130" onAction="#onThisMonth" styleClass="report-toolbar-button" style="-fx-background-color: #e5e7eb; -fx-text-fill: #111827; -fx-font-weight: bold;"/>
+                <Button text="Generar" prefWidth="130" onAction="#onGenerate" styleClass="report-toolbar-button" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Button fx:id="btnDeleteSale" text="Eliminar venta" prefWidth="130" onAction="#onDeleteSale" styleClass="report-toolbar-button" style="-fx-background-color: #dc2626; -fx-text-fill: white; -fx-font-weight: bold;" disable="true"/>
             </HBox>
             <Label fx:id="summaryLabel" styleClass="report-summary" visible="false"/>
             <padding>
@@ -42,32 +44,33 @@
         <StackPane fx:id="tableStack">
             <TableView fx:id="tableByDay" maxWidth="Infinity" maxHeight="Infinity">
                 <columns>
-                    <TableColumn fx:id="colDay" text="Día" prefWidth="200" styleClass="numeric-column"/>
-                    <TableColumn fx:id="colDayTotal" text="Total ($)" prefWidth="130" styleClass="numeric-column"/>
-                    <TableColumn fx:id="colDayCash" text="Efectivo ($)" prefWidth="110" styleClass="numeric-column"/>
-                    <TableColumn fx:id="colDayTransfer" text="Transferencia ($)" prefWidth="130" styleClass="numeric-column"/>
-                    <TableColumn fx:id="colDayDebit" text="Débito ($)" prefWidth="110" styleClass="numeric-column"/>
-                    <TableColumn fx:id="colDayCredit" text="Crédito ($)" prefWidth="110" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDay" text="Día" minWidth="160" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDayTotal" text="Total ($)" minWidth="110" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDayCash" text="Efectivo ($)" minWidth="100" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDayTransfer" text="Transferencia ($)" minWidth="140" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDayDebit" text="Débito ($)" minWidth="100" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDayCredit" text="Crédito ($)" minWidth="100" styleClass="numeric-column"/>
                 </columns>
             </TableView>
             <TableView fx:id="tableProducts" visible="false" maxWidth="Infinity" maxHeight="Infinity">
                 <columns>
-                    <TableColumn fx:id="colCode" text="Código" prefWidth="100"/>
-                    <TableColumn fx:id="colProductName" text="Producto" prefWidth="220"/>
-                    <TableColumn fx:id="colQty" text="Cant. vendida" prefWidth="120" styleClass="numeric-column"/>
-                    <TableColumn fx:id="colRevenue" text="Monto total ($)" prefWidth="140" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colCode" text="Código" minWidth="90"/>
+                    <TableColumn fx:id="colProductName" text="Producto" minWidth="180"/>
+                    <TableColumn fx:id="colQty" text="Cant. vendida" minWidth="110" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colRevenue" text="Monto total ($)" minWidth="130" styleClass="numeric-column"/>
                 </columns>
             </TableView>
             <TableView fx:id="tableDetail" visible="false" maxWidth="Infinity" maxHeight="Infinity">
                 <columns>
-                    <TableColumn fx:id="colDetailDate" text="Fecha" prefWidth="100" styleClass="numeric-column"/>
-                    <TableColumn fx:id="colDetailSaleId" text="Nº Venta" prefWidth="80" styleClass="numeric-column"/>
-                    <TableColumn fx:id="colDetailCode" text="Código" prefWidth="90"/>
-                    <TableColumn fx:id="colDetailProduct" text="Producto" prefWidth="180"/>
-                    <TableColumn fx:id="colDetailQty" text="Cant." prefWidth="60" styleClass="numeric-column"/>
-                    <TableColumn fx:id="colDetailPrice" text="P. unit. ($)" prefWidth="100" styleClass="numeric-column"/>
-                    <TableColumn fx:id="colDetailSubtotal" text="Subtotal ($)" prefWidth="110" styleClass="numeric-column"/>
-                    <TableColumn fx:id="colDetailPayment" text="Medio pago" prefWidth="110"/>
+                    <TableColumn fx:id="colDetailDate" text="Fecha" minWidth="90" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDetailSaleId" text="Nº Venta" minWidth="70" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDetailCode" text="Código" minWidth="80"/>
+                    <TableColumn fx:id="colDetailProduct" text="Producto" minWidth="150"/>
+                    <TableColumn fx:id="colDetailQty" text="Cant." minWidth="55" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDetailPrice" text="P. unit. ($)" minWidth="90" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDetailSubtotal" text="Subtotal ($)" minWidth="100" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDetailSaleTotal" text="Total venta ($)" minWidth="110" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDetailPayment" text="Medio pago" minWidth="100"/>
                 </columns>
             </TableView>
         </StackPane>

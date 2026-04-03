@@ -12,6 +12,8 @@ public class Product {
     private Integer supplierId;
     /** Nombre del proveedor (solo para mostrar en lista, no se persiste). */
     private String supplierName;
+    /** Si true, no descuenta stock al vender (producto "Varios / Sin código"). */
+    private boolean skipStock;
 
     public Product() {
     }
@@ -97,6 +99,14 @@ public class Product {
 
     public void setSupplierName(String supplierName) {
         this.supplierName = supplierName;
+    }
+
+    public boolean isSkipStock() {
+        return skipStock;
+    }
+
+    public void setSkipStock(boolean skipStock) {
+        this.skipStock = skipStock;
     }
 }
 

@@ -43,6 +43,16 @@ public class ProductSelectionDialog extends Dialog<Product> {
         table.getColumns().addAll(colCode, colName, colPrice);
         table.setPrefHeight(280);
         table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        table.setRowFactory(tv -> {
+            TableRow<Product> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && !row.isEmpty()) {
+                    setResult(row.getItem());
+                    close();
+                }
+            });
+            return row;
+        });
 
         searchField.setPromptText("Buscar por código o nombre... (Enter para buscar)");
         searchField.setOnAction(e -> doSearch());
@@ -52,14 +62,17 @@ public class ProductSelectionDialog extends Dialog<Product> {
         top.setVgap(8);
         top.add(new Label("Buscar:"), 0, 0);
         top.add(searchField, 1, 0);
+        GridPane.setMargin(searchField, new Insets(0, 0, 8, 0));
         Button searchBtn = new Button("Buscar");
         searchBtn.setOnAction(e -> doSearch());
         top.add(searchBtn, 2, 0);
+        GridPane.setMargin(searchBtn, new Insets(0, 0, 8, 0));
 
         BorderPane content = new BorderPane();
         content.setTop(top);
         content.setCenter(table);
         content.setPadding(new Insets(10));
+        BorderPane.setMargin(top, new Insets(10, 0, 0, 0));
         getDialogPane().setContent(content);
 
         setResultConverter(btn -> btn == addButton ? table.getSelectionModel().getSelectedItem() : null);

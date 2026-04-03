@@ -4,6 +4,7 @@ import com.ferreteria.database.DatabaseManager;
 import com.ferreteria.models.Product;
 import com.ferreteria.models.ReplenishmentItem;
 import com.ferreteria.repositories.ProductRepository;
+import com.ferreteria.util.AppLogger;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -177,7 +178,11 @@ public class SQLiteProductRepository implements ProductRepository {
             stmt.setDouble(1, quantity);
             stmt.setInt(2, productId);
             stmt.executeUpdate();
+            AppLogger.info("SQLiteProductRepository", "decreaseStock",
+                    "Stock descontado: productoId=" + productId + " cantidad=" + quantity);
         } catch (SQLException e) {
+            AppLogger.error("SQLiteProductRepository", "decreaseStock",
+                    "Error SQL al descontar stock: productoId=" + productId, e);
             throw new RuntimeException("Error al descontar stock", e);
         }
     }
@@ -190,7 +195,11 @@ public class SQLiteProductRepository implements ProductRepository {
             stmt.setDouble(1, quantity);
             stmt.setInt(2, productId);
             stmt.executeUpdate();
+            AppLogger.info("SQLiteProductRepository", "increaseStock",
+                    "Stock devuelto: productoId=" + productId + " cantidad=" + quantity);
         } catch (SQLException e) {
+            AppLogger.error("SQLiteProductRepository", "increaseStock",
+                    "Error SQL al devolver stock: productoId=" + productId, e);
             throw new RuntimeException("Error al devolver stock", e);
         }
     }
@@ -253,6 +262,7 @@ public class SQLiteProductRepository implements ProductRepository {
         product.setPrice(rs.getDouble("price"));
         product.setStock(rs.getDouble("stock"));
         product.setMinimumStock(rs.getDouble("minimum_stock"));
+        try { product.setSkipStock(rs.getInt("skip_stock") == 1); } catch (SQLException ignored) {}
 
         int supplierId = rs.getInt("supplier_id");
         if (rs.wasNull()) {

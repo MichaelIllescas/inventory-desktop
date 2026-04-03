@@ -2,11 +2,14 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
@@ -20,16 +23,14 @@
         <VBox spacing="10">
             <children>
                 <Label text="Nueva venta" styleClass="view-title"/>
-                <HBox spacing="8" alignment="CENTER_LEFT">
+                <HBox spacing="6" alignment="CENTER_LEFT">
                     <children>
-                        <Label text="Código / escanear:"/>
-                        <TextField fx:id="scanField" promptText="Escanee o escriba código y pulse Enter" prefWidth="280" onKeyPressed="#onScanFieldKeyPressed"/>
-                        <Button text="Añadir producto" onAction="#onAddProduct" styleClass="secondary-button"/>
-                        <Button text="Quitar línea" onAction="#onRemoveLine" styleClass="secondary-button"/>
-                        <Label text="Medio de pago:"/>
-                        <ComboBox fx:id="paymentMethodCombo" prefWidth="150.0"/>
-                        <Button text="Registrar venta" onAction="#onRegisterSale" styleClass="primary-button"/>
-                        <Button text="Limpiar" onAction="#onClear" styleClass="secondary-button"/>
+                        <TextField fx:id="scanField" promptText="Código / escanear..." HBox.hgrow="ALWAYS" minWidth="80" onKeyPressed="#onScanFieldKeyPressed"/>
+                        <Button text="+ Añadir" onAction="#onAddProduct" styleClass="sales-toolbar-button" style="-fx-background-color: #16a34a; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                        <Button text="- Quitar" onAction="#onRemoveLine" styleClass="sales-toolbar-button" style="-fx-background-color: #dc2626; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                        <ComboBox fx:id="paymentMethodCombo" prefWidth="130.0" minWidth="100" styleClass="sales-payment-combo"/>
+                        <Button text="✓ Registrar" onAction="#onRegisterSale" styleClass="sales-toolbar-button" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                        <Button text="✕ Limpiar" onAction="#onClear" styleClass="sales-toolbar-button" style="-fx-background-color: #6b7280; -fx-text-fill: white; -fx-font-weight: bold;"/>
                     </children>
                 </HBox>
             </children>
@@ -40,24 +41,69 @@
     </top>
 
     <center>
-        <TableView fx:id="itemsTable" prefHeight="320.0">
-            <columns>
-                <TableColumn fx:id="colCode" text="Código" prefWidth="120.0"/>
-                <TableColumn fx:id="colName" text="Producto" prefWidth="220.0"/>
-                <TableColumn fx:id="colQuantity" text="Cantidad" prefWidth="80.0" styleClass="numeric-column"/>
-                <TableColumn fx:id="colUnitPrice" text="P. unit. ($)" prefWidth="100.0" styleClass="numeric-column"/>
-                <TableColumn fx:id="colSubtotal" text="Subtotal ($)" prefWidth="110.0" styleClass="numeric-column"/>
-            </columns>
-        </TableView>
+        <HBox spacing="12">
+            <TableView fx:id="itemsTable" HBox.hgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colCode" text="Código" minWidth="80" maxWidth="140"/>
+                    <TableColumn fx:id="colName" text="Producto" minWidth="120"/>
+                    <TableColumn fx:id="colQuantity" text="Cant." minWidth="60" maxWidth="90" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colUnitPrice" text="P. unit. ($)" minWidth="90" maxWidth="140" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colSubtotal" text="Subtotal ($)" minWidth="90" maxWidth="140" styleClass="numeric-column"/>
+                </columns>
+            </TableView>
+
+            <VBox styleClass="sales-summary-panel" prefWidth="210" minWidth="180" spacing="8">
+                <Label text="Resumen" styleClass="summary-panel-title"/>
+                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="summary-scroll">
+                    <VBox fx:id="summaryItemsBox" spacing="8" styleClass="summary-items-box">
+                        <padding>
+                            <Insets top="4" right="4" bottom="4" left="4"/>
+                        </padding>
+                    </VBox>
+                </ScrollPane>
+                <Separator/>
+                <Label fx:id="summaryCountLabel" styleClass="summary-count-label" wrapText="true"/>
+            </VBox>
+        </HBox>
     </center>
 
     <bottom>
-        <HBox alignment="CENTER_RIGHT" spacing="16">
-            <Label fx:id="totalLabel" text="Total: 0.00" styleClass="view-title"/>
+        <VBox spacing="6">
+            <children>
+                <HBox alignment="CENTER_RIGHT" spacing="10">
+                    <children>
+                        <Label text="Calculado:" styleClass="total-calc-label"/>
+                        <Label fx:id="totalLabel" styleClass="total-calc-value"/>
+                    </children>
+                </HBox>
+                <HBox fx:id="bottomMainRow" alignment="CENTER_LEFT" spacing="10">
+                    <children>
+                        <VBox fx:id="barcodeBox" spacing="2" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS" minWidth="180" prefWidth="240">
+                            <Label text="Varios / Sin código" styleClass="varios-barcode-label"/>
+                            <ImageView fx:id="variosBarcode" fitHeight="50" fitWidth="320" preserveRatio="true" smooth="false"/>
+                        </VBox>
+                        <HBox fx:id="totalRow" alignment="CENTER_RIGHT" spacing="10" HBox.hgrow="ALWAYS">
+                            <children>
+                                <Label fx:id="totalTextLabel" text="Total a cobrar:" styleClass="total-custom-label"/>
+                                <HBox fx:id="totalAmountBox" alignment="CENTER_RIGHT" spacing="4">
+                                    <Label fx:id="pesoLabel" styleClass="total-peso-label"/>
+                                    <TextField fx:id="totalField" styleClass="total-custom-field" prefWidth="300" minWidth="0" alignment="CENTER_RIGHT"/>
+                                </HBox>
+                            </children>
+                        </HBox>
+                    </children>
+                </HBox>
+                <HBox fx:id="ajusteBox" alignment="CENTER_RIGHT" spacing="8" visible="false" managed="false">
+                    <children>
+                        <Label text="Ajuste:" styleClass="ajuste-prefix-label"/>
+                        <Label fx:id="ajusteLabel" styleClass="ajuste-value-label"/>
+                    </children>
+                </HBox>
+            </children>
             <padding>
                 <Insets top="12" right="0" bottom="0" left="0"/>
             </padding>
-        </HBox>
+        </VBox>
     </bottom>
 
     <padding>

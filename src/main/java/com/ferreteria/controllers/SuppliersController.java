@@ -7,6 +7,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -33,6 +34,10 @@ public class SuppliersController {
 
     @FXML
     private TableColumn<Supplier, String> colAddress;
+    @FXML
+    private Label summaryTotalSuppliersLabel;
+    @FXML
+    private Label summaryCurrentFilterLabel;
 
     private final SupplierService supplierService;
     private final ObservableList<Supplier> tableData = FXCollections.observableArrayList();
@@ -60,6 +65,7 @@ public class SuppliersController {
     private void loadSuppliers() {
         List<Supplier> suppliers = supplierService.getAllSuppliers();
         tableData.setAll(suppliers);
+        updateSummary(suppliers);
     }
 
     @FXML
@@ -67,6 +73,13 @@ public class SuppliersController {
         String query = searchField.getText();
         List<Supplier> result = supplierService.searchSuppliers(query);
         tableData.setAll(result);
+        updateSummary(result);
+    }
+
+    @FXML
+    private void onResetFilter() {
+        searchField.clear();
+        loadSuppliers();
     }
 
     @FXML
@@ -117,5 +130,15 @@ public class SuppliersController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    private void updateSummary(List<Supplier> suppliers) {
+        if (summaryTotalSuppliersLabel == null || summaryCurrentFilterLabel == null) {
+            return;
+        }
+
+        summaryTotalSuppliersLabel.setText(String.valueOf(suppliers.size()));
+        String query = searchField != null && searchField.getText() != null ? searchField.getText().trim() : "";
+        summaryCurrentFilterLabel.setText(query.isBlank() ? "Todos" : "Filtrado");
     }
 }

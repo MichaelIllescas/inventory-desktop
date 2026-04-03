@@ -12,10 +12,11 @@ public class SaleDetailRow {
     private double quantity;
     private double unitPrice;
     private double subtotal;
+    private double saleTotal;
     private String paymentMethod;
 
     public SaleDetailRow(int saleId, String saleDate, String productCode, String productName,
-                         double quantity, double unitPrice, double subtotal, String paymentMethod) {
+                         double quantity, double unitPrice, double subtotal, double saleTotal, String paymentMethod) {
         this.saleId = saleId;
         this.saleDate = saleDate;
         this.productCode = productCode != null ? productCode : "";
@@ -23,6 +24,7 @@ public class SaleDetailRow {
         this.quantity = quantity;
         this.unitPrice = unitPrice;
         this.subtotal = subtotal;
+        this.saleTotal = saleTotal;
         this.paymentMethod = paymentMethod;
     }
 
@@ -46,6 +48,9 @@ public class SaleDetailRow {
 
     public double getSubtotal() { return subtotal; }
     public void setSubtotal(double subtotal) { this.subtotal = subtotal; }
+
+    public double getSaleTotal() { return saleTotal; }
+    public void setSaleTotal(double saleTotal) { this.saleTotal = saleTotal; }
 
     public String getPaymentMethod() { return paymentMethod; }
     public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }

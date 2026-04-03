@@ -1,4 +1,4 @@
-# Plan de Logging para JavaFX (Implementación posterior)
+# Plan de Logging para JavaFX — IMPLEMENTADO
 
 ## Objetivo
 
@@ -107,27 +107,23 @@ Evitar registrar:
 - datos sensibles de usuario
 - informacion innecesaria o extremadamente verbosa
 
-## Plan de implementacion (fases)
+## Estado de implementacion
 
-### Fase 1 - Base minima
+### Fase 1 - Base minima ✅
 
-- Crear `AppLogger`.
-- Agregar logs de navegacion en `MainController`.
-- Agregar logs de flujo y errores en `SalesController`.
+- `AppLogger` creado en `util/AppLogger.java`.
+- Logs de navegacion en `MainController.loadView()`.
+- Logs de flujo y errores en `SalesController`.
 
-### Fase 2 - Capa de negocio y datos
+### Fase 2 - Capa de negocio y datos ✅
 
-- Agregar logs en `SaleService` y `SQLiteSaleRepository`.
-- Incluir `operationId` de punta a punta.
+- Logs en `SaleService.registerSale()` con `operationId` propagado via `AppLogger.setOperationId()`.
+- Logs en `SQLiteSaleRepository.saveSale()` y `saveSaleItems()`.
+- `operationId` de punta a punta usando `ThreadLocal` en `AppLogger`.
 
-### Fase 3 - Validacion
+### Fase 3 - Validacion ⏳
 
-- Ejecutar flujo normal de venta y revisar consistencia de logs.
-- Forzar escenarios de error:
-  - producto inexistente
-  - stock insuficiente
-  - error de BD simulado
-- Confirmar que cada fallo queda con stacktrace y contexto funcional.
+- Pendiente: ejecutar flujo normal y forzar escenarios de error para validar cobertura.
 
 ## Criterios de aceptacion
 

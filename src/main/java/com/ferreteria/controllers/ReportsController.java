@@ -12,15 +12,17 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.util.StringConverter;
 
+import static javafx.scene.control.TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class ReportsController {
 
-    private static final String VENTAS_POR_DIA = "Ventas por día";
-    private static final String PRODUCTOS_MAS_VENDIDOS = "Productos más vendidos";
-    private static final String VENTAS_CON_DETALLE = "Ventas con detalle";
+    private static final String VENTAS_POR_DIA = "Por dia";
+    private static final String PRODUCTOS_MAS_VENDIDOS = "Productos mas vendidos";
+    private static final String VENTAS_CON_DETALLE = "Con detalle";
     private static final int TOP_PRODUCTS_LIMIT = 50;
     private static final DateTimeFormatter DATE_DISPLAY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -73,6 +75,8 @@ public class ReportsController {
     @FXML
     private TableColumn<SaleDetailRow, Number> colDetailSubtotal;
     @FXML
+    private TableColumn<SaleDetailRow, Number> colDetailSaleTotal;
+    @FXML
     private TableColumn<SaleDetailRow, String> colDetailPayment;
     @FXML
     private Button btnDeleteSale;
@@ -82,7 +86,11 @@ public class ReportsController {
 
     @FXML
     public void initialize() {
-        reportTypeCombo.getItems().setAll(VENTAS_POR_DIA, PRODUCTOS_MAS_VENDIDOS, VENTAS_CON_DETALLE);
+        tableByDay.setColumnResizePolicy(CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+        tableProducts.setColumnResizePolicy(CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+        tableDetail.setColumnResizePolicy(CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+
+        reportTypeCombo.getItems().setAll(VENTAS_POR_DIA, VENTAS_CON_DETALLE, PRODUCTOS_MAS_VENDIDOS);
         reportTypeCombo.getSelectionModel().selectFirst();
         reportTypeCombo.setConverter(new StringConverter<>() {
             @Override
@@ -146,7 +154,9 @@ public class ReportsController {
         colDetailQty.setCellValueFactory(new PropertyValueFactory<>("quantity"));
         colDetailPrice.setCellValueFactory(new PropertyValueFactory<>("unitPrice"));
         colDetailSubtotal.setCellValueFactory(new PropertyValueFactory<>("subtotal"));
-
+        if (colDetailSaleTotal != null) {
+            colDetailSaleTotal.setCellValueFactory(new PropertyValueFactory<>("saleTotal"));
+        }
         if (colDetailPayment != null) {
             colDetailPayment.setCellValueFactory(new PropertyValueFactory<>("paymentMethod"));
         }
@@ -186,7 +196,7 @@ public class ReportsController {
         LocalDate from = dateFrom.getValue();
         LocalDate to = dateTo.getValue();
         if (from == null || to == null) {
-            showError("Seleccioná las fechas desde y hasta.");
+            showError("Selecciona las fechas desde y hasta.");
             return;
         }
         if (from.isAfter(to)) {
@@ -205,7 +215,8 @@ public class ReportsController {
             tableProducts.setVisible(false);
             tableDetail.setVisible(false);
             double total = reportService.getSalesTotalInRange(fromStr, toStr);
-            summaryLabel.setText(formatSummaryTotal(total) + "  ·  " + rows.size() + " días con ventas");
+            double dailyAverage = rows.isEmpty() ? 0 : total / rows.size();
+            summaryLabel.setText("Total " + formatCurrency(total) + "  |  " + rows.size() + " dias con ventas" + "  |  Promedio diario " + formatCurrency(dailyAverage));
             summaryLabel.setVisible(true);
         } else if (PRODUCTOS_MAS_VENDIDOS.equals(type)) {
             List<ProductSalesReport> rows = reportService.getTopProductsInRange(fromStr, toStr, TOP_PRODUCTS_LIMIT);
@@ -214,7 +225,8 @@ public class ReportsController {
             tableByDay.setVisible(false);
             tableDetail.setVisible(false);
             double total = reportService.getSalesTotalInRange(fromStr, toStr);
-            summaryLabel.setText(formatSummaryTotal(total) + "  ·  " + rows.size() + " productos");
+            double totalUnits = rows.stream().mapToDouble(ProductSalesReport::getQuantitySold).sum();
+            summaryLabel.setText("Facturacion " + formatCurrency(total) + "  |  " + rows.size() + " productos" + "  |  " + formatQuantity(totalUnits) + " unidades vendidas");
             summaryLabel.setVisible(true);
         } else {
             List<SaleDetailRow> rows = reportService.getSaleDetailsInRange(fromStr, toStr);
@@ -224,7 +236,8 @@ public class ReportsController {
             tableProducts.setVisible(false);
             double total = reportService.getSalesTotalInRange(fromStr, toStr);
             long ventas = rows.stream().mapToInt(SaleDetailRow::getSaleId).distinct().count();
-            summaryLabel.setText(formatSummaryTotal(total) + "  ·  " + ventas + " ventas, " + rows.size() + " líneas");
+            double ticketAverage = ventas == 0 ? 0 : total / ventas;
+            summaryLabel.setText("Total " + formatCurrency(total) + "  |  " + ventas + " ventas" + "  |  Ticket promedio " + formatCurrency(ticketAverage));
             summaryLabel.setVisible(true);
         }
         updateDeleteButtonState();
@@ -238,9 +251,9 @@ public class ReportsController {
         ButtonType confirm = new ButtonType("Eliminar", ButtonBar.ButtonData.OK_DONE);
         ButtonType cancel = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
-                "¿Eliminar la venta Nº " + saleId + "? Se devolverá el stock de los productos al inventario.",
+                "Ãƒâ€šÃ‚Â¿Eliminar la venta NÃƒâ€šÃ‚Âº " + saleId + "? Se devolverÃƒÆ’Ã‚Â¡ el stock de los productos al inventario.",
                 confirm, cancel);
-        alert.setTitle("Confirmar eliminación");
+        alert.setTitle("Confirmar eliminaciÃƒÆ’Ã‚Â³n");
         alert.setHeaderText("Anular venta");
         if (alert.showAndWait().orElse(cancel) != confirm) return;
         try {
@@ -251,8 +264,7 @@ public class ReportsController {
         }
     }
 
-    /** Formato visible: "Total: $ 18.180,00" (pesos, coma decimal). */
-    private static String formatSummaryTotal(double total) {
+    private static String formatCurrency(double total) {
         String num = String.format("%.2f", total).replace('.', ',');
         int i = num.indexOf(',');
         if (i > 3) {
@@ -262,10 +274,19 @@ public class ReportsController {
             }
             num = sb.toString();
         }
-        return "Total: $ " + num;
+        return "$ " + num;
+    }
+
+    private static String formatQuantity(double quantity) {
+        if (Math.abs(quantity - Math.rint(quantity)) < 0.000001d) {
+            return String.format("%.0f", quantity);
+        }
+        return String.format("%.2f", quantity).replace('.', ',');
     }
 
     private void showError(String message) {
         new Alert(Alert.AlertType.WARNING, message).showAndWait();
     }
 }
+
+

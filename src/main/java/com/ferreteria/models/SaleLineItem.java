@@ -13,7 +13,8 @@ public class SaleLineItem {
     private final StringProperty productName = new SimpleStringProperty();
     private final DoubleProperty quantity = new SimpleDoubleProperty(1);
     private final DoubleProperty unitPrice = new SimpleDoubleProperty(0);
-    private final ReadOnlyDoubleWrapper subtotal = new ReadOnlyDoubleWrapper();
+    private final DoubleProperty subtotal = new SimpleDoubleProperty(0);
+    private boolean subtotalOverridden = false;
 
     public SaleLineItem(Product product, double quantity) {
         this.productId.set(product.getId());
@@ -21,11 +22,18 @@ public class SaleLineItem {
         this.productName.set(product.getName());
         this.quantity.set(quantity);
         this.unitPrice.set(product.getPrice());
-        subtotal.bind(Bindings.multiply(this.quantity, this.unitPrice));
+        this.subtotal.set(quantity * product.getPrice());
+        this.quantity.addListener((obs, o, n) -> { if (!subtotalOverridden) subtotal.set(this.quantity.get() * this.unitPrice.get()); });
+        this.unitPrice.addListener((obs, o, n) -> { if (!subtotalOverridden) subtotal.set(this.quantity.get() * this.unitPrice.get()); });
     }
 
-    public ReadOnlyDoubleProperty subtotalProperty() {
-        return subtotal.getReadOnlyProperty();
+    public DoubleProperty subtotalProperty() {
+        return subtotal;
+    }
+
+    public void setSubtotal(double value) {
+        subtotalOverridden = true;
+        subtotal.set(value);
     }
 
     public int getProductId() {
@@ -68,11 +76,23 @@ public class SaleLineItem {
         return unitPrice.get();
     }
 
+    /** Precio efectivo cobrado: si el subtotal fue modificado, distribuye el ajuste por unidad. */
+    public double getEffectiveUnitPrice() {
+        if (subtotalOverridden && quantity.get() > 0) {
+            return subtotal.get() / quantity.get();
+        }
+        return unitPrice.get();
+    }
+
+    public void setUnitPrice(double price) {
+        this.unitPrice.set(price);
+    }
+
     public DoubleProperty unitPriceProperty() {
         return unitPrice;
     }
 
     public double getSubtotal() {
-        return getUnitPrice() * getQuantity();
+        return subtotal.get();
     }
 }

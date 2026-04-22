@@ -23,14 +23,18 @@
             <HBox spacing="12" alignment="CENTER_LEFT">
                 <Label text="Desde:"/>
                 <DatePicker fx:id="dateFrom" prefWidth="140"/>
-                <Label text="Hasta:"/>
+                <ComboBox fx:id="comboTimeFrom" prefWidth="90"/>
+                <Label text="  Hasta:"/>
                 <DatePicker fx:id="dateTo" prefWidth="140"/>
+                <ComboBox fx:id="comboTimeTo" prefWidth="90"/>
                 <ComboBox fx:id="reportTypeCombo" prefWidth="150" promptText="Tipo de reporte"/>
             </HBox>
             <HBox spacing="12" alignment="CENTER_LEFT">
-                <Button text="Esta semana" prefWidth="130" onAction="#onThisWeek" styleClass="report-toolbar-button" style="-fx-background-color: #e5e7eb; -fx-text-fill: #111827; -fx-font-weight: bold;"/>
-                <Button text="Este mes" prefWidth="130" onAction="#onThisMonth" styleClass="report-toolbar-button" style="-fx-background-color: #e5e7eb; -fx-text-fill: #111827; -fx-font-weight: bold;"/>
-                <Button text="Generar" prefWidth="130" onAction="#onGenerate" styleClass="report-toolbar-button" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Button text="Hoy" prefWidth="100" onAction="#onToday" styleClass="report-toolbar-button" style="-fx-background-color: #e5e7eb; -fx-text-fill: #111827; -fx-font-weight: bold;"/>
+                <Button text="Esta semana" prefWidth="120" onAction="#onThisWeek" styleClass="report-toolbar-button" style="-fx-background-color: #e5e7eb; -fx-text-fill: #111827; -fx-font-weight: bold;"/>
+                <Button text="Este mes" prefWidth="110" onAction="#onThisMonth" styleClass="report-toolbar-button" style="-fx-background-color: #e5e7eb; -fx-text-fill: #111827; -fx-font-weight: bold;"/>
+                <Button text="Este año" prefWidth="110" onAction="#onThisYear" styleClass="report-toolbar-button" style="-fx-background-color: #e5e7eb; -fx-text-fill: #111827; -fx-font-weight: bold;"/>
+                <Button text="Generar" prefWidth="110" onAction="#onGenerate" styleClass="report-toolbar-button" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold;"/>
                 <Button fx:id="btnDeleteSale" text="Eliminar venta" prefWidth="130" onAction="#onDeleteSale" styleClass="report-toolbar-button" style="-fx-background-color: #dc2626; -fx-text-fill: white; -fx-font-weight: bold;" disable="true"/>
             </HBox>
             <Label fx:id="summaryLabel" styleClass="report-summary" visible="false"/>
@@ -62,7 +66,7 @@
             </TableView>
             <TableView fx:id="tableDetail" visible="false" maxWidth="Infinity" maxHeight="Infinity">
                 <columns>
-                    <TableColumn fx:id="colDetailDate" text="Fecha" minWidth="90" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDetailDate" text="Fecha y hora" minWidth="140" styleClass="numeric-column"/>
                     <TableColumn fx:id="colDetailSaleId" text="Nº Venta" minWidth="70" styleClass="numeric-column"/>
                     <TableColumn fx:id="colDetailCode" text="Código" minWidth="80"/>
                     <TableColumn fx:id="colDetailProduct" text="Producto" minWidth="150"/>

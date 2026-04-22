@@ -85,6 +85,7 @@ public final class DatabaseManager {
                     migrateSalesPaymentMethod(connection);
                     migrateSkipStock(connection);
                     ensureVariosProduct(connection);
+                    migrateAddExpenses(connection);
                     schemaInitialized = true;
                     AppLogger.info("DatabaseManager", "getConnection", "BD inicializada correctamente");
                 }
@@ -239,6 +240,21 @@ public final class DatabaseManager {
         } catch (SQLException e) {
             AppLogger.error("DatabaseManager", "ensureVariosProduct", "Error al crear producto Varios: " + e.getMessage(), e);
             throw new RuntimeException("Error al crear producto Varios", e);
+        }
+    }
+
+    /** Crea la tabla expenses si no existe (instalaciones anteriores la obtendrán sin perder datos). */
+    private static void migrateAddExpenses(Connection conn) {
+        try (Statement st = conn.createStatement()) {
+            st.execute("CREATE TABLE IF NOT EXISTS expenses (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "date TEXT NOT NULL, " +
+                    "description TEXT NOT NULL, " +
+                    "category TEXT NOT NULL, " +
+                    "amount REAL NOT NULL)");
+        } catch (SQLException e) {
+            AppLogger.error("DatabaseManager", "migrateAddExpenses", "Error al crear tabla expenses: " + e.getMessage(), e);
+            throw new RuntimeException("Error al crear tabla expenses", e);
         }
     }
 

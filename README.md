@@ -1,6 +1,6 @@
-# Sistema de Inventario
+# Sistema de Inventario — v2.0
 
-Aplicación de escritorio para gestión de inventario, ventas, proveedores y reportes. Desarrollada en **Java 17**, **JavaFX** y **SQLite**.
+Aplicación de escritorio para gestión de inventario, ventas, gastos y reportes. Desarrollada en **Java 17**, **JavaFX** y **SQLite**.
 
 ---
 
@@ -18,13 +18,21 @@ Aplicación de escritorio para gestión de inventario, ventas, proveedores y rep
 - **Medios de pago**: selección de **Efectivo, Transferencia, Débito y Crédito** al registrar la venta; cada venta queda asociada a su medio de pago.
 - **Proveedores**: CRUD de proveedores (nombre, teléfono, email, dirección).
 - **Inventario**: vista de stock y ajuste de cantidades con diálogos dedicados.
+- **Gastos** _(nuevo en v2.0)_:
+  - Registro de gastos con descripción, categoría (Servicios, Alquiler, Proveedores, Personal, Impuestos, Mantenimiento, Otros), monto y fecha.
+  - Filtro por rango de fechas con accesos rápidos ("Este mes").
+  - Eliminación de gastos con confirmación.
 - **Reportes**:
+  - **Filtro por hora**: además de fecha, se puede filtrar por rango horario (desde HH:mm hasta HH:mm).
+  - Accesos rápidos: **Hoy**, **Esta semana**, **Este mes**, **Este año**.
   - **Por día**: totales discriminados por medio de pago (Total, Efectivo, Transferencia, Débito, Crédito) y promedio diario.
   - **Productos más vendidos**: cantidad vendida, monto total y total de unidades.
-  - **Con detalle**: cada ítem con precio cobrado, subtotal, **total de la venta** y medio de pago. Permite eliminar ventas (devuelve el stock).
-  - Barra de resumen con totales y métricas clave en todos los reportes.
+  - **Con detalle**: cada ítem con **fecha y hora**, precio cobrado, subtotal, total de la venta y medio de pago. Permite eliminar ventas (devuelve el stock).
+  - Resumen con **Ingresos**, **Gastos** y **Neto** del período en todos los tipos de reporte.
 
 La base de datos es **SQLite**; en instalación los datos se guardan en la carpeta de usuario (por usuario de Windows). La aplicación se distribuye como **instalador .exe** para Windows (sin necesidad de instalar Java en el cliente).
+
+> **Actualización desde v1.x**: la base de datos se migra automáticamente al iniciar la app. No se pierden datos.
 
 ---
 
@@ -43,10 +51,10 @@ DESKTOP INVENTIORY/
 ├── src/main/java/com/ferreteria/
 │   ├── App.java                    # Punto de entrada
 │   ├── database/
-│   │   └── DatabaseManager.java    # Conexión SQLite y esquema
+│   │   └── DatabaseManager.java    # Conexión SQLite, esquema y migraciones
 │   ├── controllers/                # Controladores FXML (vistas)
-│   ├── models/                     # Modelos de datos
-│   ├── repositories/               # Acceso a datos (SQLite)
+│   ├── models/                     # Modelos de datos (incluye Expense)
+│   ├── repositories/               # Acceso a datos (SQLite, incluye ExpenseRepository)
 │   ├── services/                   # Lógica de negocio
 │   └── util/                       # Utilidades (ej. Code128Generator)
 ├── src/main/resources/
@@ -99,7 +107,7 @@ Requisitos: **JDK 17+** (con `jpackage` y `jlink`), **Maven**, y la primera vez 
    ```
 3. El instalador se genera en:
    ```text
-   target\installer\Sistema de Inventario-1.0.0.exe
+   target\installer\Sistema de Inventario-2.0.0.exe
    ```
 
 El script hace en resumen:
@@ -130,7 +138,7 @@ Las tablas principales usan IDs `INTEGER PRIMARY KEY AUTOINCREMENT` (enteros de 
 
 - **Java 17**
 - **JavaFX 21** (UI)
-- **SQLite** (JDBC)
+- **SQLite** (JDBC, sqlite-jdbc 3.47)
 - **Maven** (build y perfil `installer` para el .exe)
 
 ---

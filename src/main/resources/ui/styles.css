@@ -45,6 +45,13 @@
   -fx-font-weight: bold;
 }
 
+.sidebar-version-label {
+  -fx-text-fill: #4b5563;
+  -fx-font-size: 12px;
+  -fx-font-weight: bold;
+  -fx-padding: 0 0 4 0;
+}
+
 .sidebar-footer-label {
   -fx-text-fill: #9ca3af;
   -fx-font-size: 13px;
@@ -334,6 +341,52 @@ TableColumn {
     -fx-border-radius: 14;
     -fx-effect: dropshadow(gaussian, rgba(37, 99, 235, 0.12), 16, 0.16, 0, 4);
   }
+
+/* ===== Tarjetas de resumen en Reportes ===== */
+.report-card {
+  -fx-background-radius: 14;
+  -fx-border-radius: 14;
+  -fx-border-width: 1;
+  -fx-padding: 12 16;
+  -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.07), 12, 0.10, 0, 3);
+}
+
+.report-card-blue {
+  -fx-background-color: linear-gradient(to bottom right, #eff6ff, #ffffff);
+  -fx-border-color: #93c5fd;
+}
+
+.report-card-red {
+  -fx-background-color: linear-gradient(to bottom right, #fff1f2, #ffffff);
+  -fx-border-color: #fca5a5;
+}
+
+.report-card-green {
+  -fx-background-color: linear-gradient(to bottom right, #f0fdf4, #ffffff);
+  -fx-border-color: #86efac;
+}
+
+.report-card-red-neto {
+  -fx-background-color: linear-gradient(to bottom right, #fff1f2, #ffffff);
+  -fx-border-color: #f87171;
+}
+
+.report-card-neutral {
+  -fx-background-color: linear-gradient(to bottom right, #f8fafc, #ffffff);
+  -fx-border-color: #dbe4ee;
+}
+
+.report-card-title {
+  -fx-font-size: 11px;
+  -fx-font-weight: bold;
+  -fx-text-fill: #64748b;
+}
+
+.report-card-value {
+  -fx-font-size: 20px;
+  -fx-font-weight: bold;
+  -fx-text-fill: #0f172a;
+}
 
 /* ===========================
    Vistas principales (tipografía más grande)
@@ -1041,4 +1094,158 @@ TableColumn {
   -fx-padding: 10 8;
   -fx-text-fill: #334155;
   -fx-border-color: transparent;
+}
+
+/* ===== Gastos ===== */
+.expenses-view-root {
+  -fx-font-size: 14px;
+}
+
+.expenses-form-grid {
+  -fx-background-color: linear-gradient(to right, #f8fbff, #ffffff);
+  -fx-background-radius: 14;
+  -fx-border-color: #dbe4ee;
+  -fx-border-radius: 14;
+  -fx-border-width: 1;
+  -fx-padding: 14;
+  -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.05), 14, 0.12, 0, 4);
+}
+
+.expenses-field-label {
+  -fx-font-size: 13px;
+  -fx-text-fill: #64748b;
+  -fx-font-weight: bold;
+}
+
+.expenses-view-root .expenses-field {
+  -fx-background-color: white;
+  -fx-background-radius: 10;
+  -fx-border-color: #cbd5e1;
+  -fx-border-radius: 10;
+  -fx-border-width: 1;
+  -fx-padding: 8 12;
+  -fx-font-size: 14px;
+}
+
+.expenses-view-root .expenses-field:focused {
+  -fx-border-color: #60a5fa;
+  -fx-effect: dropshadow(gaussian, rgba(37, 99, 235, 0.14), 10, 0.12, 0, 2);
+}
+
+.expenses-view-root .expenses-combo {
+  -fx-font-size: 14px;
+}
+
+.expenses-primary-button {
+  -fx-base: #2563eb;
+  -fx-background-color: #2563eb;
+  -fx-background-radius: 10;
+  -fx-border-radius: 10;
+  -fx-padding: 8 18;
+  -fx-text-fill: white;
+  -fx-font-weight: bold;
+  -fx-font-size: 14px;
+}
+
+.expenses-primary-button:hover {
+  -fx-base: #1d4ed8;
+  -fx-background-color: #1d4ed8;
+}
+
+.expenses-danger-button {
+  -fx-base: #dc2626;
+  -fx-background-color: #dc2626;
+  -fx-background-radius: 10;
+  -fx-border-radius: 10;
+  -fx-padding: 8 18;
+  -fx-text-fill: white;
+  -fx-font-weight: bold;
+  -fx-font-size: 14px;
+}
+
+.expenses-danger-button:hover {
+  -fx-base: #b91c1c;
+  -fx-background-color: #b91c1c;
+}
+
+.expenses-secondary-button {
+  -fx-base: #e5e7eb;
+  -fx-background-color: #e5e7eb;
+  -fx-background-radius: 10;
+  -fx-border-radius: 10;
+  -fx-padding: 8 16;
+  -fx-text-fill: #111827;
+  -fx-font-weight: bold;
+  -fx-font-size: 14px;
+}
+
+.expenses-secondary-button:hover {
+  -fx-base: #d1d5db;
+  -fx-background-color: #d1d5db;
+}
+
+.expenses-filter-bar {
+  -fx-padding: 2 0 0 0;
+}
+
+.expenses-filter-label {
+  -fx-font-size: 14px;
+  -fx-text-fill: #374151;
+}
+
+.expenses-view-root .expenses-table {
+  -fx-background-color: linear-gradient(to bottom, #ffffff, #fcfdff);
+  -fx-background-radius: 14;
+  -fx-border-color: #dbe4ee;
+  -fx-border-radius: 14;
+  -fx-border-width: 1;
+  -fx-padding: 6;
+  -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.06), 14, 0.12, 0, 4);
+}
+
+.expenses-view-root .expenses-table .column-header-background {
+  -fx-background-color: linear-gradient(to bottom, #f8fafc, #eef2f7);
+  -fx-background-radius: 10 10 0 0;
+}
+
+.expenses-view-root .expenses-table .column-header {
+  -fx-background-color: transparent;
+  -fx-border-color: transparent #e5e7eb transparent transparent;
+  -fx-padding: 10 8;
+}
+
+.expenses-view-root .expenses-table .column-header .label {
+  -fx-text-fill: #1f2937;
+  -fx-font-size: 14px;
+  -fx-font-weight: bold;
+}
+
+.expenses-view-root .expenses-table .table-row-cell {
+  -fx-background-color: white;
+  -fx-border-color: transparent transparent #eef2f7 transparent;
+}
+
+.expenses-view-root .expenses-table .table-row-cell:filled:hover {
+  -fx-background-color: #f8fbff;
+}
+
+.expenses-view-root .expenses-table .table-row-cell:filled:selected {
+  -fx-background-color: #dbeafe;
+  -fx-text-background-color: #0f172a;
+}
+
+.expenses-view-root .expenses-table .table-cell {
+  -fx-font-size: 14px;
+  -fx-padding: 10 8;
+  -fx-text-fill: #334155;
+  -fx-border-color: transparent;
+}
+
+.expenses-view-root .date-picker {
+  -fx-font-size: 14px;
+}
+
+.expenses-view-root .date-picker .text-field {
+  -fx-font-size: 14px;
+  -fx-padding: 6 8;
 }

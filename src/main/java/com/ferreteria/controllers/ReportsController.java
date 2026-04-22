@@ -15,6 +15,8 @@ import javafx.util.StringConverter;
 import static javafx.scene.control.TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -29,7 +31,11 @@ public class ReportsController {
     @FXML
     private DatePicker dateFrom;
     @FXML
+    private ComboBox<String> comboTimeFrom;
+    @FXML
     private DatePicker dateTo;
+    @FXML
+    private ComboBox<String> comboTimeTo;
     @FXML
     private ComboBox<String> reportTypeCombo;
     @FXML
@@ -83,6 +89,7 @@ public class ReportsController {
 
     private final ReportService reportService = new ReportService();
     private final SaleService saleService = new SaleService(new SQLiteSaleRepository(), new SQLiteProductRepository());
+    private final com.ferreteria.repositories.sqlite.SQLiteExpenseRepository expenseRepo = new com.ferreteria.repositories.sqlite.SQLiteExpenseRepository();
 
     @FXML
     public void initialize() {
@@ -102,6 +109,12 @@ public class ReportsController {
         LocalDate today = LocalDate.now();
         dateFrom.setValue(today.minusDays(6));
         dateTo.setValue(today);
+
+        List<String> timeSlots = buildTimeSlots();
+        comboTimeFrom.getItems().setAll(timeSlots);
+        comboTimeFrom.getSelectionModel().select("00:00");
+        comboTimeTo.getItems().setAll(timeSlots);
+        comboTimeTo.getSelectionModel().select("23:59");
 
         colDay.setCellValueFactory(new PropertyValueFactory<>("day"));
         colDay.setCellFactory(tc -> new TableCell<>() {
@@ -125,14 +138,35 @@ public class ReportsController {
         colDayTransfer.setCellValueFactory(new PropertyValueFactory<>("transfer"));
         colDayDebit.setCellValueFactory(new PropertyValueFactory<>("debit"));
         colDayCredit.setCellValueFactory(new PropertyValueFactory<>("credit"));
+        for (var col : List.of(colDayTotal, colDayCash, colDayTransfer, colDayDebit, colDayCredit)) {
+            col.setCellFactory(tc -> new TableCell<>() {
+                @Override protected void updateItem(Number item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? "" : formatCurrency(item.doubleValue()));
+                }
+            });
+        }
 
         colCode.setCellValueFactory(new PropertyValueFactory<>("productCode"));
         colProductName.setCellValueFactory(new PropertyValueFactory<>("productName"));
         colQty.setCellValueFactory(new PropertyValueFactory<>("quantitySold"));
         colRevenue.setCellValueFactory(new PropertyValueFactory<>("totalRevenue"));
+        colQty.setCellFactory(tc -> new TableCell<>() {
+            @Override protected void updateItem(Number item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : formatQuantity(item.doubleValue()));
+            }
+        });
+        colRevenue.setCellFactory(tc -> new TableCell<>() {
+            @Override protected void updateItem(Number item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : formatCurrency(item.doubleValue()));
+            }
+        });
 
         colDetailDate.setCellValueFactory(new PropertyValueFactory<>("saleDate"));
         colDetailDate.setCellFactory(tc -> new TableCell<>() {
+            private static final DateTimeFormatter DT_DISPLAY = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
@@ -140,10 +174,13 @@ public class ReportsController {
                     setText("");
                 } else {
                     try {
-                        LocalDate d = LocalDate.parse(item);
-                        setText(d.format(DATE_DISPLAY));
+                        setText(LocalDateTime.parse(item, DateTimeFormatter.ISO_LOCAL_DATE_TIME).format(DT_DISPLAY));
                     } catch (Exception e) {
-                        setText(item);
+                        try {
+                            setText(LocalDate.parse(item).format(DATE_DISPLAY));
+                        } catch (Exception ex) {
+                            setText(item);
+                        }
                     }
                 }
             }
@@ -152,10 +189,34 @@ public class ReportsController {
         colDetailCode.setCellValueFactory(new PropertyValueFactory<>("productCode"));
         colDetailProduct.setCellValueFactory(new PropertyValueFactory<>("productName"));
         colDetailQty.setCellValueFactory(new PropertyValueFactory<>("quantity"));
+        colDetailQty.setCellFactory(tc -> new TableCell<>() {
+            @Override protected void updateItem(Number item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : formatQuantity(item.doubleValue()));
+            }
+        });
         colDetailPrice.setCellValueFactory(new PropertyValueFactory<>("unitPrice"));
+        colDetailPrice.setCellFactory(tc -> new TableCell<>() {
+            @Override protected void updateItem(Number item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : formatCurrency(item.doubleValue()));
+            }
+        });
         colDetailSubtotal.setCellValueFactory(new PropertyValueFactory<>("subtotal"));
+        colDetailSubtotal.setCellFactory(tc -> new TableCell<>() {
+            @Override protected void updateItem(Number item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : formatCurrency(item.doubleValue()));
+            }
+        });
         if (colDetailSaleTotal != null) {
             colDetailSaleTotal.setCellValueFactory(new PropertyValueFactory<>("saleTotal"));
+            colDetailSaleTotal.setCellFactory(tc -> new TableCell<>() {
+                @Override protected void updateItem(Number item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? "" : formatCurrency(item.doubleValue()));
+                }
+            });
         }
         if (colDetailPayment != null) {
             colDetailPayment.setCellValueFactory(new PropertyValueFactory<>("paymentMethod"));
@@ -178,10 +239,19 @@ public class ReportsController {
     }
 
     @FXML
+    private void onToday() {
+        LocalDate today = LocalDate.now();
+        dateFrom.setValue(today);
+        dateTo.setValue(today);
+        resetTimeRange();
+    }
+
+    @FXML
     private void onThisWeek() {
         LocalDate today = LocalDate.now();
         dateFrom.setValue(today.minusDays(today.getDayOfWeek().getValue() - 1));
         dateTo.setValue(today);
+        resetTimeRange();
     }
 
     @FXML
@@ -189,6 +259,40 @@ public class ReportsController {
         LocalDate today = LocalDate.now();
         dateFrom.setValue(today.withDayOfMonth(1));
         dateTo.setValue(today);
+        resetTimeRange();
+    }
+
+    @FXML
+    private void onThisYear() {
+        LocalDate today = LocalDate.now();
+        dateFrom.setValue(today.withDayOfYear(1));
+        dateTo.setValue(today);
+        resetTimeRange();
+    }
+
+    private void resetTimeRange() {
+        comboTimeFrom.getSelectionModel().select("00:00");
+        comboTimeTo.getSelectionModel().select("23:59");
+    }
+
+    private static List<String> buildTimeSlots() {
+        List<String> slots = new java.util.ArrayList<>();
+        for (int h = 0; h < 24; h++) {
+            slots.add(String.format("%02d:00", h));
+            slots.add(String.format("%02d:30", h));
+        }
+        slots.add("23:59");
+        return slots;
+    }
+
+    private String buildDateTimeString(LocalDate date, ComboBox<String> comboTime) {
+        String time = comboTime.getValue();
+        if (time == null) time = "00:00";
+        String[] parts = time.split(":");
+        int hour = Integer.parseInt(parts[0]);
+        int min = Integer.parseInt(parts[1]);
+        return LocalDateTime.of(date, LocalTime.of(hour, min, 0))
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 
     @FXML
@@ -199,14 +303,17 @@ public class ReportsController {
             showError("Selecciona las fechas desde y hasta.");
             return;
         }
-        if (from.isAfter(to)) {
-            showError("La fecha desde no puede ser mayor que la fecha hasta.");
+
+        String fromStr = buildDateTimeString(from, comboTimeFrom);
+        String toStr = buildDateTimeString(to, comboTimeTo);
+
+        if (fromStr.compareTo(toStr) > 0) {
+            showError("La fecha/hora desde no puede ser mayor que la fecha/hora hasta.");
             return;
         }
-
-        String fromStr = from.toString();
-        String toStr = to.toString();
         String type = reportTypeCombo.getSelectionModel().getSelectedItem();
+
+        double totalExpenses = expenseRepo.getTotalInRange(fromStr, toStr);
 
         if (VENTAS_POR_DIA.equals(type)) {
             List<SalesByDay> rows = reportService.getSalesByDayInRange(fromStr, toStr);
@@ -216,7 +323,10 @@ public class ReportsController {
             tableDetail.setVisible(false);
             double total = reportService.getSalesTotalInRange(fromStr, toStr);
             double dailyAverage = rows.isEmpty() ? 0 : total / rows.size();
-            summaryLabel.setText("Total " + formatCurrency(total) + "  |  " + rows.size() + " dias con ventas" + "  |  Promedio diario " + formatCurrency(dailyAverage));
+            summaryLabel.setText("Ingresos " + formatCurrency(total) +
+                    "  |  Gastos " + formatCurrency(totalExpenses) +
+                    "  |  Neto " + formatCurrency(total - totalExpenses) +
+                    "  |  " + rows.size() + " dias  |  Promedio diario " + formatCurrency(dailyAverage));
             summaryLabel.setVisible(true);
         } else if (PRODUCTOS_MAS_VENDIDOS.equals(type)) {
             List<ProductSalesReport> rows = reportService.getTopProductsInRange(fromStr, toStr, TOP_PRODUCTS_LIMIT);
@@ -226,7 +336,10 @@ public class ReportsController {
             tableDetail.setVisible(false);
             double total = reportService.getSalesTotalInRange(fromStr, toStr);
             double totalUnits = rows.stream().mapToDouble(ProductSalesReport::getQuantitySold).sum();
-            summaryLabel.setText("Facturacion " + formatCurrency(total) + "  |  " + rows.size() + " productos" + "  |  " + formatQuantity(totalUnits) + " unidades vendidas");
+            summaryLabel.setText("Ingresos " + formatCurrency(total) +
+                    "  |  Gastos " + formatCurrency(totalExpenses) +
+                    "  |  Neto " + formatCurrency(total - totalExpenses) +
+                    "  |  " + rows.size() + " productos  |  " + formatQuantity(totalUnits) + " unidades");
             summaryLabel.setVisible(true);
         } else {
             List<SaleDetailRow> rows = reportService.getSaleDetailsInRange(fromStr, toStr);
@@ -237,7 +350,10 @@ public class ReportsController {
             double total = reportService.getSalesTotalInRange(fromStr, toStr);
             long ventas = rows.stream().mapToInt(SaleDetailRow::getSaleId).distinct().count();
             double ticketAverage = ventas == 0 ? 0 : total / ventas;
-            summaryLabel.setText("Total " + formatCurrency(total) + "  |  " + ventas + " ventas" + "  |  Ticket promedio " + formatCurrency(ticketAverage));
+            summaryLabel.setText("Ingresos " + formatCurrency(total) +
+                    "  |  Gastos " + formatCurrency(totalExpenses) +
+                    "  |  Neto " + formatCurrency(total - totalExpenses) +
+                    "  |  " + ventas + " ventas  |  Ticket promedio " + formatCurrency(ticketAverage));
             summaryLabel.setVisible(true);
         }
         updateDeleteButtonState();
@@ -251,9 +367,9 @@ public class ReportsController {
         ButtonType confirm = new ButtonType("Eliminar", ButtonBar.ButtonData.OK_DONE);
         ButtonType cancel = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
-                "Ãƒâ€šÃ‚Â¿Eliminar la venta NÃƒâ€šÃ‚Âº " + saleId + "? Se devolverÃƒÆ’Ã‚Â¡ el stock de los productos al inventario.",
+                "¿Eliminar la venta Nº " + saleId + "? Se devolverá el stock de los productos al inventario.",
                 confirm, cancel);
-        alert.setTitle("Confirmar eliminaciÃƒÆ’Ã‚Â³n");
+        alert.setTitle("Confirmar eliminación");
         alert.setHeaderText("Anular venta");
         if (alert.showAndWait().orElse(cancel) != confirm) return;
         try {

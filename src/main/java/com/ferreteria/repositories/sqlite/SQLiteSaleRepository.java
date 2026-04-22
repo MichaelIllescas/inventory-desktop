@@ -101,7 +101,7 @@ public class SQLiteSaleRepository implements SaleRepository {
 
     @Override
     public double getSalesTotalInRange(String dateFrom, String dateTo) {
-        String sql = "SELECT COALESCE(SUM(total), 0) FROM sales WHERE date(date) >= ? AND date(date) <= ?";
+        String sql = "SELECT COALESCE(SUM(total), 0) FROM sales WHERE datetime(date) >= ? AND datetime(date) <= ?";
         Connection conn = DatabaseManager.getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, dateFrom);
@@ -122,7 +122,7 @@ public class SQLiteSaleRepository implements SaleRepository {
                 " SUM(CASE WHEN payment_method = 'Transferencia' THEN total ELSE 0 END) AS transfer," +
                 " SUM(CASE WHEN payment_method = 'Débito' THEN total ELSE 0 END) AS debit," +
                 " SUM(CASE WHEN payment_method = 'Crédito' THEN total ELSE 0 END) AS credit" +
-                " FROM sales WHERE date(date) >= ? AND date(date) <= ? GROUP BY date(date) ORDER BY day";
+                " FROM sales WHERE datetime(date) >= ? AND datetime(date) <= ? GROUP BY date(date) ORDER BY day";
         Connection conn = DatabaseManager.getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, dateFrom);
@@ -150,7 +150,7 @@ public class SQLiteSaleRepository implements SaleRepository {
     public List<ProductSalesReport> getTopProductsInRange(String dateFrom, String dateTo, int limit) {
         String sql = "SELECT p.code, p.name, SUM(si.quantity) AS qty, SUM(si.quantity * si.price) AS revenue " +
                 "FROM sale_items si JOIN products p ON si.product_id = p.id " +
-                "JOIN sales s ON si.sale_id = s.id WHERE date(s.date) >= ? AND date(s.date) <= ? " +
+                "JOIN sales s ON si.sale_id = s.id WHERE datetime(s.date) >= ? AND datetime(s.date) <= ? " +
                 "GROUP BY si.product_id ORDER BY qty DESC LIMIT ?";
         Connection conn = DatabaseManager.getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -178,9 +178,9 @@ public class SQLiteSaleRepository implements SaleRepository {
 
     @Override
     public List<SaleDetailRow> getSaleDetailsInRange(String dateFrom, String dateTo) {
-        String sql = "SELECT s.id AS sale_id, date(s.date) AS sale_date, p.code, p.name, si.quantity, si.price, (si.quantity * si.price) AS subtotal, s.total AS sale_total, s.payment_method " +
+        String sql = "SELECT s.id AS sale_id, s.date AS sale_date, p.code, p.name, si.quantity, si.price, (si.quantity * si.price) AS subtotal, s.total AS sale_total, s.payment_method " +
                 "FROM sales s JOIN sale_items si ON s.id = si.sale_id JOIN products p ON si.product_id = p.id " +
-                "WHERE date(s.date) >= ? AND date(s.date) <= ? ORDER BY s.date, s.id, si.id";
+                "WHERE datetime(s.date) >= ? AND datetime(s.date) <= ? ORDER BY s.date, s.id, si.id";
         Connection conn = DatabaseManager.getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, dateFrom);

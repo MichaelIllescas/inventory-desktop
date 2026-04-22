@@ -32,6 +32,7 @@
                 <Button fx:id="btnSuppliers" text="Proveedores" styleClass="sidebar-button" onAction="#showSuppliers"/>
                 <Button fx:id="btnInventory" text="Inventario" styleClass="sidebar-button" onAction="#showInventory"/>
                 <Button fx:id="btnReports" text="Reportes" styleClass="sidebar-button" onAction="#showReports"/>
+                <Button fx:id="btnExpenses" text="Gastos" styleClass="sidebar-button" onAction="#showExpenses"/>
 
                 <Region VBox.vgrow="ALWAYS"/>
                 <Label text="Desarrollado por" styleClass="sidebar-footer-label"/>
@@ -44,6 +45,7 @@
                         </ImageView>
                     </graphic>
                 </Button>
+                <Label text="v2.0" styleClass="sidebar-version-label"/>
             </children>
             <padding>
                 <Insets top="24" right="16" bottom="24" left="16"/>

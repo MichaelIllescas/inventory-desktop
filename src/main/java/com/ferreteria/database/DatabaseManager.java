@@ -241,7 +241,15 @@ public final class DatabaseManager {
         String appHome = System.getProperty("jpackage.app-path");
         java.nio.file.Path src = null;
         if (appHome != null) {
-            src = java.nio.file.Paths.get(appHome).getParent().resolve(EXTERNAL_DB_FILE);
+            // jpackage.app-path = carpeta raíz de instalación; los recursos van en app/
+            java.nio.file.Path installDir = java.nio.file.Paths.get(appHome).getParent();
+            src = installDir.resolve("app").resolve(EXTERNAL_DB_FILE);
+            AppLogger.info("DatabaseManager", "copyExternalDbIfNeeded", "Buscando BD externa en: " + src);
+            if (!java.nio.file.Files.exists(src)) {
+                // Fallback: directamente en la raíz de instalación
+                src = installDir.resolve(EXTERNAL_DB_FILE);
+                AppLogger.info("DatabaseManager", "copyExternalDbIfNeeded", "Fallback raíz: " + src);
+            }
         }
         // Fallback: directorio de trabajo (desarrollo)
         if (src == null || !java.nio.file.Files.exists(src)) {

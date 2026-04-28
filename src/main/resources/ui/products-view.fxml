@@ -23,7 +23,7 @@
                 <Label text="Productos" styleClass="view-title"/>
                 <FlowPane hgap="8" vgap="8" prefWrapLength="900" styleClass="products-toolbar">
                     <children>
-                        <TextField fx:id="searchField" promptText="Buscar por código, nombre o descripción..." prefWidth="260"/>
+                        <TextField fx:id="searchField" promptText="Buscar por código, nombre o marca..." prefWidth="260"/>
                         <Button text="Buscar" onAction="#onSearch" styleClass="products-search-button"/>
                         <Button text="Restablecer" onAction="#onResetFilter" styleClass="products-secondary-button"/>
                         <Button text="Nuevo" onAction="#onNewProduct" styleClass="products-secondary-button"/>
@@ -55,17 +55,24 @@
     </top>
 
     <center>
-        <TableView fx:id="productsTable" prefHeight="400.0" styleClass="products-table">
-            <columns>
-                <TableColumn fx:id="colCode" text="Código" prefWidth="100.0"/>
-                <TableColumn fx:id="colName" text="Nombre" prefWidth="160.0"/>
-                <TableColumn fx:id="colDescription" text="Descripción" prefWidth="220.0"/>
-                <TableColumn fx:id="colPrice" text="Precio ($)" prefWidth="90.0" styleClass="numeric-column"/>
-                <TableColumn fx:id="colStock" text="Stock" prefWidth="80.0" styleClass="numeric-column"/>
-                <TableColumn fx:id="colMinStock" text="Stock mín." prefWidth="90.0" styleClass="numeric-column"/>
-                <TableColumn fx:id="colSupplier" text="Proveedor" prefWidth="140.0"/>
-            </columns>
-        </TableView>
+        <VBox spacing="8">
+            <TableView fx:id="productsTable" prefHeight="400.0" styleClass="products-table">
+                <columns>
+                    <TableColumn fx:id="colCode" text="Código" prefWidth="100.0"/>
+                    <TableColumn fx:id="colName" text="Nombre" prefWidth="160.0"/>
+                    <TableColumn fx:id="colDescription" text="Marca" prefWidth="220.0"/>
+                    <TableColumn fx:id="colPrice" text="Precio ($)" prefWidth="90.0" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colStock" text="Stock" prefWidth="80.0" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colMinStock" text="Stock mín." prefWidth="90.0" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colSupplier" text="Proveedor" prefWidth="140.0"/>
+                </columns>
+            </TableView>
+            <FlowPane hgap="8" vgap="4" alignment="CENTER">
+                <Button fx:id="btnPrev" text="← Anterior" onAction="#onPrevPage" styleClass="products-secondary-button"/>
+                <Label fx:id="pageLabel" text="Página 1 de 1" style="-fx-font-size: 13px; -fx-padding: 4 8;"/>
+                <Button fx:id="btnNext" text="Siguiente →" onAction="#onNextPage" styleClass="products-secondary-button"/>
+            </FlowPane>
+        </VBox>
     </center>
 
     <padding>

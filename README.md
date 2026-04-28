@@ -1,4 +1,4 @@
-# Sistema de Inventario — v2.0
+# Sistema de Inventario — v2.1
 
 Aplicación de escritorio para gestión de inventario, ventas, gastos y reportes. Desarrollada en **Java 17**, **JavaFX** y **SQLite**.
 
@@ -107,7 +107,7 @@ Requisitos: **JDK 17+** (con `jpackage` y `jlink`), **Maven**, y la primera vez 
    ```
 3. El instalador se genera en:
    ```text
-   target\installer\Sistema de Inventario-2.0.0.exe
+   target\installer\Sistema de Inventario-2.1.0.exe
    ```
 
 El script hace en resumen:

@@ -86,6 +86,10 @@ public final class DatabaseManager {
                     migrateSkipStock(connection);
                     ensureVariosProduct(connection);
                     migrateAddExpenses(connection);
+                    migrateAddCodeIndex(connection);
+                    migrateAddPrecarga(connection);
+                    migrateAddDeleted(connection);
+                    ensureExternalDb();
                     schemaInitialized = true;
                     AppLogger.info("DatabaseManager", "getConnection", "BD inicializada correctamente");
                 }
@@ -216,6 +220,45 @@ public final class DatabaseManager {
     }
 
     public static final String VARIOS_CODE = "__VARIOS__";
+    private static final String EXTERNAL_DB_FILE = "productos_supermercado.db";
+
+    /** Copia la BD externa al arrancar (si viene con el instalador y aún no está en AppData). */
+    private static void ensureExternalDb() {
+        java.nio.file.Path path = java.nio.file.Paths.get(DB_FOLDER, EXTERNAL_DB_FILE);
+        if (!java.nio.file.Files.exists(path)) {
+            copyExternalDbIfNeeded(path);
+        }
+    }
+
+    /** Devuelve la ruta a la BD externa de productos, o null si no existe. */
+    public static String getExternalProductsDbPath() {
+        java.nio.file.Path path = java.nio.file.Paths.get(DB_FOLDER, EXTERNAL_DB_FILE);
+        return java.nio.file.Files.exists(path) ? path.toString() : null;
+    }
+
+    private static void copyExternalDbIfNeeded(java.nio.file.Path target) {
+        // Buscar la BD externa junto al .exe instalado (mismo directorio que el proceso)
+        String appHome = System.getProperty("jpackage.app-path");
+        java.nio.file.Path src = null;
+        if (appHome != null) {
+            src = java.nio.file.Paths.get(appHome).getParent().resolve(EXTERNAL_DB_FILE);
+        }
+        // Fallback: directorio de trabajo (desarrollo)
+        if (src == null || !java.nio.file.Files.exists(src)) {
+            src = java.nio.file.Paths.get(System.getProperty("user.dir"), "data", EXTERNAL_DB_FILE);
+        }
+        if (src != null && java.nio.file.Files.exists(src)) {
+            try {
+                java.nio.file.Files.createDirectories(target.getParent());
+                java.nio.file.Files.copy(src, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                AppLogger.info("DatabaseManager", "copyExternalDbIfNeeded",
+                        "BD externa copiada desde: " + src);
+            } catch (Exception e) {
+                AppLogger.warn("DatabaseManager", "copyExternalDbIfNeeded",
+                        "No se pudo copiar la BD externa: " + e.getMessage());
+            }
+        }
+    }
 
     /** Inserta el producto 'Varios / Sin código' si no existe. */
     private static void ensureVariosProduct(Connection conn) {
@@ -255,6 +298,59 @@ public final class DatabaseManager {
         } catch (SQLException e) {
             AppLogger.error("DatabaseManager", "migrateAddExpenses", "Error al crear tabla expenses: " + e.getMessage(), e);
             throw new RuntimeException("Error al crear tabla expenses", e);
+        }
+    }
+
+    /** Agrega columna precarga a products: 1 = importado (sin stock real), 0 = propio del cliente. */
+    private static void migrateAddPrecarga(Connection conn) {
+        try (Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery("PRAGMA table_info(products)")) {
+            boolean has = false;
+            while (rs.next()) {
+                if ("precarga".equalsIgnoreCase(rs.getString("name"))) { has = true; break; }
+            }
+            if (!has) {
+                AppLogger.info("DatabaseManager", "migrateAddPrecarga", "Aplicando migración: columna precarga");
+                try (Statement alter = conn.createStatement()) {
+                    alter.execute("ALTER TABLE products ADD COLUMN precarga INTEGER NOT NULL DEFAULT 0");
+                    // Productos sin precio y sin stock real son de precarga
+                    alter.execute("UPDATE products SET precarga = 1 WHERE price = 0.0 AND stock = 0.0 AND minimum_stock = -1 AND skip_stock = 0");
+                }
+            }
+        } catch (SQLException e) {
+            AppLogger.error("DatabaseManager", "migrateAddPrecarga", "Error al migrar precarga: " + e.getMessage(), e);
+            throw new RuntimeException("Error al migrar columna precarga", e);
+        }
+    }
+
+    /** Agrega columna deleted a products: 1 = eliminado lógicamente, 0 = activo. */
+    private static void migrateAddDeleted(Connection conn) {
+        try (Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery("PRAGMA table_info(products)")) {
+            boolean has = false;
+            while (rs.next()) {
+                if ("deleted".equalsIgnoreCase(rs.getString("name"))) { has = true; break; }
+            }
+            if (!has) {
+                AppLogger.info("DatabaseManager", "migrateAddDeleted", "Aplicando migración: columna deleted");
+                try (Statement alter = conn.createStatement()) {
+                    alter.execute("ALTER TABLE products ADD COLUMN deleted INTEGER NOT NULL DEFAULT 0");
+                }
+            }
+        } catch (SQLException e) {
+            AppLogger.error("DatabaseManager", "migrateAddDeleted", "Error al migrar deleted: " + e.getMessage(), e);
+            throw new RuntimeException("Error al migrar columna deleted", e);
+        }
+    }
+
+    /** Crea índice en products.code para búsquedas y escaneos rápidos con 371k+ registros. */
+    private static void migrateAddCodeIndex(Connection conn) {
+        try (Statement st = conn.createStatement()) {
+            st.execute("CREATE INDEX IF NOT EXISTS idx_products_code ON products(code)");
+            st.execute("CREATE INDEX IF NOT EXISTS idx_products_name ON products(name)");
+        } catch (SQLException e) {
+            AppLogger.error("DatabaseManager", "migrateAddCodeIndex", "Error al crear índices: " + e.getMessage(), e);
+            throw new RuntimeException("Error al crear índices en products", e);
         }
     }
 

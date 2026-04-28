@@ -2,6 +2,7 @@ package com.ferreteria.controllers;
 
 import com.ferreteria.models.Product;
 import com.ferreteria.models.Supplier;
+import com.ferreteria.repositories.sqlite.SQLiteProductRepository;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -9,6 +10,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 
 import java.util.List;
+import java.util.Optional;
 
 public class ProductFormDialog extends Dialog<Product> {
 
@@ -19,6 +21,8 @@ public class ProductFormDialog extends Dialog<Product> {
     private final TextField stockField = new TextField();
     private final TextField minStockField = new TextField();
     private final ComboBox<Supplier> supplierCombo = new ComboBox<>();
+
+    private static final double FIELD_WIDTH = 300;
 
     private final Product original;
 
@@ -34,13 +38,20 @@ public class ProductFormDialog extends Dialog<Product> {
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
-        grid.setPadding(new Insets(20, 150, 10, 10));
+        grid.setPadding(new Insets(20, 20, 10, 10));
+
+        codeField.setPrefWidth(FIELD_WIDTH);
+        nameField.setPrefWidth(FIELD_WIDTH);
+        descriptionField.setPrefWidth(FIELD_WIDTH);
+        priceField.setPrefWidth(FIELD_WIDTH);
+        stockField.setPrefWidth(FIELD_WIDTH);
+        minStockField.setPrefWidth(FIELD_WIDTH);
 
         grid.add(new Label("Código:"), 0, 0);
         grid.add(codeField, 1, 0);
         grid.add(new Label("Nombre:"), 0, 1);
         grid.add(nameField, 1, 1);
-        grid.add(new Label("Descripción:"), 0, 2);
+        grid.add(new Label("Marca:"), 0, 2);
         grid.add(descriptionField, 1, 2);
         grid.add(new Label("Precio:"), 0, 3);
         grid.add(priceField, 1, 3);
@@ -49,6 +60,7 @@ public class ProductFormDialog extends Dialog<Product> {
         grid.add(new Label("Stock mínimo:"), 0, 5);
         grid.add(minStockField, 1, 5);
         grid.add(new Label("Proveedor:"), 0, 6);
+        supplierCombo.setPrefWidth(FIELD_WIDTH);
         supplierCombo.setMaxWidth(Double.MAX_VALUE);
         supplierCombo.setItems(FXCollections.observableList(suppliers));
         supplierCombo.setConverter(new javafx.util.StringConverter<Supplier>() {
@@ -76,6 +88,12 @@ public class ProductFormDialog extends Dialog<Product> {
         }
         if (product == null) {
             codeField.setPromptText("Ej: PROD-001");
+            codeField.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
+                if (wasFocused && !isFocused) {
+                    preLlenarDesdePrecarga();
+                }
+            });
+            codeField.setOnAction(e -> preLlenarDesdePrecarga());
         }
 
         getDialogPane().setContent(grid);
@@ -102,6 +120,17 @@ public class ProductFormDialog extends Dialog<Product> {
             codeField.requestFocus();
             codeField.selectAll();
         }));
+    }
+
+    private void preLlenarDesdePrecarga() {
+        String code = codeField.getText() == null ? "" : codeField.getText().trim();
+        if (code.isEmpty() || !nameField.getText().isBlank()) return;
+        Optional<Product> found = new SQLiteProductRepository().findByCode(code);
+        found.filter(Product::isPrecarga).ifPresent(p -> {
+            nameField.setText(p.getName());
+            descriptionField.setText(p.getDescription() != null ? p.getDescription() : "");
+            Platform.runLater(() -> priceField.requestFocus());
+        });
     }
 
     private Product buildProductFromFields() {

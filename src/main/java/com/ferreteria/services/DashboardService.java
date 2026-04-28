@@ -13,24 +13,20 @@ import java.util.List;
 
 public class DashboardService {
 
-    private final ProductService productService;
+    private final SQLiteProductRepository productRepository;
     private final SaleRepository saleRepository;
 
     public DashboardService() {
-        this.productService = new ProductService(new SQLiteProductRepository());
+        this.productRepository = new SQLiteProductRepository();
         this.saleRepository = new SQLiteSaleRepository();
     }
 
     public int getTotalProducts() {
-        return (int) productService.getAllProducts().stream()
-                .filter(product -> !product.isSkipStock())
-                .count();
+        return productRepository.countAll();
     }
 
     public int getLowStockCount() {
-        return (int) productService.getLowStockProducts().stream()
-                .filter(product -> !product.isSkipStock())
-                .count();
+        return productRepository.countLowStock();
     }
 
     public double getTodaySalesTotal() {

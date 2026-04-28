@@ -6,6 +6,7 @@ import com.ferreteria.models.ReplenishmentItem;
 import com.ferreteria.repositories.ProductRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public class ProductService {
 
@@ -60,18 +61,10 @@ public class ProductService {
         if (product.getCode() != null) {
             String code = product.getCode().trim();
             if (!code.isEmpty()) {
-                boolean duplicated = repository.findAll().stream().anyMatch(existing -> {
-                    if (existing.getCode() == null) {
-                        return false;
-                    }
-                    if (!code.equalsIgnoreCase(existing.getCode().trim())) {
-                        return false;
-                    }
-                    if (product.getId() == null) {
-                        return true;
-                    }
-                    return !product.getId().equals(existing.getId());
-                });
+                Optional<Product> existing = repository.findByCode(code);
+                boolean duplicated = existing.isPresent()
+                        && !existing.get().isPrecarga()
+                        && (product.getId() == null || !product.getId().equals(existing.get().getId()));
                 if (duplicated) {
                     throw new IllegalArgumentException("Ya existe un producto con ese código.");
                 }

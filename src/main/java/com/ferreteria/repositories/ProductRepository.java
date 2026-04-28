@@ -29,5 +29,20 @@ public interface ProductRepository {
     void decreaseStock(int productId, double quantity);
 
     void increaseStock(int productId, double quantity);
+
+    /** Total de productos visibles (excluye __VARIOS__). */
+    int countAll();
+
+    /** Total de productos con stock bajo o igual al mínimo (excluye __VARIOS__). */
+    int countLowStock();
+
+    /** Total de productos que coinciden con la búsqueda. */
+    int countSearch(String query);
+
+    /** Página de productos sin filtro. offset = página * pageSize. */
+    List<Product> findPage(int offset, int pageSize);
+
+    /** Página de productos filtrados por búsqueda. */
+    List<Product> searchPage(String query, int offset, int pageSize);
 }
 

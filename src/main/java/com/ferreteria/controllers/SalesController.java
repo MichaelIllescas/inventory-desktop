@@ -28,8 +28,11 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.util.StringConverter;
 
+import com.ferreteria.repositories.sqlite.SQLiteSupplierRepository;
+import com.ferreteria.services.SupplierService;
 import com.ferreteria.util.AppLogger;
 
+import java.util.List;
 import java.util.Optional;
 
 public class SalesController {
@@ -57,14 +60,18 @@ public class SalesController {
     @FXML private HBox bottomMainRow;
 
     private final SaleService saleService;
+    private final SQLiteProductRepository productRepository;
+    private final SupplierService supplierService;
     private final ObservableList<SaleLineItem> items = FXCollections.observableArrayList();
     private boolean syncingTotal = false;
 
     public SalesController() {
+        this.productRepository = new SQLiteProductRepository();
         this.saleService = new SaleService(
                 new SQLiteSaleRepository(),
-                new SQLiteProductRepository()
+                productRepository
         );
+        this.supplierService = new SupplierService(new SQLiteSupplierRepository());
     }
 
     @FXML
@@ -538,8 +545,33 @@ public class SalesController {
             showWarning("No se encontró ningún producto con código: " + normalizedCode);
             return;
         }
-        AppLogger.info("SalesController", "addProductByCode", "Producto encontrado: id=" + opt.get().getId() + " nombre=" + opt.get().getName());
-        addProductToCart(opt.get());
+        Product product = opt.get();
+        if (product.isPrecarga()) {
+            AppLogger.info("SalesController", "addProductByCode", "Producto de precarga, abriendo formulario: " + product.getName());
+            activarProductoDePrecarga(product);
+            return;
+        }
+        AppLogger.info("SalesController", "addProductByCode", "Producto encontrado: id=" + product.getId() + " nombre=" + product.getName());
+        addProductToCart(product);
+    }
+
+    private void activarProductoDePrecarga(Product product) {
+        product.setPrecarga(false);
+        List<com.ferreteria.models.Supplier> suppliers = supplierService.getAllSuppliers();
+        ProductFormDialog dialog = new ProductFormDialog(product, suppliers);
+        dialog.setTitle("Configurar producto");
+        dialog.setHeaderText("Este producto no tiene precio ni stock. Completá los datos para activarlo.");
+        dialog.showAndWait().ifPresent(configured -> {
+            try {
+                configured.setPrecarga(false);
+                new com.ferreteria.services.ProductService(productRepository).saveProduct(configured);
+                AppLogger.info("SalesController", "activarProductoDePrecarga", "Producto activado: " + configured.getName());
+                Optional<Product> activado = saleService.findProductByCode(configured.getCode());
+                activado.ifPresent(this::addProductToCart);
+            } catch (IllegalArgumentException e) {
+                showError(e.getMessage());
+            }
+        });
     }
 
     private void addProductToCart(Product product) {

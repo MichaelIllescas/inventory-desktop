@@ -10,6 +10,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Pos?>
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
@@ -39,7 +40,7 @@
     <center>
         <VBox spacing="12">
             <Label text="Stock actual" styleClass="inventory-section-title"/>
-            <VBox styleClass="inventory-table-panel">
+            <VBox styleClass="inventory-table-panel" spacing="6">
                 <children>
                     <TableView fx:id="stockTable" prefHeight="220.0" styleClass="products-table inventory-table inventory-stock-table">
                         <columns>
@@ -50,6 +51,11 @@
                             <TableColumn fx:id="colSupplier" text="Proveedor" prefWidth="140.0"/>
                         </columns>
                     </TableView>
+                    <FlowPane hgap="8" vgap="4" alignment="CENTER">
+                        <Button fx:id="btnPrev" text="← Anterior" onAction="#onPrevPage" styleClass="inventory-action-button" style="-fx-background-color: #e5e7eb; -fx-text-fill: #111827;"/>
+                        <Label fx:id="pageLabel" text="Página 1 de 1" style="-fx-font-size: 13px; -fx-padding: 4 8;"/>
+                        <Button fx:id="btnNext" text="Siguiente →" onAction="#onNextPage" styleClass="inventory-action-button" style="-fx-background-color: #e5e7eb; -fx-text-fill: #111827;"/>
+                    </FlowPane>
                 </children>
             </VBox>
             <Label text="Lista de reposición (productos con bajo stock y contacto del proveedor)" styleClass="inventory-section-title"/>

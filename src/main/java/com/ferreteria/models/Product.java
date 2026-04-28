@@ -14,6 +14,8 @@ public class Product {
     private String supplierName;
     /** Si true, no descuenta stock al vender (producto "Varios / Sin código"). */
     private boolean skipStock;
+    /** Si true, producto importado de precarga — no aparece en inventario hasta que el cliente lo configure. */
+    private boolean precarga;
 
     public Product() {
     }
@@ -107,6 +109,14 @@ public class Product {
 
     public void setSkipStock(boolean skipStock) {
         this.skipStock = skipStock;
+    }
+
+    public boolean isPrecarga() {
+        return precarga;
+    }
+
+    public void setPrecarga(boolean precarga) {
+        this.precarga = precarga;
     }
 }
 

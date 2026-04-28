@@ -57,7 +57,7 @@ if %ERRORLEVEL% neq 0 (
     goto :fin
 )
 
-set "APP_JAR=inventory-app-2.0.0.jar"
+set "APP_JAR=inventory-app-2.1.0.jar"
 set "APP_DIR=target\app"
 set "OUT_DIR=target\installer"
 
@@ -102,6 +102,14 @@ if %ERRORLEVEL% neq 0 (
     goto :fin
 )
 
+echo [3.5/5] Incluyendo base de datos de catalogo de productos...
+if exist "data\productos_supermercado.db" (
+    copy /Y "data\productos_supermercado.db" "%APP_DIR%\productos_supermercado.db" >nul
+    echo   OK - productos_supermercado.db incluida en el instalador.
+) else (
+    echo   AVISO: no se encontro data\productos_supermercado.db - el catalogo no estara incluido.
+)
+
 echo [4/5] Generando instalador .exe con jpackage...
 if not exist "%OUT_DIR%" mkdir "%OUT_DIR%"
 
@@ -109,7 +117,7 @@ set "ICON_PATH=%~dp0src\main\resources\images\logo-nuevo.ico"
 set "ICON_OPT="
 if exist "%ICON_PATH%" set "ICON_OPT=--icon "%ICON_PATH%""
 
-"%JPKG%" --type exe --name "Sistema de Inventario" --input "%APP_DIR%" --main-jar "%APP_JAR%" --main-class com.ferreteria.App --runtime-image "%RUNTIME_JRE%" --dest "%OUT_DIR%" --app-version 2.0.0 --vendor "Inventario" --description "Sistema de inventario, ventas y reportes" --win-shortcut --win-menu %ICON_OPT%
+"%JPKG%" --type exe --name "Sistema de Inventario" --input "%APP_DIR%" --main-jar "%APP_JAR%" --main-class com.ferreteria.App --runtime-image "%RUNTIME_JRE%" --dest "%OUT_DIR%" --app-version 2.1.0 --vendor "Inventario" --description "Sistema de inventario, ventas y reportes" --win-shortcut --win-menu %ICON_OPT%
 
 if %ERRORLEVEL% neq 0 (
     echo [ERROR] Fallo jpackage.
@@ -119,7 +127,7 @@ if %ERRORLEVEL% neq 0 (
 echo [5/5] Listo.
 echo.
 echo Instalador generado en:
-echo   %OUT_DIR%\Sistema de Inventario-2.0.0.exe
+echo   %OUT_DIR%\Sistema de Inventario-2.1.0.exe
 echo.
 echo Copia ese .exe a cualquier PC con Windows y ejecutalo para instalar.
 echo.

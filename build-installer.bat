@@ -51,7 +51,7 @@ if not exist "%JPKG%" (
 )
 
 echo [1/5] Compilando y preparando JARs (Maven)...
-call mvn clean package -Pinstaller
+call mvn package -Pinstaller
 if %ERRORLEVEL% neq 0 (
     echo [ERROR] Fallo la compilacion con Maven.
     goto :fin

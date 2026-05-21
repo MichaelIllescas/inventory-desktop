@@ -132,8 +132,7 @@ public class SaleService {
                     "Limite de cuenta corriente excedido.\n" +
                             "Limite: " + formatCurrency(creditLimit) + "\n" +
                             "Deuda actual: " + formatCurrency(currentBalance) + "\n" +
-                            "Restan: " + formatCurrency(remaining) + "\n" +
-                            "Deuda proyectada: " + formatCurrency(projectedBalance)
+                            "Restan: " + formatCurrency(remaining)
             );
         }
     }
@@ -244,18 +243,11 @@ public class SaleService {
     public void deleteSale(int saleId) {
         String opId = AppLogger.beginOperation();
         try {
-            double appliedAmount = getAppliedPaymentsTotalForSale(saleId);
-            if (appliedAmount > 0.000001d) {
-                throw new IllegalArgumentException(
-                        "No se puede eliminar la venta porque tiene pagos de cuenta corriente aplicados por " +
-                                formatCurrency(appliedAmount) +
-                                ". Primero debe revertir esos pagos."
-                );
-            }
             List<SaleItem> items = saleRepository.getSaleItemsBySaleId(saleId);
             AppLogger.info("SaleService", "deleteSale",
                     "Anulando venta id=" + saleId + " con " + items.size() + " items");
             DatabaseManager.runInTransaction(() -> {
+                deletePaymentApplicationsForSale(saleId);
                 deleteCurrentAccountSaleMovements(saleId);
                 for (SaleItem item : items) {
                     productRepository.increaseStock(item.getProductId(), item.getQuantity());
@@ -273,16 +265,54 @@ public class SaleService {
         }
     }
 
-    private double getAppliedPaymentsTotalForSale(int saleId) {
-        String sql = "SELECT COALESCE(SUM(applied_amount), 0) AS total FROM customer_payment_applications WHERE sale_id = ?";
+    private void deletePaymentApplicationsForSale(int saleId) {
         Connection conn = DatabaseManager.getConnection();
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+        // Pagos que estaban aplicados a esta venta
+        List<Integer> paymentIds = new ArrayList<>();
+        String fetchSql = "SELECT DISTINCT payment_id FROM customer_payment_applications WHERE sale_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(fetchSql)) {
             stmt.setInt(1, saleId);
-            try (java.sql.ResultSet rs = stmt.executeQuery()) {
-                return rs.next() ? rs.getDouble("total") : 0;
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) paymentIds.add(rs.getInt("payment_id"));
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Error al validar pagos aplicados de la venta", e);
+            throw new RuntimeException("Error al obtener pagos aplicados a la venta", e);
+        }
+
+        // Eliminar las aplicaciones de esta venta
+        String deleteAppsSql = "DELETE FROM customer_payment_applications WHERE sale_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(deleteAppsSql)) {
+            stmt.setInt(1, saleId);
+            int deleted = stmt.executeUpdate();
+            if (deleted > 0) {
+                AppLogger.info("SaleService", "deletePaymentApplicationsForSale",
+                        "Aplicaciones eliminadas para saleId=" + saleId + ": " + deleted);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al eliminar aplicaciones de pago de la venta", e);
+        }
+
+        // Para cada pago: si ya no tiene aplicaciones en ninguna venta, revertir su movimiento y el registro
+        for (int paymentId : paymentIds) {
+            String checkSql = "SELECT COUNT(*) FROM customer_payment_applications WHERE payment_id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(checkSql)) {
+                stmt.setInt(1, paymentId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next() && rs.getInt(1) == 0) {
+                        // Pago sin más aplicaciones → revertir movimiento de cuenta corriente
+                        String delMovementSql = "DELETE FROM customer_account_movements WHERE payment_id = ?";
+                        try (PreparedStatement ps = conn.prepareStatement(delMovementSql)) {
+                            ps.setInt(1, paymentId);
+                            ps.executeUpdate();
+                        }
+                        AppLogger.info("SaleService", "deletePaymentApplicationsForSale",
+                                "Movimiento de pago revertido para paymentId=" + paymentId);
+                    }
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException("Error al revertir movimiento de pago", e);
+            }
         }
     }
 

@@ -1,4 +1,4 @@
-# Sistema de Inventario — v2.1
+# Sistema de Inventario — v3.0
 
 Aplicación de escritorio para gestión de inventario, ventas, gastos y reportes. Desarrollada en **Java 17**, **JavaFX** y **SQLite**.
 
@@ -16,6 +16,14 @@ Aplicación de escritorio para gestión de inventario, ventas, gastos y reportes
   - Confirmación rápida con **Enter** y limpieza de la venta con un click.
   - **Producto "Varios / Sin código"** (`__VARIOS__`): se crea automáticamente al iniciar la app, no afecta el inventario, precio comienza en 0 y se abre para editar al agregarlo. Incluye **código de barras Code 128** en la pantalla de ventas para escanearlo directamente con un lector.
 - **Medios de pago**: selección de **Efectivo, Transferencia, Débito y Crédito** al registrar la venta; cada venta queda asociada a su medio de pago.
+- **Cuentas corrientes** _(nuevo en v3.0)_:
+  - Venta en cuenta corriente asociada a cliente obligatorio.
+  - Registro de pagos parciales y aplicacion FIFO a ventas pendientes.
+  - Soporte de sobrepago (saldo a favor) y aplicacion automatica en ventas futuras.
+  - Carga de deuda anterior/manual como ajuste de cuenta corriente.
+  - Bloqueo de venta por limite de credito del cliente (si tiene limite definido).
+  - Bloqueo de eliminacion de clientes con deuda pendiente.
+  - Exportacion de PDF de estado de cuenta con logo del negocio y desglose de deuda.
 - **Proveedores**: CRUD de proveedores (nombre, teléfono, email, dirección).
 - **Inventario**: vista de stock y ajuste de cantidades con diálogos dedicados.
 - **Gastos** _(nuevo en v2.0)_:
@@ -28,6 +36,8 @@ Aplicación de escritorio para gestión de inventario, ventas, gastos y reportes
   - **Por día**: totales discriminados por medio de pago (Total, Efectivo, Transferencia, Débito, Crédito) y promedio diario.
   - **Productos más vendidos**: cantidad vendida, monto total y total de unidades.
   - **Con detalle**: cada ítem con **fecha y hora**, precio cobrado, subtotal, total de la venta y medio de pago. Permite eliminar ventas (devuelve el stock).
+  - **Rentabilidad**: vista separada con vendido, cobrado, gastos, neto y montos de cuenta corriente.
+  - **Reporte CC**: deuda inicial, compras CC, pagos CC y saldo final por cliente.
   - Resumen con **Ingresos**, **Gastos** y **Neto** del período en todos los tipos de reporte.
 
 La base de datos es **SQLite**; en instalación los datos se guardan en la carpeta de usuario (por usuario de Windows). La aplicación se distribuye como **instalador .exe** para Windows (sin necesidad de instalar Java en el cliente).
@@ -107,7 +117,7 @@ Requisitos: **JDK 17+** (con `jpackage` y `jlink`), **Maven**, y la primera vez 
    ```
 3. El instalador se genera en:
    ```text
-   target\installer\Sistema de Inventario-2.1.0.exe
+   target\installer\Sistema de Inventario-<version>.exe
    ```
 
 El script hace en resumen:
@@ -152,3 +162,5 @@ Las tablas principales usan IDs `INTEGER PRIMARY KEY AUTOINCREMENT` (enteros de 
 ## Licencia
 
 Uso según los términos acordados con el titular del proyecto.
+
+

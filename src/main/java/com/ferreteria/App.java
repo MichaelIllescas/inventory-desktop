@@ -1,5 +1,6 @@
 package com.ferreteria;
 
+import com.ferreteria.services.CurrentAccountService;
 import com.ferreteria.util.AppLogger;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -34,6 +35,7 @@ public class App extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         AppLogger.info("App", "start", "Iniciando aplicación");
+        new CurrentAccountService().cleanupOrphanedCreditMovements();
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/main-layout.fxml"));
         Parent root = loader.load();
 

@@ -61,6 +61,10 @@ public final class DatabaseManager {
         }
     }
 
+    public static String getDataFolder() {
+        return DB_FOLDER;
+    }
+
     private static String getDbUrl() {
         return "jdbc:sqlite:" + DB_FOLDER.replace("\\", "/") + "/" + DB_FILE;
     }
@@ -90,6 +94,7 @@ public final class DatabaseManager {
                     migrateAddPrecarga(connection);
                     migrateAddDeleted(connection);
                     migrateAddCustomersAndCurrentAccount(connection);
+                    migrateAddAppSettings(connection);
                     ensureExternalDb();
                     schemaInitialized = true;
                     AppLogger.info("DatabaseManager", "getConnection", "BD inicializada correctamente");
@@ -222,6 +227,16 @@ public final class DatabaseManager {
 
     public static final String VARIOS_CODE = "__VARIOS__";
     private static final String EXTERNAL_DB_FILE = "productos_supermercado.db";
+
+    private static void migrateAddAppSettings(Connection conn) {
+        try (Statement st = conn.createStatement()) {
+            st.execute("CREATE TABLE IF NOT EXISTS app_settings (" +
+                    "key TEXT PRIMARY KEY, " +
+                    "value TEXT)");
+        } catch (SQLException e) {
+            throw new RuntimeException("Error en migración app_settings", e);
+        }
+    }
 
     /** Copia la BD externa al arrancar (si viene con el instalador y aún no está en AppData). */
     private static void ensureExternalDb() {

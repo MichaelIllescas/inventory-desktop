@@ -27,16 +27,17 @@
                 </VBox>
 
                 <Button fx:id="btnDashboard" text="Inicio" styleClass="sidebar-button" onAction="#showDashboard"/>
-                <Button fx:id="btnProducts" text="Productos" styleClass="sidebar-button" onAction="#showProducts"/>
                 <Button fx:id="btnSales" text="Ventas" styleClass="sidebar-button" onAction="#showSales"/>
-                <Button fx:id="btnCustomers" text="Clientes" styleClass="sidebar-button" onAction="#showCustomers"/>
                 <Button fx:id="btnCurrentAccount" text="Ctas. corrientes" styleClass="sidebar-button" onAction="#showCurrentAccount"/>
-                <Button fx:id="btnSuppliers" text="Proveedores" styleClass="sidebar-button" onAction="#showSuppliers"/>
+                <Button fx:id="btnCustomers" text="Clientes" styleClass="sidebar-button" onAction="#showCustomers"/>
+                <Button fx:id="btnProducts" text="Productos" styleClass="sidebar-button" onAction="#showProducts"/>
                 <Button fx:id="btnInventory" text="Inventario" styleClass="sidebar-button" onAction="#showInventory"/>
-                <Button fx:id="btnReports" text="Reportes" styleClass="sidebar-button" onAction="#showReports"/>
+                <Button fx:id="btnSuppliers" text="Proveedores" styleClass="sidebar-button" onAction="#showSuppliers"/>
                 <Button fx:id="btnExpenses" text="Gastos" styleClass="sidebar-button" onAction="#showExpenses"/>
+                <Button fx:id="btnReports" text="Reportes" styleClass="sidebar-button" onAction="#showReports"/>
 
                 <Region VBox.vgrow="ALWAYS"/>
+                <Button fx:id="btnSettings" text="⚙ Configuración" styleClass="sidebar-button sidebar-button-settings" onAction="#showSettings"/>
                 <Label text="Desarrollado por" styleClass="sidebar-footer-label"/>
                 <Button fx:id="logoImperialNet" styleClass="sidebar-logo-button" onAction="#openImperialNet">
                     <graphic>
@@ -47,7 +48,7 @@
                         </ImageView>
                     </graphic>
                 </Button>
-                <Label text="v2.1" styleClass="sidebar-version-label"/>
+                <Label text="v3.0" styleClass="sidebar-version-label"/>
             </children>
             <padding>
                 <Insets top="24" right="16" bottom="24" left="16"/>

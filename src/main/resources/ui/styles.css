@@ -30,6 +30,7 @@
   -fx-padding: 9 12 9 12;
   -fx-font-size: 16px;
   -fx-background-radius: 10;
+  -fx-max-width: infinity;
 }
 
 .sidebar-button:hover {
@@ -43,6 +44,42 @@
   -fx-border-width: 0 0 2 0;
   -fx-border-radius: 10;
   -fx-font-weight: bold;
+}
+
+.sidebar-button-settings {
+  -fx-text-fill: #cbd5e1;
+  -fx-font-size: 14px;
+  -fx-font-weight: 600;
+  -fx-background-color: rgba(30, 41, 59, 0.6);
+  -fx-background-radius: 10;
+  -fx-border-color: rgba(148, 163, 184, 0.25);
+  -fx-border-radius: 10;
+  -fx-border-width: 1;
+  -fx-padding: 9 12 9 12;
+}
+
+.sidebar-button-settings:hover {
+  -fx-text-fill: white;
+  -fx-background-color: rgba(37, 99, 235, 0.24);
+  -fx-border-color: rgba(96, 165, 250, 0.45);
+}
+
+#btnSettings {
+  -fx-text-fill: #cbd5e1;
+  -fx-font-size: 14px;
+  -fx-font-weight: 600;
+  -fx-background-color: rgba(30, 41, 59, 0.6);
+  -fx-background-radius: 10;
+  -fx-border-color: rgba(148, 163, 184, 0.25);
+  -fx-border-radius: 10;
+  -fx-border-width: 1;
+  -fx-padding: 9 12 9 12;
+}
+
+#btnSettings:hover {
+  -fx-text-fill: white;
+  -fx-background-color: rgba(37, 99, 235, 0.24);
+  -fx-border-color: rgba(96, 165, 250, 0.45);
 }
 
 .sidebar-version-label {
@@ -427,8 +464,121 @@ TableColumn {
   -fx-text-fill: #0f172a;
 }
 
-.reports-view-root .profit-chart .chart-bar {
-  -fx-bar-fill: #2563eb;
+/* ===== Configuración ===== */
+.settings-root {
+  -fx-background-color: #f8fafc;
+}
+
+.settings-subtitle {
+  -fx-font-size: 13px;
+  -fx-text-fill: #64748b;
+}
+
+.settings-section-title {
+  -fx-font-size: 14px;
+  -fx-font-weight: bold;
+  -fx-text-fill: #1e293b;
+}
+
+.settings-field-label {
+  -fx-font-size: 13px;
+  -fx-font-weight: bold;
+  -fx-text-fill: #475569;
+}
+
+.settings-logo-preview-box {
+  -fx-background-color: white;
+  -fx-border-color: #cbd5e1;
+  -fx-border-radius: 10;
+  -fx-background-radius: 10;
+  -fx-border-width: 1;
+  -fx-padding: 8;
+}
+
+.settings-logo-path {
+  -fx-font-size: 12px;
+  -fx-text-fill: #64748b;
+}
+
+.settings-primary-button {
+  -fx-background-color: #2563eb;
+  -fx-text-fill: white;
+  -fx-font-weight: bold;
+  -fx-font-size: 13px;
+  -fx-background-radius: 8;
+  -fx-padding: 7 16;
+  -fx-cursor: hand;
+}
+
+.settings-primary-button:hover { -fx-background-color: #1d4ed8; }
+
+.settings-danger-button {
+  -fx-background-color: #fee2e2;
+  -fx-text-fill: #dc2626;
+  -fx-font-weight: bold;
+  -fx-font-size: 13px;
+  -fx-background-radius: 8;
+  -fx-padding: 7 16;
+  -fx-cursor: hand;
+}
+
+.settings-danger-button:hover { -fx-background-color: #fecaca; }
+
+.settings-save-button {
+  -fx-background-color: #16a34a;
+  -fx-text-fill: white;
+  -fx-font-weight: bold;
+  -fx-font-size: 14px;
+  -fx-background-radius: 10;
+  -fx-padding: 10 28;
+  -fx-cursor: hand;
+}
+
+.settings-save-button:hover { -fx-background-color: #15803d; }
+
+.cc-export-btn {
+  -fx-background-color: #2563eb;
+  -fx-text-fill: white;
+  -fx-font-size: 11px;
+  -fx-font-weight: bold;
+  -fx-background-radius: 6;
+  -fx-padding: 4 12;
+  -fx-cursor: hand;
+}
+
+.cc-export-btn:hover {
+  -fx-background-color: #1d4ed8;
+}
+
+.cc-export-btn:pressed {
+  -fx-background-color: #1e40af;
+  -fx-scale-x: 0.97;
+  -fx-scale-y: 0.97;
+}
+
+.profit-narrative-box {
+  -fx-background-color: #f8fafc;
+  -fx-background-radius: 10;
+  -fx-border-color: #e2e8f0;
+  -fx-border-radius: 10;
+  -fx-border-width: 1;
+  -fx-padding: 12 16;
+}
+
+.profit-narrative-line {
+  -fx-font-size: 13px;
+  -fx-text-fill: #334155;
+}
+
+.profit-narrative-result {
+  -fx-font-size: 14px;
+  -fx-font-weight: bold;
+  -fx-padding: 4 0 0 0;
+}
+
+.reports-view-root .profit-line-chart .default-color0.chart-series-line {
+  -fx-stroke: #2563eb;
+  -fx-stroke-width: 2.5px;
 }
 
 .reports-view-root .profit-chart .axis-label {
@@ -517,38 +667,94 @@ TableColumn {
   -fx-padding: 2 0 2 0;
 }
 
-.report-toolbar-button {
-  -fx-padding: 8 14;
+/* ===== Reports toolbar: inputs uniform height ===== */
+.reports-toolbar .date-picker,
+.reports-toolbar .combo-box {
+  -fx-pref-height: 34px;
+  -fx-min-height: 34px;
 }
 
-.report-period-button {
-  -fx-background-color: #e5e7eb;
-  -fx-text-fill: #111827;
+.reports-toolbar .date-picker .text-field {
+  -fx-pref-height: 32px;
+  -fx-min-height: 32px;
+  -fx-padding: 4 8;
+}
+
+.reports-toolbar .combo-box .list-cell {
+  -fx-pref-height: 32px;
+  -fx-padding: 4 8;
+}
+
+/* ===== Reports toolbar card ===== */
+.reports-toolbar {
+  -fx-background-color: linear-gradient(to right, #f8fbff, #ffffff);
+  -fx-background-radius: 14;
+  -fx-border-color: #dbe4ee;
+  -fx-border-radius: 14;
+  -fx-border-width: 1;
+  -fx-padding: 14;
+  -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.05), 14, 0.12, 0, 4);
+}
+
+.reports-filter-label {
+  -fx-font-size: 13px;
+  -fx-text-fill: #64748b;
   -fx-font-weight: bold;
 }
 
+.report-period-button {
+  -fx-base: #e5e7eb;
+  -fx-background-color: #e5e7eb;
+  -fx-background-insets: 0;
+  -fx-background-radius: 8;
+  -fx-border-radius: 8;
+  -fx-text-fill: #111827;
+  -fx-font-weight: bold;
+  -fx-font-size: 13px;
+  -fx-padding: 7 14;
+}
+
 .report-period-button:hover {
+  -fx-base: #d1d5db;
   -fx-background-color: #d1d5db;
 }
 
 .report-generate-button {
+  -fx-base: #2563eb;
   -fx-background-color: #2563eb;
+  -fx-background-insets: 0;
+  -fx-background-radius: 8;
+  -fx-border-radius: 8;
   -fx-text-fill: white;
   -fx-font-weight: bold;
+  -fx-font-size: 13px;
+  -fx-padding: 7 14;
 }
 
 .report-generate-button:hover {
+  -fx-base: #1d4ed8;
   -fx-background-color: #1d4ed8;
 }
 
 .report-delete-button {
+  -fx-base: #dc2626;
   -fx-background-color: #dc2626;
+  -fx-background-insets: 0;
+  -fx-background-radius: 8;
+  -fx-border-radius: 8;
   -fx-text-fill: white;
   -fx-font-weight: bold;
+  -fx-font-size: 13px;
+  -fx-padding: 7 14;
 }
 
 .report-delete-button:hover {
+  -fx-base: #b91c1c;
   -fx-background-color: #b91c1c;
+}
+
+.report-delete-button:disabled {
+  -fx-opacity: 0.45;
 }
 
 /* Tabla ventas Ã¢â‚¬â€ nÃƒÂºmeros mÃƒÂ¡s grandes */
@@ -1248,9 +1454,10 @@ TableColumn {
   -fx-font-size: 15px;
 }
 
+/* ── ca-compact (panel < 1050px) ── */
 .current-account-view-root.ca-compact .current-account-toolbar {
   -fx-padding: 12;
-  -fx-hgap: 8;
+  -fx-spacing: 6;
 }
 
 .current-account-view-root.ca-compact .current-account-toolbar .text-field,
@@ -1277,7 +1484,7 @@ TableColumn {
 }
 
 .current-account-view-root.ca-compact .summary-panel-title {
-  -fx-font-size: 18px;
+  -fx-font-size: 16px;
 }
 
 .current-account-view-root.ca-compact .customers-table .table-cell,
@@ -1285,22 +1492,70 @@ TableColumn {
   -fx-font-size: 12px;
 }
 
+.current-account-view-root.ca-compact .text-field,
+.current-account-view-root.ca-compact .combo-box {
+  -fx-min-height: 36;
+  -fx-pref-height: 36;
+  -fx-font-size: 13px;
+}
+
+.current-account-view-root.ca-compact .button {
+  -fx-min-height: 36;
+  -fx-pref-height: 36;
+  -fx-font-size: 13px;
+}
+
+/* ── ca-xcompact (panel < 780px) ── */
+.current-account-view-root.ca-xcompact .current-account-toolbar {
+  -fx-padding: 10;
+  -fx-spacing: 5;
+}
+
 .current-account-view-root.ca-xcompact .current-account-toolbar .text-field,
 .current-account-view-root.ca-xcompact .current-account-toolbar .combo-box {
   -fx-font-size: 12px;
-  -fx-min-height: 34;
-  -fx-pref-height: 34;
+  -fx-min-height: 32;
+  -fx-pref-height: 32;
 }
 
 .current-account-view-root.ca-xcompact .current-account-toolbar .button {
   -fx-font-size: 12px;
-  -fx-min-height: 34;
-  -fx-pref-height: 34;
-  -fx-padding: 7 10;
+  -fx-min-height: 32;
+  -fx-pref-height: 32;
+  -fx-padding: 6 10;
+}
+
+.current-account-view-root.ca-xcompact .customers-summary-title {
+  -fx-font-size: 11px;
 }
 
 .current-account-view-root.ca-xcompact .customers-summary-value {
+  -fx-font-size: 13px;
+  -fx-wrap-text: true;
+}
+
+.current-account-view-root.ca-xcompact .summary-panel-title {
   -fx-font-size: 14px;
+}
+
+.current-account-view-root.ca-xcompact .customers-table .table-cell,
+.current-account-view-root.ca-xcompact .customers-table .column-header .label {
+  -fx-font-size: 11px;
+  -fx-padding: 4 6;
+}
+
+.current-account-view-root.ca-xcompact .text-field,
+.current-account-view-root.ca-xcompact .combo-box {
+  -fx-min-height: 32;
+  -fx-pref-height: 32;
+  -fx-font-size: 12px;
+}
+
+.current-account-view-root.ca-xcompact .button {
+  -fx-min-height: 32;
+  -fx-pref-height: 32;
+  -fx-font-size: 12px;
+  -fx-padding: 6 10;
 }
 
 .current-account-export-button {
@@ -1488,6 +1743,17 @@ TableColumn {
 
 .expenses-view-root .expenses-combo {
   -fx-font-size: 14px;
+  -fx-background-color: white;
+  -fx-background-radius: 10;
+  -fx-border-color: #cbd5e1;
+  -fx-border-radius: 10;
+  -fx-border-width: 1;
+}
+
+.expenses-view-root .expenses-combo .list-cell {
+  -fx-padding: 8 12;
+  -fx-font-size: 14px;
+  -fx-background-color: transparent;
 }
 
 .expenses-primary-button {
@@ -1602,4 +1868,161 @@ TableColumn {
 .expenses-view-root .date-picker .text-field {
   -fx-font-size: 14px;
   -fx-padding: 6 8;
+}
+
+/* ===== Summary cards strip ===== */
+.report-summary-card {
+  -fx-background-radius: 10;
+  -fx-border-radius: 10;
+  -fx-border-width: 1;
+  -fx-padding: 8 12;
+  -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.05), 8, 0.08, 0, 2);
+}
+
+.report-summary-card-blue {
+  -fx-background-color: linear-gradient(to bottom right, #eff6ff, #ffffff);
+  -fx-border-color: #93c5fd;
+}
+
+.report-summary-card-green {
+  -fx-background-color: linear-gradient(to bottom right, #f0fdf4, #ffffff);
+  -fx-border-color: #86efac;
+}
+
+.report-summary-card-cyan {
+  -fx-background-color: linear-gradient(to bottom right, #ecfeff, #ffffff);
+  -fx-border-color: #a5f3fc;
+}
+
+.report-summary-card-neutral {
+  -fx-background-color: linear-gradient(to bottom right, #f8fafc, #ffffff);
+  -fx-border-color: #dbe4ee;
+}
+
+.report-summary-card-title {
+  -fx-font-size: 11px;
+  -fx-font-weight: bold;
+  -fx-text-fill: #64748b;
+}
+
+.report-summary-card-value {
+  -fx-font-size: 16px;
+  -fx-font-weight: bold;
+  -fx-text-fill: #0f172a;
+}
+
+.report-summary-card-value-sm {
+  -fx-font-size: 20px;
+  -fx-font-weight: bold;
+  -fx-text-fill: #0f172a;
+}
+
+/* ===== Reports profit bar chart ===== */
+.reports-view-root .profit-bar-chart .chart-plot-background {
+  -fx-background-color: #f8fbff;
+  -fx-background-radius: 10;
+}
+
+.reports-view-root .profit-bar-chart .chart-title {
+  -fx-font-size: 15px;
+  -fx-font-weight: bold;
+  -fx-text-fill: #0f172a;
+}
+
+.reports-view-root .profit-bar-chart .axis-label {
+  -fx-text-fill: #64748b;
+  -fx-font-weight: bold;
+}
+
+.reports-view-root .profit-bar-chart .axis {
+  -fx-tick-label-fill: #64748b;
+}
+
+.reports-view-root .profit-bar-chart .chart-vertical-grid-lines {
+  -fx-stroke: transparent;
+}
+
+.reports-view-root .profit-bar-chart .chart-horizontal-grid-lines {
+  -fx-stroke: #e2e8f0;
+  -fx-stroke-dash-array: 2 8;
+}
+
+/* Each bar gets a distinct color (data0..data4) */
+.reports-view-root .profit-bar-chart .default-color0.chart-bar { -fx-bar-fill: #2563eb; }
+.reports-view-root .profit-bar-chart .default-color1.chart-bar { -fx-bar-fill: #16a34a; }
+.reports-view-root .profit-bar-chart .default-color2.chart-bar { -fx-bar-fill: #dc2626; }
+.reports-view-root .profit-bar-chart .default-color3.chart-bar { -fx-bar-fill: #64748b; }
+.reports-view-root .profit-bar-chart .default-color4.chart-bar { -fx-bar-fill: #0ea5e9; }
+
+/* ===== Reports responsive ===== */
+.reports-view-root.reports-compact .reports-toolbar {
+  -fx-padding: 10 12;
+}
+
+.reports-view-root.reports-compact .view-title {
+  -fx-font-size: 18px;
+}
+
+.reports-view-root.reports-compact .report-period-button,
+.reports-view-root.reports-compact .report-generate-button,
+.reports-view-root.reports-compact .report-delete-button {
+  -fx-font-size: 12px;
+  -fx-padding: 6 10;
+}
+
+.reports-view-root.reports-compact .date-picker,
+.reports-view-root.reports-compact .combo-box {
+  -fx-font-size: 12px;
+}
+
+.reports-view-root.reports-compact .report-card-value {
+  -fx-font-size: 16px;
+}
+
+.reports-view-root.reports-compact .report-summary-card-value {
+  -fx-font-size: 13px;
+}
+
+.reports-view-root.reports-compact .report-summary-card-value-sm {
+  -fx-font-size: 16px;
+}
+
+.reports-view-root.reports-xcompact .reports-toolbar {
+  -fx-padding: 8 10;
+}
+
+.reports-view-root.reports-xcompact .view-title {
+  -fx-font-size: 15px;
+}
+
+.reports-view-root.reports-xcompact .report-period-button,
+.reports-view-root.reports-xcompact .report-generate-button,
+.reports-view-root.reports-xcompact .report-delete-button {
+  -fx-font-size: 11px;
+  -fx-padding: 5 8;
+}
+
+.reports-view-root.reports-xcompact .date-picker,
+.reports-view-root.reports-xcompact .combo-box {
+  -fx-font-size: 11px;
+}
+
+.reports-view-root.reports-xcompact .report-card-value {
+  -fx-font-size: 14px;
+}
+
+.reports-view-root.reports-xcompact .report-card-title {
+  -fx-font-size: 10px;
+}
+
+.reports-view-root.reports-xcompact .report-summary-card-value {
+  -fx-font-size: 12px;
+}
+
+.reports-view-root.reports-xcompact .report-summary-card-value-sm {
+  -fx-font-size: 14px;
+}
+
+.reports-view-root.reports-xcompact .report-summary-card-title {
+  -fx-font-size: 10px;
 }

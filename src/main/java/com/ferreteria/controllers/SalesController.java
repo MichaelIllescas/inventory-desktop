@@ -36,6 +36,8 @@ import com.ferreteria.repositories.sqlite.SQLiteSupplierRepository;
 import com.ferreteria.services.SupplierService;
 import com.ferreteria.util.AppLogger;
 
+import javafx.geometry.Insets;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -441,9 +443,15 @@ public class SalesController {
 
     private void updateChangePreview() {
         if (changeLabel == null) return;
+        String receivedText = paymentReceivedField == null ? null : paymentReceivedField.getText();
+        if (receivedText == null || receivedText.isBlank()) {
+            changeLabel.setText("Vuelto: $ 0,00");
+            changeLabel.setStyle("-fx-text-fill: #9ca3af;");
+            return;
+        }
         double calculated = items.stream().mapToDouble(SaleLineItem::getSubtotal).sum();
         double total = parseTotalField(calculated);
-        double received = parseAmountInput(paymentReceivedField == null ? null : paymentReceivedField.getText(), 0d);
+        double received = parseAmountInput(receivedText, 0d);
         double diff = received - total;
         if (Math.abs(diff) < 0.005d) {
             changeLabel.setText("Vuelto: $ 0,00");
@@ -740,6 +748,8 @@ public class SalesController {
             AppLogger.info("SalesController", "confirmAndRegisterSale", "Venta registrada correctamente");
             items.clear();
             if (paymentReceivedField != null) paymentReceivedField.clear();
+            if (customerSearchField != null) customerSearchField.clear();
+            if (customerCombo != null) customerCombo.getSelectionModel().clearSelection();
             syncingTotal = true;
             totalField.setText(formatTotal(0));
             syncingTotal = false;
@@ -786,9 +796,29 @@ public class SalesController {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
         alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.getDialogPane().setPrefWidth(560);
-        alert.getDialogPane().setMinHeight(180);
+
+        String[] lines = message != null ? message.split("\n") : new String[]{"Error desconocido"};
+        if (lines.length > 1) {
+            VBox content = new VBox(5);
+            content.setPadding(new Insets(2, 2, 2, 2));
+            Label title = new Label(lines[0]);
+            title.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+            title.setWrapText(true);
+            content.getChildren().add(title);
+            for (int i = 1; i < lines.length; i++) {
+                if (!lines[i].isBlank()) {
+                    Label detail = new Label(lines[i]);
+                    detail.setStyle("-fx-font-size: 13px;");
+                    detail.setWrapText(true);
+                    content.getChildren().add(detail);
+                }
+            }
+            alert.getDialogPane().setContent(content);
+            alert.getDialogPane().setPrefWidth(400);
+        } else {
+            alert.setContentText(message);
+            alert.getDialogPane().setPrefWidth(400);
+        }
         alert.showAndWait();
     }
 

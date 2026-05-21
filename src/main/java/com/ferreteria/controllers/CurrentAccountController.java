@@ -31,8 +31,8 @@ import java.util.Map;
 
 public class CurrentAccountController {
     private static final DateTimeFormatter UI_DATE_TIME = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-    private static final double BREAKPOINT_COMPACT = 1450;
-    private static final double BREAKPOINT_XCOMPACT = 1250;
+    private static final double BREAKPOINT_COMPACT = 1050;
+    private static final double BREAKPOINT_XCOMPACT = 780;
     private static final String STYLE_COMPACT = "ca-compact";
     private static final String STYLE_XCOMPACT = "ca-xcompact";
 
@@ -101,6 +101,8 @@ public class CurrentAccountController {
     private Button registerInitialDebtButton;
     @FXML
     private Button exportPdfButton;
+    @FXML
+    private Button deleteMovementButton;
 
     private final CustomerService customerService;
     private final CurrentAccountService currentAccountService;
@@ -129,13 +131,7 @@ public class CurrentAccountController {
         if (rootPane == null) {
             return;
         }
-        rootPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
-            if (newScene == null) {
-                return;
-            }
-            applyResponsiveMode(newScene.getWidth());
-            newScene.widthProperty().addListener((o, oldW, newW) -> applyResponsiveMode(newW.doubleValue()));
-        });
+        rootPane.widthProperty().addListener((obs, old, w) -> applyResponsiveMode(w.doubleValue()));
     }
 
     private void applyResponsiveMode(double width) {
@@ -199,6 +195,7 @@ public class CurrentAccountController {
         for (TableColumn<CustomerDebtRow, ?> col : List.of(colDebtSaleId, colDebtDate, colDebtTotal, colDebtApplied, colDebtPending, colDebtStatus)) {
             col.setStyle("-fx-alignment: CENTER;");
         }
+        debtTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         debtTable.setItems(debtRows);
     }
 
@@ -244,7 +241,22 @@ public class CurrentAccountController {
             col.setStyle("-fx-alignment: CENTER;");
         }
 
+        movementTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         movementTable.setItems(movementRows);
+        movementTable.getSelectionModel().selectedItemProperty().addListener((obs, old, sel) -> {
+            boolean deletable = sel != null && (
+                (sel.getSaleId() == null && sel.getPaymentId() == null) ||   // ajuste manual
+                ("CREDITO".equals(sel.getType()) && sel.getPaymentId() != null) // pago reversible
+            );
+            if (deleteMovementButton != null) {
+                deleteMovementButton.setDisable(!deletable);
+                if (sel != null && "CREDITO".equals(sel.getType()) && sel.getPaymentId() != null) {
+                    deleteMovementButton.setText("Eliminar pago");
+                } else {
+                    deleteMovementButton.setText("Eliminar ajuste");
+                }
+            }
+        });
     }
 
     private void setupPaymentControls() {
@@ -371,11 +383,46 @@ public class CurrentAccountController {
                 }
             }
             Map<Integer, String> saleDetails = currentAccountService.getSaleDetailsBySaleIds(saleIds);
-            CurrentAccountPdfExporter.export(Path.of(file.getAbsolutePath()), customer, currentBalance, debts, saleDetails);
+            com.ferreteria.models.AppSettings settings = new com.ferreteria.services.AppSettingsService().load();
+            CurrentAccountPdfExporter.export(Path.of(file.getAbsolutePath()), customer, currentBalance, debts, saleDetails, settings);
             showInfo("PDF exportado correctamente.");
         } catch (Exception e) {
             showError("No se pudo exportar PDF: " + e.getMessage());
         }
+    }
+
+    @FXML
+    private void onDeleteMovement() {
+        CustomerAccountMovementRow selected = movementTable.getSelectionModel().getSelectedItem();
+        if (selected == null) return;
+
+        boolean isPayment = "CREDITO".equals(selected.getType()) && selected.getPaymentId() != null;
+        String title = isPayment ? "Eliminar pago" : "Eliminar ajuste";
+        String body = isPayment
+                ? "¿Eliminar el pago de " + formatCurrency(selected.getAmount()) + "?\n" +
+                  "Esto revertirá el pago y las ventas asociadas volverán a quedar pendientes."
+                : "¿Eliminar el ajuste de " + formatCurrency(selected.getAmount()) + "?\n\"" +
+                  (selected.getNotes() != null ? selected.getNotes() : "") + "\"";
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle(title);
+        confirm.setHeaderText(null);
+        confirm.setContentText(body);
+        confirm.showAndWait().ifPresent(bt -> {
+            if (bt != javafx.scene.control.ButtonType.OK) return;
+            try {
+                if (isPayment) {
+                    currentAccountService.deletePayment(selected.getPaymentId());
+                } else {
+                    currentAccountService.deleteManualMovement(selected.getId());
+                }
+                Customer customer = customerCombo.getSelectionModel().getSelectedItem();
+                loadCustomerAccountData(customer);
+                showInfo(isPayment ? "Pago eliminado correctamente." : "Ajuste eliminado correctamente.");
+            } catch (Exception e) {
+                showError("No se pudo eliminar: " + e.getMessage());
+            }
+        });
     }
 
     private void reloadCustomers() {

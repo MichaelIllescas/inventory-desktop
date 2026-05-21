@@ -1,5 +1,6 @@
 package com.ferreteria.util;
 
+import com.ferreteria.models.AppSettings;
 import com.ferreteria.models.Customer;
 import com.ferreteria.models.CustomerDebtRow;
 import com.lowagie.text.Document;
@@ -34,7 +35,8 @@ public final class CurrentAccountPdfExporter {
             Customer customer,
             double balance,
             List<CustomerDebtRow> debts,
-            Map<Integer, String> saleDetailsBySaleId
+            Map<Integer, String> saleDetailsBySaleId,
+            AppSettings settings
     ) {
         try {
             Document document = new Document(PageSize.A4, 32, 32, 28, 28);
@@ -47,7 +49,9 @@ public final class CurrentAccountPdfExporter {
             Font header = new Font(Font.HELVETICA, 9, Font.BOLD, Color.WHITE);
             Font body = new Font(Font.HELVETICA, 9, Font.NORMAL, new Color(51, 65, 85));
             Font totalLabel = new Font(Font.HELVETICA, 10, Font.BOLD, new Color(30, 41, 59));
-            Font totalValue = new Font(Font.HELVETICA, 15, Font.BOLD, new Color(37, 99, 235));
+            boolean hasCreditBalance = balance < -0.005;
+            Font totalValue = new Font(Font.HELVETICA, 15, Font.BOLD,
+                    hasCreditBalance ? new Color(22, 163, 74) : new Color(37, 99, 235));
 
             List<CustomerDebtRow> pendingDebts = debts.stream()
                     .filter(d -> d.getPendingAmount() > 0.000001d)
@@ -55,29 +59,80 @@ public final class CurrentAccountPdfExporter {
             double pendingSalesDebt = pendingDebts.stream().mapToDouble(CustomerDebtRow::getPendingAmount).sum();
             double manualAdjustmentsDebt = balance - pendingSalesDebt;
 
+            // ── Fila 1: logo/nombre del negocio (izq) + datos de contacto (der) ──
+            boolean useBusiness = settings != null && settings.hasData();
             PdfPTable headingTable = new PdfPTable(new float[]{1f, 1f});
             headingTable.setWidthPercentage(100);
             PdfPCell left = cellNoBorder();
-            Image logo = loadLogo();
-            if (logo != null) {
-                logo.scaleToFit(130, 42);
-                logo.setAlignment(Element.ALIGN_LEFT);
-                left.addElement(logo);
+
+            if (useBusiness) {
+                boolean customLogoRendered = false;
+                if (settings.hasLogo()) {
+                    Image bizLogo = loadLogoFromFile(settings.getLogoPath());
+                    if (bizLogo != null) {
+                        bizLogo.scaleToFit(190, 88);
+                        bizLogo.setAlignment(Element.ALIGN_LEFT);
+                        left.addElement(bizLogo);
+                        customLogoRendered = true;
+                    }
+                }
+                if (!customLogoRendered) {
+                    Image fallbackLogo = loadLogo();
+                    if (fallbackLogo != null) {
+                        fallbackLogo.scaleToFit(190, 88);
+                        fallbackLogo.setAlignment(Element.ALIGN_LEFT);
+                        left.addElement(fallbackLogo);
+                    } else {
+                        left.addElement(new Paragraph("ImperialNet", subtitle));
+                    }
+                }
             } else {
-                left.addElement(new Paragraph("ImperialNet", subtitle));
+                Image logo = loadLogo();
+                if (logo != null) {
+                    logo.scaleToFit(190, 88);
+                    logo.setAlignment(Element.ALIGN_LEFT);
+                    left.addElement(logo);
+                } else {
+                    left.addElement(new Paragraph("ImperialNet", subtitle));
+                }
             }
-            Paragraph heading = new Paragraph("Estado de Deuda", title);
-            heading.setSpacingBefore(2);
-            left.addElement(heading);
-            left.addElement(new Paragraph("Cuenta corriente de cliente", subtitle));
+
             PdfPCell right = cellNoBorder();
             right.setHorizontalAlignment(Element.ALIGN_RIGHT);
-            right.addElement(rightAligned("Fecha emision: " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), subtitle));
-            right.addElement(rightAligned("Hora: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm")), subtitle));
-            right.addElement(rightAligned("Comprobante: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss")), subtitle));
+            right.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            if (useBusiness) {
+                if (safe(settings.getBusinessName()).length() > 1)
+                    right.addElement(rightAligned(settings.getBusinessName(), title));
+                if (safe(settings.getBusinessAddress()).length() > 1)
+                    right.addElement(rightAligned(settings.getBusinessAddress(), subtitle));
+                if (safe(settings.getBusinessPhone()).length() > 1)
+                    right.addElement(rightAligned("Tel: " + settings.getBusinessPhone(), subtitle));
+                if (safe(settings.getBusinessCuit()).length() > 1)
+                    right.addElement(rightAligned("CUIT: " + settings.getBusinessCuit(), subtitle));
+            }
             headingTable.addCell(left);
             headingTable.addCell(right);
             document.add(headingTable);
+
+            document.add(space(6));
+
+            // ── Fila 2: título del documento (izq) + fecha de emisión (der) ──
+            Font emisionFont = new Font(Font.HELVETICA, 8, Font.NORMAL, new Color(148, 163, 184));
+            PdfPTable titleRow = new PdfPTable(new float[]{1f, 1f});
+            titleRow.setWidthPercentage(100);
+            PdfPCell titleCell = cellNoBorder();
+            Paragraph heading = new Paragraph("Estado de Deuda", title);
+            titleCell.addElement(heading);
+            titleCell.addElement(new Paragraph("Cuenta corriente de cliente", subtitle));
+            PdfPCell dateCell = cellNoBorder();
+            dateCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            dateCell.setVerticalAlignment(Element.ALIGN_BOTTOM);
+            String fechaHora = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+            String comprobante = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
+            dateCell.addElement(rightAligned("Emitido: " + fechaHora + "  ·  Comp.: " + comprobante, emisionFont));
+            titleRow.addCell(titleCell);
+            titleRow.addCell(dateCell);
+            document.add(titleRow);
 
             document.add(space(8));
 
@@ -91,42 +146,49 @@ public final class CurrentAccountPdfExporter {
 
             document.add(space(8));
 
+            Color totalBorderColor = hasCreditBalance ? new Color(187, 247, 208) : new Color(191, 219, 254);
+            Color totalBgColor     = hasCreditBalance ? new Color(240, 253, 244) : new Color(239, 246, 255);
+            String totalTitleText  = hasCreditBalance ? "SALDO A FAVOR" : "TOTAL ADEUDADO";
+            String totalAmountText = money(Math.abs(balance));
+
             PdfPTable totalTable = new PdfPTable(new float[]{1f, 1f});
             totalTable.setWidthPercentage(100);
-            PdfPCell totalTitle = new PdfPCell(new Phrase("TOTAL ADEUDADO", totalLabel));
+            PdfPCell totalTitle = new PdfPCell(new Phrase(totalTitleText, totalLabel));
             totalTitle.setBorder(Rectangle.BOX);
-            totalTitle.setBorderColor(new Color(191, 219, 254));
-            totalTitle.setBackgroundColor(new Color(239, 246, 255));
+            totalTitle.setBorderColor(totalBorderColor);
+            totalTitle.setBackgroundColor(totalBgColor);
             totalTitle.setPadding(10);
-            PdfPCell totalAmount = new PdfPCell(new Phrase(money(balance), totalValue));
+            PdfPCell totalAmount = new PdfPCell(new Phrase(totalAmountText, totalValue));
             totalAmount.setHorizontalAlignment(Element.ALIGN_RIGHT);
             totalAmount.setBorder(Rectangle.BOX);
-            totalAmount.setBorderColor(new Color(191, 219, 254));
-            totalAmount.setBackgroundColor(new Color(239, 246, 255));
+            totalAmount.setBorderColor(totalBorderColor);
+            totalAmount.setBackgroundColor(totalBgColor);
             totalAmount.setPadding(10);
             totalTable.addCell(totalTitle);
             totalTable.addCell(totalAmount);
             document.add(totalTable);
 
             document.add(space(4));
+            String adjustLabel  = manualAdjustmentsDebt < -0.005 ? "Saldo a favor / ajustes" : "Deuda anterior / ajustes";
+            String adjustAmount = money(Math.abs(manualAdjustmentsDebt));
             PdfPTable breakdownTable = new PdfPTable(new float[]{1f, 1f});
             breakdownTable.setWidthPercentage(100);
             addBody(breakdownTable, "Deuda por ventas CC", sectionHeader, Element.ALIGN_LEFT, Color.WHITE);
             addBody(breakdownTable, money(pendingSalesDebt), body, Element.ALIGN_RIGHT, Color.WHITE);
-            addBody(breakdownTable, "Deuda anterior / ajustes", sectionHeader, Element.ALIGN_LEFT, new Color(248, 250, 252));
-            addBody(breakdownTable, money(manualAdjustmentsDebt), body, Element.ALIGN_RIGHT, new Color(248, 250, 252));
+            addBody(breakdownTable, adjustLabel, sectionHeader, Element.ALIGN_LEFT, new Color(248, 250, 252));
+            addBody(breakdownTable, adjustAmount, body, Element.ALIGN_RIGHT, new Color(248, 250, 252));
             document.add(breakdownTable);
 
             document.add(space(10));
 
-            PdfPTable debtTable = new PdfPTable(new float[]{0.8f, 1.5f, 2.9f, 1.2f, 1.2f, 1.2f, 1f});
+            PdfPTable debtTable = new PdfPTable(new float[]{0.7f, 1.4f, 2.5f, 1.1f, 1.1f, 1.1f, 1.3f});
             debtTable.setWidthPercentage(100);
-            addHeader(debtTable, "Venta", header, Element.ALIGN_CENTER);
+            addHeader(debtTable, "N°", header, Element.ALIGN_CENTER);
             addHeader(debtTable, "Fecha", header, Element.ALIGN_CENTER);
-            addHeader(debtTable, "Detalle", header, Element.ALIGN_LEFT);
-            addHeader(debtTable, "Total", header, Element.ALIGN_RIGHT);
-            addHeader(debtTable, "Pagado", header, Element.ALIGN_RIGHT);
-            addHeader(debtTable, "Pendiente", header, Element.ALIGN_RIGHT);
+            addHeader(debtTable, "Detalle", header, Element.ALIGN_CENTER);
+            addHeader(debtTable, "Total", header, Element.ALIGN_CENTER);
+            addHeader(debtTable, "Pagado", header, Element.ALIGN_CENTER);
+            addHeader(debtTable, "Pendiente", header, Element.ALIGN_CENTER);
             addHeader(debtTable, "Estado", header, Element.ALIGN_CENTER);
 
             if (pendingDebts.isEmpty()) {
@@ -145,9 +207,9 @@ public final class CurrentAccountPdfExporter {
                 addBody(debtTable, normalizeDate(row.getSaleDate()), body, Element.ALIGN_CENTER, rowColor);
                 String details = saleDetailsBySaleId == null ? null : saleDetailsBySaleId.get(row.getSaleId());
                 addBody(debtTable, safe(details), body, Element.ALIGN_LEFT, rowColor);
-                addBody(debtTable, money(row.getSaleTotal()), body, Element.ALIGN_RIGHT, rowColor);
-                addBody(debtTable, money(row.getAppliedAmount()), body, Element.ALIGN_RIGHT, rowColor);
-                addBody(debtTable, money(row.getPendingAmount()), body, Element.ALIGN_RIGHT, rowColor);
+                addBody(debtTable, money(row.getSaleTotal()), body, Element.ALIGN_CENTER, rowColor);
+                addBody(debtTable, money(row.getAppliedAmount()), body, Element.ALIGN_CENTER, rowColor);
+                addBody(debtTable, money(row.getPendingAmount()), body, Element.ALIGN_CENTER, rowColor);
                 addBody(debtTable, row.getStatus(), body, Element.ALIGN_CENTER, rowColor);
             }
             document.add(debtTable);
@@ -223,6 +285,15 @@ public final class CurrentAccountPdfExporter {
                 buffer.write(chunk, 0, read);
             }
             return Image.getInstance(buffer.toByteArray());
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private static Image loadLogoFromFile(String path) {
+        try {
+            byte[] bytes = java.nio.file.Files.readAllBytes(java.nio.file.Path.of(path));
+            return Image.getInstance(bytes);
         } catch (Exception ignored) {
             return null;
         }

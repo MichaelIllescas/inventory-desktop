@@ -35,6 +35,8 @@ public class MainController {
     private Button btnReports;
     @FXML
     private Button btnExpenses;
+    @FXML
+    private Button btnSettings;
 
     @FXML
     public void initialize() {
@@ -97,6 +99,12 @@ public class MainController {
     }
 
     @FXML
+    private void showSettings() {
+        setActiveSidebarButton(btnSettings);
+        loadView("settings-view.fxml");
+    }
+
+    @FXML
     private void openImperialNet() {
         try {
             Desktop.getDesktop().browse(URI.create("https://imperial-net.com"));
@@ -140,7 +148,7 @@ public class MainController {
     }
 
     private void setActiveSidebarButton(Button activeButton) {
-        Button[] buttons = {btnDashboard, btnProducts, btnSales, btnCustomers, btnCurrentAccount, btnSuppliers, btnInventory, btnReports, btnExpenses};
+        Button[] buttons = {btnDashboard, btnProducts, btnSales, btnCustomers, btnCurrentAccount, btnSuppliers, btnInventory, btnReports, btnExpenses, btnSettings};
         for (Button button : buttons) {
             if (button == null) {
                 continue;

@@ -3,6 +3,7 @@ package com.ferreteria.services;
 import com.ferreteria.database.DatabaseManager;
 import com.ferreteria.models.CustomerAccountMovementRow;
 import com.ferreteria.models.CustomerDebtRow;
+import com.ferreteria.util.AppLogger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -79,6 +80,21 @@ public class CurrentAccountService {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error al calcular saldo de cliente", e);
+        }
+    }
+
+    public double getTotalCurrentBalance() {
+        String sql = "SELECT COALESCE(SUM(CASE " +
+                "WHEN type = 'DEBITO' THEN amount " +
+                "WHEN type = 'CREDITO' THEN -amount " +
+                "ELSE amount END), 0) " +
+                "FROM customer_account_movements";
+        Connection conn = DatabaseManager.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            return rs.next() ? rs.getDouble(1) : 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al calcular saldo total de clientes", e);
         }
     }
 
@@ -284,6 +300,116 @@ public class CurrentAccountService {
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Error al aplicar pago a venta", e);
+        }
+    }
+
+    public void deletePayment(int paymentId) {
+        Connection conn = DatabaseManager.getConnection();
+        DatabaseManager.runInTransaction(() -> {
+            // Eliminar aplicaciones del pago (libera la deuda de las ventas)
+            String deleteApps = "DELETE FROM customer_payment_applications WHERE payment_id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(deleteApps)) {
+                stmt.setInt(1, paymentId);
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Error al eliminar aplicaciones del pago", e);
+            }
+            // Eliminar movimiento CREDITO del historial
+            String deleteMovement = "DELETE FROM customer_account_movements WHERE payment_id = ? AND type = 'CREDITO'";
+            try (PreparedStatement stmt = conn.prepareStatement(deleteMovement)) {
+                stmt.setInt(1, paymentId);
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Error al eliminar movimiento del pago", e);
+            }
+            // Eliminar el registro del pago
+            String deletePayment = "DELETE FROM customer_payments WHERE id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(deletePayment)) {
+                stmt.setInt(1, paymentId);
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Error al eliminar registro de pago", e);
+            }
+        });
+    }
+
+    public void deleteManualMovement(int movementId) {
+        String checkSql = "SELECT sale_id, payment_id FROM customer_account_movements WHERE id = ?";
+        String deleteSql = "DELETE FROM customer_account_movements WHERE id = ? AND sale_id IS NULL AND payment_id IS NULL";
+        Connection conn = DatabaseManager.getConnection();
+        try (PreparedStatement check = conn.prepareStatement(checkSql)) {
+            check.setInt(1, movementId);
+            try (ResultSet rs = check.executeQuery()) {
+                if (!rs.next()) throw new IllegalArgumentException("Movimiento no encontrado.");
+                if (rs.getObject("sale_id") != null || rs.getObject("payment_id") != null) {
+                    throw new IllegalArgumentException("Solo se pueden eliminar ajustes manuales (deuda anterior). Las ventas y pagos se gestionan desde sus propias secciones.");
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al verificar movimiento", e);
+        }
+        try (PreparedStatement stmt = conn.prepareStatement(deleteSql)) {
+            stmt.setInt(1, movementId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al eliminar movimiento", e);
+        }
+    }
+
+    public int cleanupOrphanedCreditMovements() {
+        Connection conn = DatabaseManager.getConnection();
+        try {
+            int total = 0;
+
+            // 1. Borrar aplicaciones que apuntan a ventas eliminadas
+            String cleanAppsSales = "DELETE FROM customer_payment_applications " +
+                    "WHERE sale_id NOT IN (SELECT id FROM sales)";
+            try (PreparedStatement stmt = conn.prepareStatement(cleanAppsSales)) {
+                int n = stmt.executeUpdate();
+                if (n > 0) AppLogger.info("CurrentAccountService", "cleanup", "Apps de ventas eliminadas: " + n);
+                total += n;
+            }
+
+            // 2. Borrar aplicaciones que apuntan a pagos sin movimiento CREDITO
+            //    (pagos fantasma que quedaron después de una limpieza anterior)
+            String cleanAppsPhantom = "DELETE FROM customer_payment_applications " +
+                    "WHERE payment_id NOT IN (" +
+                    "  SELECT DISTINCT payment_id FROM customer_account_movements " +
+                    "  WHERE payment_id IS NOT NULL AND type = 'CREDITO')";
+            try (PreparedStatement stmt = conn.prepareStatement(cleanAppsPhantom)) {
+                int n = stmt.executeUpdate();
+                if (n > 0) AppLogger.info("CurrentAccountService", "cleanup", "Apps de pagos fantasma eliminadas: " + n);
+                total += n;
+            }
+
+            // 3. Borrar movimientos CREDITO para pagos sin aplicaciones restantes
+            String cleanMovements = "DELETE FROM customer_account_movements " +
+                    "WHERE type = 'CREDITO' AND payment_id IS NOT NULL " +
+                    "AND payment_id NOT IN " +
+                    "(SELECT DISTINCT payment_id FROM customer_payment_applications WHERE payment_id IS NOT NULL)";
+            try (PreparedStatement stmt = conn.prepareStatement(cleanMovements)) {
+                int n = stmt.executeUpdate();
+                if (n > 0) AppLogger.info("CurrentAccountService", "cleanup", "Movimientos CREDITO huerfanos: " + n);
+                total += n;
+            }
+
+            // 4. Borrar registros de customer_payments sin movimiento CREDITO
+            //    (evita que applyAvailableCreditsToSale los aplique como saldo disponible)
+            String cleanPhantomPayments = "DELETE FROM customer_payments " +
+                    "WHERE id NOT IN (" +
+                    "  SELECT DISTINCT payment_id FROM customer_account_movements " +
+                    "  WHERE payment_id IS NOT NULL AND type = 'CREDITO')";
+            try (PreparedStatement stmt = conn.prepareStatement(cleanPhantomPayments)) {
+                int n = stmt.executeUpdate();
+                if (n > 0) AppLogger.info("CurrentAccountService", "cleanup", "Pagos fantasma eliminados: " + n);
+                total += n;
+            }
+
+            return total;
+        } catch (SQLException e) {
+            AppLogger.error("CurrentAccountService", "cleanupOrphanedCreditMovements",
+                    "Error al limpiar movimientos huerfanos", e);
+            throw new RuntimeException("Error al limpiar movimientos de cuenta corriente", e);
         }
     }
 

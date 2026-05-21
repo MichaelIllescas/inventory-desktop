@@ -3,13 +3,17 @@ package com.ferreteria.controllers;
 import com.ferreteria.models.ProductSalesReport;
 import com.ferreteria.models.SaleDetailRow;
 import com.ferreteria.models.SalesByDay;
+import com.ferreteria.models.CustomerCurrentAccountReportRow;
 import com.ferreteria.repositories.sqlite.SQLiteProductRepository;
 import com.ferreteria.repositories.sqlite.SQLiteSaleRepository;
 import com.ferreteria.services.ReportService;
 import com.ferreteria.services.SaleService;
 import javafx.fxml.FXML;
+import javafx.scene.chart.AreaChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 
 import static javafx.scene.control.TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN;
@@ -25,6 +29,8 @@ public class ReportsController {
     private static final String VENTAS_POR_DIA = "Por dia";
     private static final String PRODUCTOS_MAS_VENDIDOS = "Productos mas vendidos";
     private static final String VENTAS_CON_DETALLE = "Con detalle";
+    private static final String RENTABILIDAD = "Rentabilidad";
+    private static final String REPORTE_CC = "Reporte CC";
     private static final int TOP_PRODUCTS_LIMIT = 50;
     private static final DateTimeFormatter DATE_DISPLAY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -54,6 +60,8 @@ public class ReportsController {
     private TableColumn<SalesByDay, Number> colDayDebit;
     @FXML
     private TableColumn<SalesByDay, Number> colDayCredit;
+    @FXML
+    private TableColumn<SalesByDay, Number> colDayCurrentAccount;
     @FXML
     private TableView<ProductSalesReport> tableProducts;
     @FXML
@@ -85,7 +93,35 @@ public class ReportsController {
     @FXML
     private TableColumn<SaleDetailRow, String> colDetailPayment;
     @FXML
+    private TableView<CustomerCurrentAccountReportRow> tableCurrentAccount;
+    @FXML
+    private TableColumn<CustomerCurrentAccountReportRow, String> colCcCustomer;
+    @FXML
+    private TableColumn<CustomerCurrentAccountReportRow, Number> colCcInitialDebt;
+    @FXML
+    private TableColumn<CustomerCurrentAccountReportRow, Number> colCcSales;
+    @FXML
+    private TableColumn<CustomerCurrentAccountReportRow, Number> colCcPayments;
+    @FXML
+    private TableColumn<CustomerCurrentAccountReportRow, Number> colCcFinalDebt;
+    @FXML
     private Button btnDeleteSale;
+    @FXML
+    private VBox profitPanel;
+    @FXML
+    private Label profitDevengadoLabel;
+    @FXML
+    private Label profitCobradoLabel;
+    @FXML
+    private Label profitGastosLabel;
+    @FXML
+    private Label profitNetoCajaLabel;
+    @FXML
+    private Label profitCcSalesLabel;
+    @FXML
+    private Label profitCcPaymentsLabel;
+    @FXML
+    private AreaChart<String, Number> profitAreaChart;
 
     private final ReportService reportService = new ReportService();
     private final SaleService saleService = new SaleService(new SQLiteSaleRepository(), new SQLiteProductRepository());
@@ -95,9 +131,10 @@ public class ReportsController {
     public void initialize() {
         tableByDay.setColumnResizePolicy(CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         tableProducts.setColumnResizePolicy(CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
-        tableDetail.setColumnResizePolicy(CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+        tableDetail.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
+        tableCurrentAccount.setColumnResizePolicy(CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
-        reportTypeCombo.getItems().setAll(VENTAS_POR_DIA, VENTAS_CON_DETALLE, PRODUCTOS_MAS_VENDIDOS);
+        reportTypeCombo.getItems().setAll(VENTAS_POR_DIA, VENTAS_CON_DETALLE, PRODUCTOS_MAS_VENDIDOS, RENTABILIDAD, REPORTE_CC);
         reportTypeCombo.getSelectionModel().selectFirst();
         reportTypeCombo.setConverter(new StringConverter<>() {
             @Override
@@ -138,7 +175,8 @@ public class ReportsController {
         colDayTransfer.setCellValueFactory(new PropertyValueFactory<>("transfer"));
         colDayDebit.setCellValueFactory(new PropertyValueFactory<>("debit"));
         colDayCredit.setCellValueFactory(new PropertyValueFactory<>("credit"));
-        for (var col : List.of(colDayTotal, colDayCash, colDayTransfer, colDayDebit, colDayCredit)) {
+        colDayCurrentAccount.setCellValueFactory(new PropertyValueFactory<>("currentAccount"));
+        for (var col : List.of(colDayTotal, colDayCash, colDayTransfer, colDayDebit, colDayCredit, colDayCurrentAccount)) {
             col.setCellFactory(tc -> new TableCell<>() {
                 @Override protected void updateItem(Number item, boolean empty) {
                     super.updateItem(item, empty);
@@ -222,9 +260,30 @@ public class ReportsController {
             colDetailPayment.setCellValueFactory(new PropertyValueFactory<>("paymentMethod"));
         }
 
+        colCcCustomer.setCellValueFactory(new PropertyValueFactory<>("customerName"));
+        colCcInitialDebt.setCellValueFactory(new PropertyValueFactory<>("initialDebt"));
+        colCcSales.setCellValueFactory(new PropertyValueFactory<>("periodSales"));
+        colCcPayments.setCellValueFactory(new PropertyValueFactory<>("periodPayments"));
+        colCcFinalDebt.setCellValueFactory(new PropertyValueFactory<>("finalDebt"));
+        for (TableColumn<CustomerCurrentAccountReportRow, Number> col : List.of(colCcInitialDebt, colCcSales, colCcPayments, colCcFinalDebt)) {
+            col.setCellFactory(tc -> new TableCell<>() {
+                @Override
+                protected void updateItem(Number item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? "" : formatCurrency(item.doubleValue()));
+                }
+            });
+        }
+
         tableByDay.setVisible(true);
+        tableByDay.setManaged(true);
         tableProducts.setVisible(false);
+        tableProducts.setManaged(false);
         tableDetail.setVisible(false);
+        tableDetail.setManaged(false);
+        tableCurrentAccount.setVisible(false);
+        tableCurrentAccount.setManaged(false);
+        showProfitPanel(false);
 
         reportTypeCombo.getSelectionModel().selectedItemProperty().addListener((o, old, v) -> updateDeleteButtonState());
         tableDetail.getSelectionModel().selectedItemProperty().addListener((o, old, v) -> updateDeleteButtonState());
@@ -314,49 +373,182 @@ public class ReportsController {
         String type = reportTypeCombo.getSelectionModel().getSelectedItem();
 
         double totalExpenses = expenseRepo.getTotalInRange(fromStr, toStr);
+        double totalDevengado = reportService.getSalesTotalInRange(fromStr, toStr);
+        double totalCobrado = reportService.getCollectedTotalInRange(fromStr, toStr);
+        double totalVentasCC = reportService.getCurrentAccountSalesTotalInRange(fromStr, toStr);
+        double totalPagosCC = reportService.getCurrentAccountPaymentsTotalInRange(fromStr, toStr);
+        double netoDevengado = totalDevengado - totalExpenses;
+        double netoCaja = totalCobrado - totalExpenses;
 
         if (VENTAS_POR_DIA.equals(type)) {
             List<SalesByDay> rows = reportService.getSalesByDayInRange(fromStr, toStr);
             tableByDay.getItems().setAll(rows);
             tableByDay.setVisible(true);
+            tableByDay.setManaged(true);
             tableProducts.setVisible(false);
+            tableProducts.setManaged(false);
             tableDetail.setVisible(false);
-            double total = reportService.getSalesTotalInRange(fromStr, toStr);
-            double dailyAverage = rows.isEmpty() ? 0 : total / rows.size();
-            summaryLabel.setText("Ingresos " + formatCurrency(total) +
-                    "  |  Gastos " + formatCurrency(totalExpenses) +
-                    "  |  Neto " + formatCurrency(total - totalExpenses) +
-                    "  |  " + rows.size() + " dias  |  Promedio diario " + formatCurrency(dailyAverage));
-            summaryLabel.setVisible(true);
+            tableDetail.setManaged(false);
+            showProfitPanel(false);
+            double dailyAverage = rows.isEmpty() ? 0 : totalDevengado / rows.size();
+            summaryLabel.setText(buildSalesSummaryText(
+                    totalDevengado, totalCobrado, totalVentasCC, totalPagosCC,
+                    "Dias con ventas: " + rows.size(),
+                    "Promedio diario: " + formatCurrency(dailyAverage)
+            ));
+            setSummaryVisible(true);
         } else if (PRODUCTOS_MAS_VENDIDOS.equals(type)) {
             List<ProductSalesReport> rows = reportService.getTopProductsInRange(fromStr, toStr, TOP_PRODUCTS_LIMIT);
             tableProducts.getItems().setAll(rows);
             tableProducts.setVisible(true);
+            tableProducts.setManaged(true);
             tableByDay.setVisible(false);
+            tableByDay.setManaged(false);
             tableDetail.setVisible(false);
-            double total = reportService.getSalesTotalInRange(fromStr, toStr);
+            tableDetail.setManaged(false);
+            showProfitPanel(false);
             double totalUnits = rows.stream().mapToDouble(ProductSalesReport::getQuantitySold).sum();
-            summaryLabel.setText("Ingresos " + formatCurrency(total) +
-                    "  |  Gastos " + formatCurrency(totalExpenses) +
-                    "  |  Neto " + formatCurrency(total - totalExpenses) +
-                    "  |  " + rows.size() + " productos  |  " + formatQuantity(totalUnits) + " unidades");
-            summaryLabel.setVisible(true);
-        } else {
+            summaryLabel.setText(buildSalesSummaryText(
+                    totalDevengado, totalCobrado, totalVentasCC, totalPagosCC,
+                    "Productos en ranking: " + rows.size(),
+                    "Unidades vendidas: " + formatQuantity(totalUnits)
+            ));
+            setSummaryVisible(true);
+        } else if (VENTAS_CON_DETALLE.equals(type)) {
             List<SaleDetailRow> rows = reportService.getSaleDetailsInRange(fromStr, toStr);
             tableDetail.getItems().setAll(rows);
             tableDetail.setVisible(true);
+            tableDetail.setManaged(true);
             tableByDay.setVisible(false);
+            tableByDay.setManaged(false);
             tableProducts.setVisible(false);
-            double total = reportService.getSalesTotalInRange(fromStr, toStr);
+            tableProducts.setManaged(false);
+            showProfitPanel(false);
             long ventas = rows.stream().mapToInt(SaleDetailRow::getSaleId).distinct().count();
-            double ticketAverage = ventas == 0 ? 0 : total / ventas;
-            summaryLabel.setText("Ingresos " + formatCurrency(total) +
-                    "  |  Gastos " + formatCurrency(totalExpenses) +
-                    "  |  Neto " + formatCurrency(total - totalExpenses) +
-                    "  |  " + ventas + " ventas  |  Ticket promedio " + formatCurrency(ticketAverage));
-            summaryLabel.setVisible(true);
+            double ticketAverage = ventas == 0 ? 0 : totalDevengado / ventas;
+            summaryLabel.setText(buildSalesSummaryText(
+                    totalDevengado, totalCobrado, totalVentasCC, totalPagosCC,
+                    "Ventas registradas: " + ventas,
+                    "Ticket promedio: " + formatCurrency(ticketAverage)
+            ));
+            setSummaryVisible(true);
+        } else {
+            if (RENTABILIDAD.equals(type)) {
+                showProfitPanel(true);
+                setSummaryVisible(false);
+                updateProfitPanel(totalDevengado, totalCobrado, totalExpenses, netoDevengado, netoCaja, totalVentasCC, totalPagosCC);
+                tableCurrentAccount.setVisible(false);
+                tableCurrentAccount.setManaged(false);
+            } else {
+                showProfitPanel(false);
+                tableByDay.setVisible(false);
+                tableByDay.setManaged(false);
+                tableProducts.setVisible(false);
+                tableProducts.setManaged(false);
+                tableDetail.setVisible(false);
+                tableDetail.setManaged(false);
+                tableCurrentAccount.setVisible(true);
+                tableCurrentAccount.setManaged(true);
+
+                List<CustomerCurrentAccountReportRow> ccRows = reportService.getCurrentAccountReportByCustomer(fromStr, toStr);
+                tableCurrentAccount.getItems().setAll(ccRows);
+
+                double initialDebt = ccRows.stream().mapToDouble(CustomerCurrentAccountReportRow::getInitialDebt).sum();
+                double ccSales = ccRows.stream().mapToDouble(CustomerCurrentAccountReportRow::getPeriodSales).sum();
+                double ccPayments = ccRows.stream().mapToDouble(CustomerCurrentAccountReportRow::getPeriodPayments).sum();
+                double finalDebt = ccRows.stream().mapToDouble(CustomerCurrentAccountReportRow::getFinalDebt).sum();
+                summaryLabel.setText(
+                        "REPORTE DE CUENTA CORRIENTE\n" +
+                        "----------------------------------------\n" +
+                        "Saldo inicial (clientes): " + formatCurrency(initialDebt) + "\n" +
+                        "Compras CC del periodo: " + formatCurrency(ccSales) + "\n" +
+                        "Pagos CC del periodo: " + formatCurrency(ccPayments) + "\n" +
+                        "Saldo final (clientes): " + formatCurrency(finalDebt) + "\n" +
+                        "Clientes en reporte: " + ccRows.size()
+                );
+                setSummaryVisible(true);
+            }
         }
         updateDeleteButtonState();
+    }
+
+    private void setSummaryVisible(boolean visible) {
+        summaryLabel.setVisible(visible);
+        summaryLabel.setManaged(visible);
+    }
+
+    private void showProfitPanel(boolean show) {
+        if (profitPanel == null) return;
+        profitPanel.setVisible(show);
+        profitPanel.setManaged(show);
+        if (show) {
+            tableByDay.setVisible(false);
+            tableByDay.setManaged(false);
+            tableProducts.setVisible(false);
+            tableProducts.setManaged(false);
+            tableDetail.setVisible(false);
+            tableDetail.setManaged(false);
+        }
+    }
+
+    private void updateProfitPanel(double devengado, double cobrado, double gastos, double netoDev, double netoCaja, double ccSales, double ccPayments) {
+        if (profitPanel == null) return;
+        profitDevengadoLabel.setText(formatCurrency(devengado));
+        profitCobradoLabel.setText(formatCurrency(cobrado));
+        profitGastosLabel.setText(formatCurrency(gastos));
+        profitNetoCajaLabel.setText(formatCurrency(netoCaja));
+        if (profitCcSalesLabel != null) profitCcSalesLabel.setText(formatCurrency(ccSales));
+        if (profitCcPaymentsLabel != null) profitCcPaymentsLabel.setText(formatCurrency(ccPayments));
+
+        profitAreaChart.getData().clear();
+        XYChart.Series<String, Number> serie = new XYChart.Series<>();
+        serie.setName("Montos");
+        serie.getData().add(new XYChart.Data<>("Devengado", devengado));
+        serie.getData().add(new XYChart.Data<>("Cobrado", cobrado));
+        serie.getData().add(new XYChart.Data<>("Gastos", gastos));
+        serie.getData().add(new XYChart.Data<>("Neto dev", netoDev));
+        serie.getData().add(new XYChart.Data<>("Neto caja", netoCaja));
+        profitAreaChart.getData().add(serie);
+    }
+
+    private String buildSalesSummaryText(
+            double totalVendido,
+            double totalCobrado,
+            double totalVentasCC,
+            double totalPagosCC,
+            String extraLine1,
+            String extraLine2
+    ) {
+        return "RESUMEN DE VENTAS\n" +
+                "----------------------------------------\n" +
+                "Vendido total (incluye cuenta corriente): " + formatCurrency(totalVendido) + "\n" +
+                "Cobrado (caja): " + formatCurrency(totalCobrado) + "\n" +
+                "Ventas en cuenta corriente: " + formatCurrency(totalVentasCC) + "\n" +
+                "Pagos de cuenta corriente: " + formatCurrency(totalPagosCC) + "\n" +
+                "----------------------------------------\n" +
+                extraLine1 + "\n" +
+                extraLine2;
+    }
+
+    private String buildProfitSummaryText(
+            double totalDevengado,
+            double totalCobrado,
+            double totalExpenses,
+            double netoDevengado,
+            double netoCaja,
+            String extraLine1,
+            String extraLine2
+    ) {
+        return "RESUMEN DE RENTABILIDAD\n" +
+                "----------------------------------------\n" +
+                "Ingresos devengados: " + formatCurrency(totalDevengado) + " (todo lo vendido, cobrado o no)\n" +
+                "Ingresos cobrados (caja): " + formatCurrency(totalCobrado) + " (dinero efectivamente ingresado)\n" +
+                "Gastos: " + formatCurrency(totalExpenses) + " (egresos cargados en el periodo)\n" +
+                "Neto devengado: " + formatCurrency(netoDevengado) + " (devengado - gastos)\n" +
+                "Neto caja: " + formatCurrency(netoCaja) + " (cobrado - gastos)\n" +
+                "----------------------------------------\n" +
+                extraLine1 + " (ventas fiadas registradas)\n" +
+                extraLine2 + " (cobros reales de esas cuentas)";
     }
 
     @FXML

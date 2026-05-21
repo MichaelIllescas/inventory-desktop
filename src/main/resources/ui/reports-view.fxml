@@ -7,6 +7,9 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.chart.AreaChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
@@ -46,6 +49,46 @@
 
     <center>
         <StackPane fx:id="tableStack">
+            <VBox fx:id="profitPanel" visible="false" managed="false" spacing="12" styleClass="profit-panel" StackPane.alignment="TOP_LEFT">
+                <HBox spacing="12">
+                    <VBox styleClass="report-card report-card-blue" HBox.hgrow="ALWAYS">
+                        <Label text="Ingresos devengados" styleClass="report-card-title"/>
+                        <Label fx:id="profitDevengadoLabel" text="\$ 0,00" styleClass="report-card-value"/>
+                    </VBox>
+                    <VBox styleClass="report-card report-card-green" HBox.hgrow="ALWAYS">
+                        <Label text="Ingresos cobrados (caja)" styleClass="report-card-title"/>
+                        <Label fx:id="profitCobradoLabel" text="\$ 0,00" styleClass="report-card-value"/>
+                    </VBox>
+                    <VBox styleClass="report-card report-card-red" HBox.hgrow="ALWAYS">
+                        <Label text="Gastos" styleClass="report-card-title"/>
+                        <Label fx:id="profitGastosLabel" text="\$ 0,00" styleClass="report-card-value"/>
+                    </VBox>
+                    <VBox styleClass="report-card report-card-neutral" HBox.hgrow="ALWAYS">
+                        <Label text="Neto caja" styleClass="report-card-title"/>
+                        <Label fx:id="profitNetoCajaLabel" text="\$ 0,00" styleClass="report-card-value"/>
+                    </VBox>
+                </HBox>
+                <HBox spacing="12">
+                    <VBox styleClass="report-card report-card-cyan" HBox.hgrow="ALWAYS">
+                        <Label text="Ventas en cuenta corriente" styleClass="report-card-title"/>
+                        <Label fx:id="profitCcSalesLabel" text="\$ 0,00" styleClass="report-card-value"/>
+                        <Label text="Ventas fiadas registradas en el periodo" styleClass="report-card-note"/>
+                    </VBox>
+                    <VBox styleClass="report-card report-card-cyan" HBox.hgrow="ALWAYS">
+                        <Label text="Pagos de cuenta corriente" styleClass="report-card-title"/>
+                        <Label fx:id="profitCcPaymentsLabel" text="\$ 0,00" styleClass="report-card-value"/>
+                        <Label text="Cobros reales de cuentas corrientes" styleClass="report-card-note"/>
+                    </VBox>
+                </HBox>
+                <AreaChart fx:id="profitAreaChart" animated="false" legendVisible="false" title="Rentabilidad del periodo" styleClass="profit-chart profit-area-chart" prefHeight="340">
+                    <xAxis>
+                        <CategoryAxis/>
+                    </xAxis>
+                    <yAxis>
+                        <NumberAxis/>
+                    </yAxis>
+                </AreaChart>
+            </VBox>
             <TableView fx:id="tableByDay" maxWidth="Infinity" maxHeight="Infinity">
                 <columns>
                     <TableColumn fx:id="colDay" text="Día" minWidth="160" styleClass="numeric-column"/>
@@ -53,7 +96,7 @@
                     <TableColumn fx:id="colDayCash" text="Efectivo ($)" minWidth="100" styleClass="numeric-column"/>
                     <TableColumn fx:id="colDayTransfer" text="Transferencia ($)" minWidth="140" styleClass="numeric-column"/>
                     <TableColumn fx:id="colDayDebit" text="Débito ($)" minWidth="100" styleClass="numeric-column"/>
-                    <TableColumn fx:id="colDayCredit" text="Crédito ($)" minWidth="100" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDayCredit" text="Crédito ($)" minWidth="100" styleClass="numeric-column"/>                    <TableColumn fx:id="colDayCurrentAccount" text="Cuenta corriente ($)" minWidth="170" styleClass="numeric-column"/>
                 </columns>
             </TableView>
             <TableView fx:id="tableProducts" visible="false" maxWidth="Infinity" maxHeight="Infinity">
@@ -77,6 +120,15 @@
                     <TableColumn fx:id="colDetailPayment" text="Medio pago" minWidth="100"/>
                 </columns>
             </TableView>
+            <TableView fx:id="tableCurrentAccount" visible="false" managed="false" maxWidth="Infinity" maxHeight="Infinity">
+                <columns>
+                    <TableColumn fx:id="colCcCustomer" text="Cliente" minWidth="220"/>
+                    <TableColumn fx:id="colCcInitialDebt" text="Deuda inicial ($)" minWidth="140" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colCcSales" text="Compras CC ($)" minWidth="140" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colCcPayments" text="Pagos CC ($)" minWidth="130" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colCcFinalDebt" text="Deuda final ($)" minWidth="140" styleClass="numeric-column"/>
+                </columns>
+            </TableView>
         </StackPane>
     </center>
 
@@ -85,3 +137,5 @@
     </padding>
 
 </BorderPane>
+
+

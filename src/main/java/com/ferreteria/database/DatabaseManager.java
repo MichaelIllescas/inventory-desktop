@@ -89,6 +89,7 @@ public final class DatabaseManager {
                     migrateAddCodeIndex(connection);
                     migrateAddPrecarga(connection);
                     migrateAddDeleted(connection);
+                    migrateAddCustomersAndCurrentAccount(connection);
                     ensureExternalDb();
                     schemaInitialized = true;
                     AppLogger.info("DatabaseManager", "getConnection", "BD inicializada correctamente");
@@ -359,6 +360,95 @@ public final class DatabaseManager {
         } catch (SQLException e) {
             AppLogger.error("DatabaseManager", "migrateAddCodeIndex", "Error al crear índices: " + e.getMessage(), e);
             throw new RuntimeException("Error al crear índices en products", e);
+        }
+    }
+
+    /**
+     * Crea estructura base de clientes y cuenta corriente sin romper bases existentes.
+     * - sales.customer_id queda nullable para compatibilidad con ventas historicas.
+     * - Las tablas nuevas se crean con IF NOT EXISTS (idempotente).
+     */
+    private static void migrateAddCustomersAndCurrentAccount(Connection conn) {
+        try (Statement st = conn.createStatement()) {
+            st.execute("CREATE TABLE IF NOT EXISTS customers (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "name TEXT NOT NULL, " +
+                    "phone TEXT, " +
+                    "address TEXT, " +
+                    "credit_limit REAL NOT NULL DEFAULT -1, " +
+                    "active INTEGER NOT NULL DEFAULT 1, " +
+                    "created_at TEXT NOT NULL)");
+
+            st.execute("CREATE TABLE IF NOT EXISTS customer_payments (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "customer_id INTEGER NOT NULL, " +
+                    "date TEXT NOT NULL, " +
+                    "amount REAL NOT NULL, " +
+                    "payment_method TEXT, " +
+                    "notes TEXT, " +
+                    "FOREIGN KEY (customer_id) REFERENCES customers(id))");
+
+            st.execute("CREATE TABLE IF NOT EXISTS customer_account_movements (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "customer_id INTEGER NOT NULL, " +
+                    "date TEXT NOT NULL, " +
+                    "type TEXT NOT NULL, " +
+                    "amount REAL NOT NULL, " +
+                    "sale_id INTEGER, " +
+                    "payment_id INTEGER, " +
+                    "notes TEXT, " +
+                    "FOREIGN KEY (customer_id) REFERENCES customers(id), " +
+                    "FOREIGN KEY (sale_id) REFERENCES sales(id), " +
+                    "FOREIGN KEY (payment_id) REFERENCES customer_payments(id))");
+
+            st.execute("CREATE TABLE IF NOT EXISTS customer_payment_applications (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "payment_id INTEGER NOT NULL, " +
+                    "sale_id INTEGER NOT NULL, " +
+                    "applied_amount REAL NOT NULL, " +
+                    "FOREIGN KEY (payment_id) REFERENCES customer_payments(id) ON DELETE CASCADE, " +
+                    "FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE)");
+        } catch (SQLException e) {
+            AppLogger.error("DatabaseManager", "migrateAddCustomersAndCurrentAccount",
+                    "Error al crear tablas de clientes/cuenta corriente: " + e.getMessage(), e);
+            throw new RuntimeException("Error al crear estructura de clientes/cuenta corriente", e);
+        }
+
+        try (Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery("PRAGMA table_info(sales)")) {
+            boolean hasCustomerId = false;
+            while (rs.next()) {
+                if ("customer_id".equalsIgnoreCase(rs.getString("name"))) {
+                    hasCustomerId = true;
+                    break;
+                }
+            }
+            if (!hasCustomerId) {
+                AppLogger.info("DatabaseManager", "migrateAddCustomersAndCurrentAccount",
+                        "Aplicando migracion: columna customer_id en sales");
+                try (Statement alter = conn.createStatement()) {
+                    alter.execute("ALTER TABLE sales ADD COLUMN customer_id INTEGER");
+                }
+            }
+        } catch (SQLException e) {
+            AppLogger.error("DatabaseManager", "migrateAddCustomersAndCurrentAccount",
+                    "Error al agregar columna customer_id en sales: " + e.getMessage(), e);
+            throw new RuntimeException("Error al migrar columna customer_id en sales", e);
+        }
+
+        try (Statement st = conn.createStatement()) {
+            st.execute("CREATE INDEX IF NOT EXISTS idx_sales_customer_id ON sales(customer_id)");
+            st.execute("CREATE INDEX IF NOT EXISTS idx_customers_name ON customers(name)");
+            st.execute("CREATE INDEX IF NOT EXISTS idx_cam_customer_date ON customer_account_movements(customer_id, date)");
+            st.execute("CREATE INDEX IF NOT EXISTS idx_cam_sale_id ON customer_account_movements(sale_id)");
+            st.execute("CREATE INDEX IF NOT EXISTS idx_cam_payment_id ON customer_account_movements(payment_id)");
+            st.execute("CREATE INDEX IF NOT EXISTS idx_cp_customer_date ON customer_payments(customer_id, date)");
+            st.execute("CREATE INDEX IF NOT EXISTS idx_cpa_payment_id ON customer_payment_applications(payment_id)");
+            st.execute("CREATE INDEX IF NOT EXISTS idx_cpa_sale_id ON customer_payment_applications(sale_id)");
+        } catch (SQLException e) {
+            AppLogger.error("DatabaseManager", "migrateAddCustomersAndCurrentAccount",
+                    "Error al crear indices de clientes/cuenta corriente: " + e.getMessage(), e);
+            throw new RuntimeException("Error al crear indices de clientes/cuenta corriente", e);
         }
     }
 

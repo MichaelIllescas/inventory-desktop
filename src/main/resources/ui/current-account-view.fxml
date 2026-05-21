@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.ferreteria.controllers.CurrentAccountController"
+            fx:id="rootPane"
+            styleClass="current-account-view-root">
+
+    <top>
+        <VBox spacing="12">
+            <children>
+                <Label text="Cuentas corrientes" styleClass="view-title"/>
+                <HBox spacing="10" alignment="CENTER_LEFT" styleClass="customers-toolbar current-account-toolbar">
+                    <children>
+                        <TextField fx:id="searchCustomerField" promptText="Buscar cliente por nombre o apellido..." prefWidth="320" HBox.hgrow="ALWAYS"/>
+                        <Button text="Buscar" onAction="#onSearchCustomer" styleClass="customers-search-button" minWidth="100" prefWidth="110"/>
+                        <Button text="Restablecer" onAction="#onResetCustomerFilter" styleClass="customers-secondary-button" minWidth="130" prefWidth="140"/>
+                        <ComboBox fx:id="customerCombo" prefWidth="320" promptText="Seleccionar cliente" HBox.hgrow="ALWAYS"/>
+                        <Button fx:id="exportPdfButton" text="Exportar PDF" onAction="#onExportPdf" styleClass="current-account-export-button" minWidth="140" prefWidth="150"/>
+                    </children>
+                </HBox>
+                <GridPane hgap="16" vgap="10" styleClass="customers-summary-card-neutral">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="20"/>
+                        <ColumnConstraints percentWidth="20"/>
+                        <ColumnConstraints percentWidth="20"/>
+                        <ColumnConstraints percentWidth="20"/>
+                        <ColumnConstraints percentWidth="20"/>
+                    </columnConstraints>
+                    <VBox GridPane.columnIndex="0" spacing="4">
+                        <Label text="Nombre" styleClass="customers-summary-title"/>
+                        <Label fx:id="customerNameLabel" text="-" styleClass="customers-summary-value"/>
+                    </VBox>
+                    <VBox GridPane.columnIndex="1" spacing="4">
+                        <Label text="Telefono" styleClass="customers-summary-title"/>
+                        <Label fx:id="customerPhoneLabel" text="-" styleClass="customers-summary-value"/>
+                    </VBox>
+                    <VBox GridPane.columnIndex="2" spacing="4">
+                        <Label text="Direccion" styleClass="customers-summary-title"/>
+                        <Label fx:id="customerAddressLabel" text="-" styleClass="customers-summary-value"/>
+                    </VBox>
+                    <VBox GridPane.columnIndex="3" spacing="4">
+                        <Label text="Limite" styleClass="customers-summary-title"/>
+                        <Label fx:id="customerLimitLabel" text="Sin limite" styleClass="customers-summary-value"/>
+                    </VBox>
+                    <VBox GridPane.columnIndex="4" spacing="4">
+                        <Label text="Saldo cliente" styleClass="customers-summary-title"/>
+                        <Label fx:id="customerBalanceLabel" text="\$ 0,00" styleClass="customers-summary-value"/>
+                    </VBox>
+                </GridPane>
+                <GridPane hgap="14" vgap="14" styleClass="customers-summary-grid">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="50"/>
+                        <ColumnConstraints percentWidth="50"/>
+                    </columnConstraints>
+                    <VBox styleClass="customers-summary-card-primary" GridPane.columnIndex="0" spacing="4">
+                        <Label text="Saldo actual" styleClass="customers-summary-title"/>
+                        <Label fx:id="summaryBalanceLabel" text="\$ 0,00" styleClass="customers-summary-value"/>
+                    </VBox>
+                    <VBox styleClass="customers-summary-card-neutral" GridPane.columnIndex="1" spacing="4">
+                        <Label text="Ventas con deuda" styleClass="customers-summary-title"/>
+                        <Label fx:id="summaryPendingSalesLabel" text="0" styleClass="customers-summary-value"/>
+                    </VBox>
+                </GridPane>
+            </children>
+            <padding>
+                <Insets top="0" right="0" bottom="12" left="0"/>
+            </padding>
+        </VBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true" pannable="true" styleClass="summary-scroll">
+            <content>
+                <VBox spacing="10">
+                    <Label text="Deuda por venta" styleClass="summary-panel-title"/>
+                    <TableView fx:id="debtTable" prefHeight="200" styleClass="customers-table">
+                        <columns>
+                            <TableColumn fx:id="colDebtSaleId" text="Venta" prefWidth="70"/>
+                            <TableColumn fx:id="colDebtDate" text="Fecha" prefWidth="180"/>
+                            <TableColumn fx:id="colDebtTotal" text="Total venta" prefWidth="140"/>
+                            <TableColumn fx:id="colDebtApplied" text="Pagado" prefWidth="130"/>
+                            <TableColumn fx:id="colDebtPending" text="Pendiente" prefWidth="130"/>
+                            <TableColumn fx:id="colDebtStatus" text="Estado" prefWidth="110"/>
+                        </columns>
+                    </TableView>
+
+                    <Separator/>
+
+                    <Label text="Movimientos" styleClass="summary-panel-title"/>
+                    <TableView fx:id="movementTable" prefHeight="200" styleClass="customers-table">
+                        <columns>
+                            <TableColumn fx:id="colMovDate" text="Fecha" prefWidth="180"/>
+                            <TableColumn fx:id="colMovType" text="Tipo" prefWidth="90"/>
+                            <TableColumn fx:id="colMovAmount" text="Monto" prefWidth="120"/>
+                            <TableColumn fx:id="colMovBalance" text="Saldo" prefWidth="120"/>
+                            <TableColumn fx:id="colMovRef" text="Referencia" prefWidth="120"/>
+                            <TableColumn fx:id="colMovNotes" text="Detalle" prefWidth="260"/>
+                        </columns>
+                    </TableView>
+
+                    <VBox spacing="12">
+                        <Label text="Registrar pago" styleClass="summary-panel-title"/>
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <children>
+                                <TextField fx:id="paymentAmountField" promptText="Monto (ej. 15000,50)" prefWidth="180"/>
+                                <ComboBox fx:id="paymentMethodCombo" prefWidth="160"/>
+                                <TextField fx:id="paymentNotesField" promptText="Observacion (opcional)" HBox.hgrow="ALWAYS"/>
+                                <Button fx:id="registerPaymentButton" text="Registrar pago" onAction="#onRegisterPayment" styleClass="customers-search-button"/>
+                            </children>
+                        </HBox>
+                        <Label text="Registrar deuda anterior" styleClass="summary-panel-title"/>
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <children>
+                                <TextField fx:id="initialDebtAmountField" promptText="Monto deuda anterior (ej. 25000)" prefWidth="220"/>
+                                <TextField fx:id="initialDebtNotesField" promptText="Detalle (opcional)" HBox.hgrow="ALWAYS"/>
+                                <Button fx:id="registerInitialDebtButton" text="Registrar deuda" onAction="#onRegisterInitialDebt" styleClass="current-account-export-button"/>
+                            </children>
+                        </HBox>
+                        <padding>
+                            <Insets top="10" right="0" bottom="0" left="0"/>
+                        </padding>
+                    </VBox>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+
+    <padding>
+        <Insets top="16" right="16" bottom="16" left="16"/>
+    </padding>
+
+</BorderPane>

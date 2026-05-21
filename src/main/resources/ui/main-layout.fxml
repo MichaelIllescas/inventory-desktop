@@ -29,6 +29,8 @@
                 <Button fx:id="btnDashboard" text="Inicio" styleClass="sidebar-button" onAction="#showDashboard"/>
                 <Button fx:id="btnProducts" text="Productos" styleClass="sidebar-button" onAction="#showProducts"/>
                 <Button fx:id="btnSales" text="Ventas" styleClass="sidebar-button" onAction="#showSales"/>
+                <Button fx:id="btnCustomers" text="Clientes" styleClass="sidebar-button" onAction="#showCustomers"/>
+                <Button fx:id="btnCurrentAccount" text="Ctas. corrientes" styleClass="sidebar-button" onAction="#showCurrentAccount"/>
                 <Button fx:id="btnSuppliers" text="Proveedores" styleClass="sidebar-button" onAction="#showSuppliers"/>
                 <Button fx:id="btnInventory" text="Inventario" styleClass="sidebar-button" onAction="#showInventory"/>
                 <Button fx:id="btnReports" text="Reportes" styleClass="sidebar-button" onAction="#showReports"/>

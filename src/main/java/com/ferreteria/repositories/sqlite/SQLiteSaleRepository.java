@@ -1,6 +1,7 @@
 package com.ferreteria.repositories.sqlite;
 
 import com.ferreteria.database.DatabaseManager;
+import com.ferreteria.models.CustomerCurrentAccountReportRow;
 import com.ferreteria.models.ProductSalesReport;
 import com.ferreteria.models.Sale;
 import com.ferreteria.models.SaleDetailRow;
@@ -14,15 +15,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SQLiteSaleRepository implements SaleRepository {
+    private static final String PAYMENT_CURRENT_ACCOUNT = "Cuenta corriente";
+    private static final String PAYMENT_CURRENT_ACCOUNT_LEGACY = "CUENTA_CORRIENTE";
 
     @Override
     public Sale saveSale(Sale sale) {
-        String sql = "INSERT INTO sales(date, total, payment_method) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO sales(date, total, payment_method, customer_id) VALUES (?, ?, ?, ?)";
         Connection conn = DatabaseManager.getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, sale.getDate());
             stmt.setDouble(2, sale.getTotal());
             stmt.setString(3, sale.getPaymentMethod());
+            if (sale.getCustomerId() == null) {
+                stmt.setNull(4, Types.INTEGER);
+            } else {
+                stmt.setInt(4, sale.getCustomerId());
+            }
             stmt.executeUpdate();
             try (ResultSet keys = stmt.getGeneratedKeys()) {
                 if (keys.next()) {
@@ -101,7 +109,10 @@ public class SQLiteSaleRepository implements SaleRepository {
 
     @Override
     public double getSalesTotalInRange(String dateFrom, String dateTo) {
-        String sql = "SELECT COALESCE(SUM(total), 0) FROM sales WHERE datetime(date) >= ? AND datetime(date) <= ?";
+        String sql = "SELECT COALESCE(SUM(s.total), 0) " +
+                "FROM sales s " +
+                "WHERE datetime(s.date) >= ? AND datetime(s.date) <= ? " +
+                "AND EXISTS (SELECT 1 FROM sale_items si WHERE si.sale_id = s.id)";
         Connection conn = DatabaseManager.getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, dateFrom);
@@ -115,18 +126,95 @@ public class SQLiteSaleRepository implements SaleRepository {
     }
 
     @Override
-    public List<SalesByDay> getSalesByDayInRange(String dateFrom, String dateTo) {
-        String sql = "SELECT date(date) AS day," +
-                " SUM(total) AS total," +
-                " SUM(CASE WHEN payment_method = 'Efectivo' THEN total ELSE 0 END) AS cash," +
-                " SUM(CASE WHEN payment_method = 'Transferencia' THEN total ELSE 0 END) AS transfer," +
-                " SUM(CASE WHEN payment_method = 'Débito' THEN total ELSE 0 END) AS debit," +
-                " SUM(CASE WHEN payment_method = 'Crédito' THEN total ELSE 0 END) AS credit" +
-                " FROM sales WHERE datetime(date) >= ? AND datetime(date) <= ? GROUP BY date(date) ORDER BY day";
+    public double getCollectedTotalInRange(String dateFrom, String dateTo) {
+        String cashSalesSql = "SELECT COALESCE(SUM(s.total), 0) FROM sales s " +
+                "WHERE datetime(s.date) >= ? AND datetime(s.date) <= ? " +
+                "AND (s.payment_method IS NULL OR s.payment_method NOT IN (?, ?)) " +
+                "AND EXISTS (SELECT 1 FROM sale_items si WHERE si.sale_id = s.id)";
+        String currentAccountPaymentsSql = "SELECT COALESCE(SUM(cpa.applied_amount), 0) " +
+                "FROM customer_payment_applications cpa " +
+                "JOIN customer_payments cp ON cp.id = cpa.payment_id " +
+                "WHERE datetime(cp.date) >= ? AND datetime(cp.date) <= ?";
+        Connection conn = DatabaseManager.getConnection();
+        try (PreparedStatement cashStmt = conn.prepareStatement(cashSalesSql);
+             PreparedStatement paymentsStmt = conn.prepareStatement(currentAccountPaymentsSql)) {
+            cashStmt.setString(1, dateFrom);
+            cashStmt.setString(2, dateTo);
+            cashStmt.setString(3, PAYMENT_CURRENT_ACCOUNT);
+            cashStmt.setString(4, PAYMENT_CURRENT_ACCOUNT_LEGACY);
+            double cashSales;
+            try (ResultSet rs = cashStmt.executeQuery()) {
+                cashSales = rs.next() ? rs.getDouble(1) : 0;
+            }
+
+            paymentsStmt.setString(1, dateFrom);
+            paymentsStmt.setString(2, dateTo);
+            double currentAccountPayments;
+            try (ResultSet rs = paymentsStmt.executeQuery()) {
+                currentAccountPayments = rs.next() ? rs.getDouble(1) : 0;
+            }
+            return cashSales + currentAccountPayments;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al obtener total cobrado en rango", e);
+        }
+    }
+
+    @Override
+    public double getCurrentAccountPaymentsTotalInRange(String dateFrom, String dateTo) {
+        String sql = "SELECT COALESCE(SUM(cpa.applied_amount), 0) " +
+                "FROM customer_payment_applications cpa " +
+                "JOIN customer_payments cp ON cp.id = cpa.payment_id " +
+                "WHERE datetime(cp.date) >= ? AND datetime(cp.date) <= ?";
         Connection conn = DatabaseManager.getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, dateFrom);
             stmt.setString(2, dateTo);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getDouble(1) : 0;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al obtener pagos de cuenta corriente en rango", e);
+        }
+    }
+
+    @Override
+    public double getCurrentAccountSalesTotalInRange(String dateFrom, String dateTo) {
+        String sql = "SELECT COALESCE(SUM(s.total), 0) FROM sales s " +
+                "WHERE datetime(s.date) >= ? AND datetime(s.date) <= ? " +
+                "AND s.payment_method IN (?, ?) " +
+                "AND EXISTS (SELECT 1 FROM sale_items si WHERE si.sale_id = s.id)";
+        Connection conn = DatabaseManager.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, dateFrom);
+            stmt.setString(2, dateTo);
+            stmt.setString(3, PAYMENT_CURRENT_ACCOUNT);
+            stmt.setString(4, PAYMENT_CURRENT_ACCOUNT_LEGACY);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getDouble(1) : 0;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al obtener ventas de cuenta corriente en rango", e);
+        }
+    }
+
+    @Override
+    public List<SalesByDay> getSalesByDayInRange(String dateFrom, String dateTo) {
+        String sql = "SELECT date(s.date) AS day," +
+                " SUM(s.total) AS total," +
+                " SUM(CASE WHEN s.payment_method = 'Efectivo' THEN s.total ELSE 0 END) AS cash," +
+                " SUM(CASE WHEN s.payment_method = 'Transferencia' THEN s.total ELSE 0 END) AS transfer," +
+                " SUM(CASE WHEN s.payment_method = 'Debito' OR s.payment_method = 'Débito' THEN s.total ELSE 0 END) AS debit," +
+                " SUM(CASE WHEN s.payment_method = 'Credito' OR s.payment_method = 'Crédito' THEN s.total ELSE 0 END) AS credit," +
+                " SUM(CASE WHEN s.payment_method IN (?, ?) THEN s.total ELSE 0 END) AS current_account" +
+                " FROM sales s WHERE datetime(s.date) >= ? AND datetime(s.date) <= ? " +
+                " AND EXISTS (SELECT 1 FROM sale_items si WHERE si.sale_id = s.id) " +
+                " GROUP BY date(s.date) ORDER BY day";
+        Connection conn = DatabaseManager.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, PAYMENT_CURRENT_ACCOUNT);
+            stmt.setString(2, PAYMENT_CURRENT_ACCOUNT_LEGACY);
+            stmt.setString(3, dateFrom);
+            stmt.setString(4, dateTo);
             try (ResultSet rs = stmt.executeQuery()) {
                 List<SalesByDay> list = new ArrayList<>();
                 while (rs.next()) {
@@ -136,13 +224,14 @@ public class SQLiteSaleRepository implements SaleRepository {
                             rs.getDouble("cash"),
                             rs.getDouble("transfer"),
                             rs.getDouble("debit"),
-                            rs.getDouble("credit")
+                            rs.getDouble("credit"),
+                            rs.getDouble("current_account")
                     ));
                 }
                 return list;
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Error al obtener ventas por día en rango", e);
+            throw new RuntimeException("Error al obtener ventas por dia en rango", e);
         }
     }
 
@@ -210,6 +299,97 @@ public class SQLiteSaleRepository implements SaleRepository {
     }
 
     @Override
+    public List<CustomerCurrentAccountReportRow> getCurrentAccountReportByCustomer(String dateFrom, String dateTo) {
+        String normMovementDate = "replace(substr(m.date,1,19),'T',' ')";
+        String normSaleDate = "replace(substr(s.date,1,19),'T',' ')";
+        String sql = "WITH " +
+                "initial_balance AS ( " +
+                "  SELECT m.customer_id AS customer_id, " +
+                "         COALESCE(SUM(CASE WHEN m.type = 'DEBITO' THEN m.amount WHEN m.type = 'CREDITO' THEN -m.amount ELSE 0 END),0) AS total " +
+                "  FROM customer_account_movements m " +
+                "  WHERE " + normMovementDate + " < ? " +
+                "  GROUP BY m.customer_id " +
+                "), " +
+                "manual_initial_period AS ( " +
+                "  SELECT m.customer_id AS customer_id, COALESCE(SUM(m.amount),0) AS total " +
+                "  FROM customer_account_movements m " +
+                "  WHERE m.type = 'DEBITO' " +
+                "    AND m.sale_id IS NULL " +
+                "    AND m.payment_id IS NULL " +
+                "    AND " + normMovementDate + " >= ? " +
+                "    AND " + normMovementDate + " <= ? " +
+                "  GROUP BY m.customer_id " +
+                "), " +
+                "sales_period AS ( " +
+                "  SELECT s.customer_id AS customer_id, COALESCE(SUM(s.total),0) AS total " +
+                "  FROM sales s " +
+                "  WHERE s.customer_id IS NOT NULL AND s.payment_method IN (?, ?) AND " + normSaleDate + " >= ? AND " + normSaleDate + " <= ? " +
+                "  GROUP BY s.customer_id " +
+                "), " +
+                "payments_period AS ( " +
+                "  SELECT m.customer_id AS customer_id, COALESCE(SUM(m.amount),0) AS total " +
+                "  FROM customer_account_movements m " +
+                "  WHERE m.type = 'CREDITO' AND " + normMovementDate + " >= ? AND " + normMovementDate + " <= ? " +
+                "  GROUP BY m.customer_id " +
+                "), " +
+                "final_balance AS ( " +
+                "  SELECT m.customer_id AS customer_id, " +
+                "         COALESCE(SUM(CASE WHEN m.type = 'DEBITO' THEN m.amount WHEN m.type = 'CREDITO' THEN -m.amount ELSE 0 END),0) AS total " +
+                "  FROM customer_account_movements m " +
+                "  WHERE " + normMovementDate + " <= ? " +
+                "  GROUP BY m.customer_id " +
+                ") " +
+                "SELECT c.id AS customer_id, c.name AS customer_name, " +
+                "       (COALESCE(ib.total,0) + COALESCE(mip.total,0)) AS initial_debt, " +
+                "       COALESCE(sp.total,0) AS period_sales, " +
+                "       COALESCE(pp.total,0) AS period_payments, " +
+                "       COALESCE(fb.total,0) AS final_debt " +
+                "FROM customers c " +
+                "LEFT JOIN initial_balance ib ON ib.customer_id = c.id " +
+                "LEFT JOIN manual_initial_period mip ON mip.customer_id = c.id " +
+                "LEFT JOIN sales_period sp ON sp.customer_id = c.id " +
+                "LEFT JOIN payments_period pp ON pp.customer_id = c.id " +
+                "LEFT JOIN final_balance fb ON fb.customer_id = c.id " +
+                "WHERE c.active = 1 " +
+                "  AND (ABS(COALESCE(ib.total,0) + COALESCE(mip.total,0)) > 0.000001 " +
+                "       OR ABS(COALESCE(sp.total,0)) > 0.000001 " +
+                "       OR ABS(COALESCE(pp.total,0)) > 0.000001 " +
+                "       OR ABS(COALESCE(fb.total,0)) > 0.000001) " +
+                "ORDER BY final_debt DESC, c.name";
+
+        Connection conn = DatabaseManager.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            int i = 1;
+            stmt.setString(i++, dateFrom);
+            stmt.setString(i++, dateFrom);
+            stmt.setString(i++, dateTo);
+            stmt.setString(i++, PAYMENT_CURRENT_ACCOUNT);
+            stmt.setString(i++, PAYMENT_CURRENT_ACCOUNT_LEGACY);
+            stmt.setString(i++, dateFrom);
+            stmt.setString(i++, dateTo);
+            stmt.setString(i++, dateFrom);
+            stmt.setString(i++, dateTo);
+            stmt.setString(i++, dateTo);
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<CustomerCurrentAccountReportRow> rows = new ArrayList<>();
+                while (rs.next()) {
+                    rows.add(new CustomerCurrentAccountReportRow(
+                            rs.getInt("customer_id"),
+                            rs.getString("customer_name"),
+                            rs.getDouble("initial_debt"),
+                            rs.getDouble("period_sales"),
+                            rs.getDouble("period_payments"),
+                            rs.getDouble("final_debt")
+                    ));
+                }
+                return rows;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al obtener reporte de cuenta corriente por cliente", e);
+        }
+    }
+
+    @Override
     public List<SaleItem> getSaleItemsBySaleId(int saleId) {
         String sql = "SELECT id, sale_id, product_id, quantity, price FROM sale_items WHERE sale_id = ?";
         Connection conn = DatabaseManager.getConnection();
@@ -245,3 +425,4 @@ public class SQLiteSaleRepository implements SaleRepository {
         }
     }
 }
+

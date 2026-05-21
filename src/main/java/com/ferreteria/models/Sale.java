@@ -9,6 +9,7 @@ public class Sale {
     private String date;
     private double total;
     private String paymentMethod;
+    private Integer customerId;
 
     public Sale() {
     }
@@ -53,5 +54,13 @@ public class Sale {
 
     public void setPaymentMethod(String paymentMethod) {
         this.paymentMethod = paymentMethod;
+    }
+
+    public Integer getCustomerId() {
+        return customerId;
+    }
+
+    public void setCustomerId(Integer customerId) {
+        this.customerId = customerId;
     }
 }

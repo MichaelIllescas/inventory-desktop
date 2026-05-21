@@ -24,6 +24,10 @@ public class MainController {
     @FXML
     private Button btnSales;
     @FXML
+    private Button btnCustomers;
+    @FXML
+    private Button btnCurrentAccount;
+    @FXML
     private Button btnSuppliers;
     @FXML
     private Button btnInventory;
@@ -54,6 +58,18 @@ public class MainController {
     private void showSales() {
         setActiveSidebarButton(btnSales);
         loadView("sales-view.fxml");
+    }
+
+    @FXML
+    private void showCustomers() {
+        setActiveSidebarButton(btnCustomers);
+        loadView("customers-view.fxml");
+    }
+
+    @FXML
+    private void showCurrentAccount() {
+        setActiveSidebarButton(btnCurrentAccount);
+        loadView("current-account-view.fxml");
     }
 
     @FXML
@@ -111,6 +127,8 @@ public class MainController {
             case "dashboard-view.fxml" -> btnDashboard;
             case "products-view.fxml" -> btnProducts;
             case "sales-view.fxml" -> btnSales;
+            case "customers-view.fxml" -> btnCustomers;
+            case "current-account-view.fxml" -> btnCurrentAccount;
             case "suppliers-view.fxml" -> btnSuppliers;
             case "inventory-view.fxml" -> btnInventory;
             case "reports-view.fxml" -> btnReports;
@@ -122,7 +140,7 @@ public class MainController {
     }
 
     private void setActiveSidebarButton(Button activeButton) {
-        Button[] buttons = {btnDashboard, btnProducts, btnSales, btnSuppliers, btnInventory, btnReports, btnExpenses};
+        Button[] buttons = {btnDashboard, btnProducts, btnSales, btnCustomers, btnCurrentAccount, btnSuppliers, btnInventory, btnReports, btnExpenses};
         for (Button button : buttons) {
             if (button == null) {
                 continue;

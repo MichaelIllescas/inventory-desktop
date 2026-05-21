@@ -330,16 +330,19 @@ TableColumn {
 }
 
 .report-summary {
-    -fx-font-size: 16px;
-    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
     -fx-text-fill: #0f172a;
     -fx-background-color: linear-gradient(to right, #f8fbff, #eef6ff);
     -fx-background-radius: 14;
-    -fx-padding: 14 20;
+    -fx-padding: 16 20;
     -fx-border-color: #60a5fa;
     -fx-border-width: 1;
     -fx-border-radius: 14;
     -fx-effect: dropshadow(gaussian, rgba(37, 99, 235, 0.12), 16, 0.16, 0, 4);
+    -fx-alignment: CENTER_LEFT;
+    -fx-wrap-text: true;
+    -fx-line-spacing: 4px;
   }
 
 /* ===== Tarjetas de resumen en Reportes ===== */
@@ -376,6 +379,11 @@ TableColumn {
   -fx-border-color: #dbe4ee;
 }
 
+.report-card-cyan {
+  -fx-background-color: linear-gradient(to bottom right, #ecfeff, #ffffff);
+  -fx-border-color: #a5f3fc;
+}
+
 .report-card-title {
   -fx-font-size: 11px;
   -fx-font-weight: bold;
@@ -388,16 +396,77 @@ TableColumn {
   -fx-text-fill: #0f172a;
 }
 
+.report-card-note {
+  -fx-font-size: 12px;
+  -fx-text-fill: #475569;
+}
+
+.profit-panel {
+  -fx-background-color: linear-gradient(to bottom right, #ffffff, #f1f7ff);
+  -fx-background-radius: 18;
+  -fx-border-color: #cfe0f5;
+  -fx-border-radius: 18;
+  -fx-border-width: 1;
+  -fx-padding: 16;
+  -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.10), 20, 0.14, 0, 6);
+}
+
+.reports-view-root .profit-chart {
+  -fx-background-color: transparent;
+  -fx-padding: 8 2 0 2;
+}
+
+.reports-view-root .profit-chart .chart-plot-background {
+  -fx-background-color: #f8fbff;
+  -fx-background-radius: 10;
+}
+
+.reports-view-root .profit-chart .chart-title {
+  -fx-font-size: 16px;
+  -fx-font-weight: bold;
+  -fx-text-fill: #0f172a;
+}
+
+.reports-view-root .profit-chart .chart-bar {
+  -fx-bar-fill: #2563eb;
+}
+
+.reports-view-root .profit-chart .axis-label {
+  -fx-text-fill: #64748b;
+  -fx-font-weight: bold;
+}
+
+.reports-view-root .profit-chart .axis {
+  -fx-tick-label-fill: #64748b;
+}
+
+.reports-view-root .profit-area-chart .chart-series-area-line {
+  -fx-stroke: #0ea5e9;
+  -fx-stroke-width: 3px;
+}
+
+.reports-view-root .profit-area-chart .chart-series-area-fill {
+  -fx-fill: linear-gradient(to bottom, rgba(14, 165, 233, 0.28), rgba(14, 165, 233, 0.03));
+}
+
+.reports-view-root .profit-area-chart .chart-line-symbol {
+  -fx-background-color: #ffffff, #0ea5e9;
+  -fx-background-insets: 0, 2.5;
+  -fx-background-radius: 8;
+  -fx-padding: 5;
+}
+
 /* ===========================
-   Vistas principales (tipografía más grande)
+   Vistas principales (tipografÃƒÂ­a mÃƒÂ¡s grande)
    =========================== */
 .products-view-root,
 .inventory-view-root,
 .sales-view-root,
 .suppliers-view-root,
+.customers-view-root,
 .reports-view-root,
 .dashboard-view-root {
-  -fx-font-size: 14px; /* texto general un poco más grande */
+  -fx-font-size: 14px; /* texto general un poco mÃƒÂ¡s grande */
 }
 
 .products-view-root .button,
@@ -420,6 +489,7 @@ TableColumn {
 .inventory-view-root .text-field,
 .sales-view-root .text-field,
 .suppliers-view-root .text-field,
+.customers-view-root .text-field,
 .reports-view-root .text-field {
   -fx-font-size: 14px;
   -fx-padding: 6 10;
@@ -429,6 +499,7 @@ TableColumn {
 .inventory-view-root .flow-pane,
 .sales-view-root .flow-pane,
 .suppliers-view-root .flow-pane,
+.customers-view-root .flow-pane,
 .reports-view-root .flow-pane {
   -fx-alignment: CENTER_LEFT;
 }
@@ -480,7 +551,7 @@ TableColumn {
   -fx-background-color: #b91c1c;
 }
 
-/* Tabla ventas — números más grandes */
+/* Tabla ventas Ã¢â‚¬â€ nÃƒÂºmeros mÃƒÂ¡s grandes */
 .sales-view-root .table-view .column-header,
 .sales-view-root .table-view .table-cell {
   -fx-font-size: 15px;
@@ -496,7 +567,7 @@ TableColumn {
   -fx-font-size: 13px;
 }
 
-/* Tabla reportes — mismo tamaño que ventas */
+/* Tabla reportes Ã¢â‚¬â€ mismo tamaÃƒÂ±o que ventas */
 .reports-view-root .table-view {
   -fx-background-color: linear-gradient(to bottom, #ffffff, #fcfdff);
   -fx-background-radius: 14;
@@ -546,7 +617,7 @@ TableColumn {
   -fx-border-color: transparent;
 }
 
-/* Toolbar de reportes: DatePicker y ComboBox más grandes */
+/* Toolbar de reportes: DatePicker y ComboBox mÃƒÂ¡s grandes */
 .reports-view-root .date-picker,
 .reports-view-root .combo-box {
   -fx-font-size: 14px;
@@ -557,7 +628,7 @@ TableColumn {
   -fx-padding: 6 8;
 }
 
-/* Columnas numéricas centradas en tablas */
+/* Columnas numÃƒÂ©ricas centradas en tablas */
 .table-view .column-header.numeric-column,
 .table-view .table-cell.numeric-column {
   -fx-alignment: CENTER;
@@ -594,7 +665,7 @@ TableColumn {
   -fx-text-fill: #6b7280;
 }
 
-/* ===== Sección de total (ventas) ===== */
+/* ===== SecciÃƒÂ³n de total (ventas) ===== */
 .total-calc-label {
   -fx-font-size: 14px;
   -fx-text-fill: #9ca3af;
@@ -617,7 +688,7 @@ TableColumn {
   -fx-text-fill: #111827;
 }
 
-/* Más específico que .sales-view-root .text-field para que no sea pisado */
+/* MÃƒÂ¡s especÃƒÂ­fico que .sales-view-root .text-field para que no sea pisado */
 .sales-view-root .total-custom-field {
   -fx-font-size: 72px;
   -fx-font-weight: bold;
@@ -649,6 +720,36 @@ TableColumn {
 .ajuste-value-label {
   -fx-font-size: 14px;
   -fx-font-weight: bold;
+}
+
+.sales-customer-card {
+  -fx-background-color: linear-gradient(to right, #f8fbff, #ffffff);
+  -fx-background-radius: 12;
+  -fx-border-color: #dbe4ee;
+  -fx-border-radius: 12;
+  -fx-border-width: 1;
+  -fx-padding: 10;
+}
+
+.sales-customer-title {
+  -fx-font-size: 13px;
+  -fx-font-weight: bold;
+  -fx-text-fill: #1f2937;
+}
+
+.sales-customer-preview-row {
+  -fx-padding: 2 2 0 2;
+}
+
+.sales-customer-k {
+  -fx-font-size: 12px;
+  -fx-text-fill: #64748b;
+  -fx-font-weight: bold;
+}
+
+.sales-customer-v {
+  -fx-font-size: 12px;
+  -fx-text-fill: #0f172a;
 }
 
 /* ===== Inventario ===== */
@@ -1091,6 +1192,259 @@ TableColumn {
 }
 
 .suppliers-view-root .suppliers-table .table-cell {
+  -fx-padding: 10 8;
+  -fx-text-fill: #334155;
+  -fx-border-color: transparent;
+}
+
+/* ===== Clientes ===== */
+.customers-toolbar {
+  -fx-background-color: linear-gradient(to right, #f8fbff, #ffffff);
+  -fx-background-radius: 14;
+  -fx-border-color: #dbe4ee;
+  -fx-border-radius: 14;
+  -fx-border-width: 1;
+  -fx-padding: 12;
+  -fx-hgap: 10;
+  -fx-vgap: 10;
+}
+
+.current-account-view-root .current-account-toolbar {
+  -fx-padding: 16;
+  -fx-hgap: 12;
+  -fx-vgap: 12;
+  -fx-background-radius: 16;
+  -fx-border-radius: 16;
+}
+
+.current-account-view-root .current-account-toolbar .text-field,
+.current-account-view-root .current-account-toolbar .combo-box {
+  -fx-min-height: 42;
+  -fx-pref-height: 42;
+  -fx-font-size: 15px;
+}
+
+.current-account-view-root .current-account-toolbar .button {
+  -fx-min-height: 42;
+  -fx-pref-height: 42;
+  -fx-font-size: 15px;
+  -fx-padding: 10 20;
+}
+
+.current-account-view-root .text-field,
+.current-account-view-root .combo-box {
+  -fx-min-height: 42;
+  -fx-pref-height: 42;
+  -fx-font-size: 15px;
+}
+
+.current-account-view-root .button {
+  -fx-min-height: 42;
+  -fx-pref-height: 42;
+  -fx-font-size: 15px;
+}
+
+.current-account-view-root .combo-box .list-cell {
+  -fx-font-size: 15px;
+}
+
+.current-account-view-root.ca-compact .current-account-toolbar {
+  -fx-padding: 12;
+  -fx-hgap: 8;
+}
+
+.current-account-view-root.ca-compact .current-account-toolbar .text-field,
+.current-account-view-root.ca-compact .current-account-toolbar .combo-box {
+  -fx-font-size: 13px;
+  -fx-min-height: 36;
+  -fx-pref-height: 36;
+}
+
+.current-account-view-root.ca-compact .current-account-toolbar .button {
+  -fx-font-size: 13px;
+  -fx-min-height: 36;
+  -fx-pref-height: 36;
+  -fx-padding: 8 12;
+}
+
+.current-account-view-root.ca-compact .customers-summary-title {
+  -fx-font-size: 12px;
+}
+
+.current-account-view-root.ca-compact .customers-summary-value {
+  -fx-font-size: 16px;
+  -fx-wrap-text: true;
+}
+
+.current-account-view-root.ca-compact .summary-panel-title {
+  -fx-font-size: 18px;
+}
+
+.current-account-view-root.ca-compact .customers-table .table-cell,
+.current-account-view-root.ca-compact .customers-table .column-header .label {
+  -fx-font-size: 12px;
+}
+
+.current-account-view-root.ca-xcompact .current-account-toolbar .text-field,
+.current-account-view-root.ca-xcompact .current-account-toolbar .combo-box {
+  -fx-font-size: 12px;
+  -fx-min-height: 34;
+  -fx-pref-height: 34;
+}
+
+.current-account-view-root.ca-xcompact .current-account-toolbar .button {
+  -fx-font-size: 12px;
+  -fx-min-height: 34;
+  -fx-pref-height: 34;
+  -fx-padding: 7 10;
+}
+
+.current-account-view-root.ca-xcompact .customers-summary-value {
+  -fx-font-size: 14px;
+}
+
+.current-account-export-button {
+  -fx-base: #0ea5e9;
+  -fx-background-color: #0ea5e9;
+  -fx-background-radius: 10;
+  -fx-border-radius: 10;
+  -fx-text-fill: white;
+  -fx-font-weight: bold;
+  -fx-padding: 10 18;
+}
+
+.current-account-export-button:hover {
+  -fx-base: #0284c7;
+  -fx-background-color: #0284c7;
+}
+
+.customers-search-button {
+  -fx-base: #2563eb;
+  -fx-background-color: #2563eb;
+  -fx-background-radius: 10;
+  -fx-border-radius: 10;
+  -fx-padding: 8 16;
+  -fx-text-fill: white;
+  -fx-font-weight: bold;
+}
+
+.customers-search-button:hover {
+  -fx-base: #1d4ed8;
+  -fx-background-color: #1d4ed8;
+}
+
+.customers-secondary-button {
+  -fx-base: #e5e7eb;
+  -fx-background-color: #e5e7eb;
+  -fx-background-radius: 10;
+  -fx-border-radius: 10;
+  -fx-padding: 8 16;
+  -fx-text-fill: #111827;
+}
+
+.customers-secondary-button:hover {
+  -fx-base: #d1d5db;
+  -fx-background-color: #d1d5db;
+}
+
+.customers-danger-button {
+  -fx-base: #dc2626;
+  -fx-background-color: #dc2626;
+  -fx-background-radius: 10;
+  -fx-border-radius: 10;
+  -fx-padding: 8 16;
+  -fx-text-fill: white;
+  -fx-font-weight: bold;
+}
+
+.customers-danger-button:hover {
+  -fx-base: #b91c1c;
+  -fx-background-color: #b91c1c;
+}
+
+.customers-summary-grid {
+  -fx-padding: 2 0 0 0;
+}
+
+.customers-summary-card-primary,
+.customers-summary-card-neutral {
+  -fx-background-color: linear-gradient(to bottom, #ffffff, #fbfdff);
+  -fx-background-radius: 14;
+  -fx-border-color: #dbe4ee;
+  -fx-border-radius: 14;
+  -fx-border-width: 1;
+  -fx-padding: 14;
+  -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.05), 14, 0.12, 0, 4);
+}
+
+.customers-summary-card-primary {
+  -fx-background-color: linear-gradient(to bottom right, #eff6ff, #ffffff);
+  -fx-border-color: #bfdbfe;
+}
+
+.customers-summary-card-neutral {
+  -fx-background-color: linear-gradient(to bottom right, #f8fafc, #ffffff);
+  -fx-border-color: #dbe4ee;
+}
+
+.customers-summary-title {
+  -fx-font-size: 13px;
+  -fx-text-fill: #64748b;
+}
+
+.customers-summary-value {
+  -fx-font-size: 24px;
+  -fx-font-weight: bold;
+  -fx-text-fill: #0f172a;
+}
+
+.customers-summary-note {
+  -fx-font-size: 12px;
+  -fx-text-fill: #475569;
+}
+
+.customers-view-root .customers-table {
+  -fx-background-color: linear-gradient(to bottom, #ffffff, #fcfdff);
+  -fx-background-radius: 14;
+  -fx-border-color: #dbe4ee;
+  -fx-border-radius: 14;
+  -fx-border-width: 1;
+  -fx-padding: 6;
+  -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.06), 14, 0.12, 0, 4);
+}
+
+.customers-view-root .customers-table .column-header-background {
+  -fx-background-color: linear-gradient(to bottom, #f8fafc, #eef2f7);
+  -fx-background-radius: 10 10 0 0;
+}
+
+.customers-view-root .customers-table .column-header {
+  -fx-background-color: transparent;
+  -fx-border-color: transparent #e5e7eb transparent transparent;
+  -fx-padding: 10 8;
+}
+
+.customers-view-root .customers-table .column-header .label {
+  -fx-text-fill: #1f2937;
+  -fx-font-size: 13px;
+  -fx-font-weight: bold;
+}
+
+.customers-view-root .customers-table .table-row-cell {
+  -fx-background-color: white;
+  -fx-border-color: transparent transparent #eef2f7 transparent;
+}
+
+.customers-view-root .customers-table .table-row-cell:filled:hover {
+  -fx-background-color: #f8fbff;
+}
+
+.customers-view-root .customers-table .table-row-cell:filled:selected {
+  -fx-background-color: #dbeafe;
+  -fx-text-background-color: #0f172a;
+}
+
+.customers-view-root .customers-table .table-cell {
   -fx-padding: 10 8;
   -fx-text-fill: #334155;
   -fx-border-color: transparent;

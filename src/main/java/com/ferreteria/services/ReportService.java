@@ -1,5 +1,6 @@
 package com.ferreteria.services;
 
+import com.ferreteria.models.CustomerCurrentAccountReportRow;
 import com.ferreteria.models.ProductSalesReport;
 import com.ferreteria.models.SaleDetailRow;
 import com.ferreteria.models.SalesByDay;
@@ -17,6 +18,18 @@ public class ReportService {
         return saleRepository.getSalesTotalInRange(dateFrom, dateTo);
     }
 
+    public double getCollectedTotalInRange(String dateFrom, String dateTo) {
+        return saleRepository.getCollectedTotalInRange(dateFrom, dateTo);
+    }
+
+    public double getCurrentAccountPaymentsTotalInRange(String dateFrom, String dateTo) {
+        return saleRepository.getCurrentAccountPaymentsTotalInRange(dateFrom, dateTo);
+    }
+
+    public double getCurrentAccountSalesTotalInRange(String dateFrom, String dateTo) {
+        return saleRepository.getCurrentAccountSalesTotalInRange(dateFrom, dateTo);
+    }
+
     public List<SalesByDay> getSalesByDayInRange(String dateFrom, String dateTo) {
         return saleRepository.getSalesByDayInRange(dateFrom, dateTo);
     }
@@ -27,6 +40,10 @@ public class ReportService {
 
     public List<SaleDetailRow> getSaleDetailsInRange(String dateFrom, String dateTo) {
         return saleRepository.getSaleDetailsInRange(dateFrom, dateTo);
+    }
+
+    public List<CustomerCurrentAccountReportRow> getCurrentAccountReportByCustomer(String dateFrom, String dateTo) {
+        return saleRepository.getCurrentAccountReportByCustomer(dateFrom, dateTo);
     }
 
     /** Fecha de hoy en YYYY-MM-DD */

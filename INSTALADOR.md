@@ -14,7 +14,7 @@ Resumen rápido. Para requisitos y estructura del proyecto ver [README.md](READM
 2. Ejecutar: **`build-installer.bat`**  
    (o **`Ejecutar-crear-instalador.bat`** para que la ventana no se cierre).
 3. Al terminar, el instalador queda en:  
-   **`target\installer\Sistema de Inventario-1.0.0.exe`**
+   **`target\installer\Sistema de Inventario-3.0.0.exe`**
 
 ## Qué hace el script
 
@@ -29,5 +29,5 @@ El script usa **`src/main/resources/images/logo-nuevo.ico`** si existe. Si no ha
 
 ## Instalar en otra PC
 
-Copiar **`Sistema de Inventario-1.0.0.exe`** a la otra PC y ejecutarlo. No hace falta instalar Java.  
+Copiar **`Sistema de Inventario-3.0.0.exe`** a la otra PC y ejecutarlo. No hace falta instalar Java.  
 Los datos se guardan en **`%LOCALAPPDATA%\Sistema de Inventario\data`** (cada usuario de Windows tiene su propia base).

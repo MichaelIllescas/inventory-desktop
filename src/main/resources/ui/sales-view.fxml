@@ -18,6 +18,7 @@
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.ferreteria.controllers.SalesController"
+            fx:id="rootPane"
             styleClass="sales-view-root">
 
     <top>
@@ -68,7 +69,7 @@
     </top>
 
     <center>
-        <HBox spacing="12">
+        <HBox spacing="12" fillHeight="false" alignment="TOP_LEFT">
             <TableView fx:id="itemsTable" HBox.hgrow="ALWAYS">
                 <columns>
                     <TableColumn fx:id="colCode" text="Codigo" minWidth="80" maxWidth="140"/>
@@ -81,7 +82,7 @@
 
             <VBox styleClass="sales-summary-panel" prefWidth="210" minWidth="180" spacing="8">
                 <Label text="Resumen" styleClass="summary-panel-title"/>
-                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="summary-scroll">
+                <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" VBox.vgrow="ALWAYS" styleClass="summary-scroll">
                     <VBox fx:id="summaryItemsBox" spacing="8" styleClass="summary-items-box">
                         <padding>
                             <Insets top="4" right="4" bottom="4" left="4"/>

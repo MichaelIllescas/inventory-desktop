@@ -6,6 +6,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 
 import java.awt.*;
 import java.io.IOException;
@@ -14,9 +15,15 @@ import java.net.URI;
 public class MainController {
 
     private static MainController instance;
+    private static final double SIDEBAR_COMPACT_BREAKPOINT = 1460;
+    private static final double SIDEBAR_XCOMPACT_BREAKPOINT = 1260;
+    private static final String SIDEBAR_COMPACT_CLASS = "sidebar-compact";
+    private static final String SIDEBAR_XCOMPACT_CLASS = "sidebar-xcompact";
 
     @FXML
     private StackPane contentArea;
+    @FXML
+    private VBox sidebarBox;
     @FXML
     private Button btnDashboard;
     @FXML
@@ -41,7 +48,27 @@ public class MainController {
     @FXML
     public void initialize() {
         instance = this;
+        setupSidebarResponsiveMode();
         showDashboard();
+    }
+
+    private void setupSidebarResponsiveMode() {
+        if (sidebarBox == null) return;
+        sidebarBox.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene == null) return;
+            applySidebarResponsiveMode(newScene.getWidth());
+            newScene.widthProperty().addListener((o, oldW, newW) -> applySidebarResponsiveMode(newW.doubleValue()));
+        });
+    }
+
+    private void applySidebarResponsiveMode(double width) {
+        if (sidebarBox == null) return;
+        sidebarBox.getStyleClass().removeAll(SIDEBAR_COMPACT_CLASS, SIDEBAR_XCOMPACT_CLASS);
+        if (width < SIDEBAR_XCOMPACT_BREAKPOINT) {
+            sidebarBox.getStyleClass().addAll(SIDEBAR_COMPACT_CLASS, SIDEBAR_XCOMPACT_CLASS);
+        } else if (width < SIDEBAR_COMPACT_BREAKPOINT) {
+            sidebarBox.getStyleClass().add(SIDEBAR_COMPACT_CLASS);
+        }
     }
 
     @FXML

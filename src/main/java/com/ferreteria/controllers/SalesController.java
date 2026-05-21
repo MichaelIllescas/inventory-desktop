@@ -24,6 +24,7 @@ import javafx.scene.Cursor;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -43,7 +44,12 @@ import java.util.Optional;
 
 public class SalesController {
     private static final String PAYMENT_CURRENT_ACCOUNT = "Cuenta corriente";
+    private static final double BREAKPOINT_COMPACT = 1700;
+    private static final double BREAKPOINT_XCOMPACT = 1460;
+    private static final String STYLE_COMPACT = "sales-compact";
+    private static final String STYLE_XCOMPACT = "sales-xcompact";
 
+    @FXML private BorderPane rootPane;
     @FXML private TextField scanField;
     @FXML private javafx.scene.control.ComboBox<String> paymentMethodCombo;
     @FXML private TextField customerSearchField;
@@ -97,6 +103,7 @@ public class SalesController {
     public void initialize() {
         AppLogger.info("SalesController", "initialize", "Inicializando panel de ventas");
         setupTable();
+        setupResponsiveMode();
         itemsTable.setItems(items);
         updateTotal();
         updateSummary();
@@ -261,6 +268,29 @@ public class SalesController {
         Platform.runLater(this::updateTotalFieldWidth);
         Platform.runLater(this::updateBarcodeWidth);
         Platform.runLater(this::updateChangePreview);
+    }
+
+    private void setupResponsiveMode() {
+        if (rootPane == null) return;
+        rootPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene == null) return;
+            applyResponsiveMode(newScene.getWidth());
+            newScene.widthProperty().addListener((o, oldW, newW) -> applyResponsiveMode(newW.doubleValue()));
+        });
+    }
+
+    private void applyResponsiveMode(double width) {
+        if (rootPane == null) return;
+        rootPane.getStyleClass().removeAll(STYLE_COMPACT, STYLE_XCOMPACT);
+        if (width < BREAKPOINT_XCOMPACT) {
+            rootPane.getStyleClass().addAll(STYLE_COMPACT, STYLE_XCOMPACT);
+        } else if (width < BREAKPOINT_COMPACT) {
+            rootPane.getStyleClass().add(STYLE_COMPACT);
+        }
+        Platform.runLater(() -> {
+            updateTotalFieldWidth();
+            updateBarcodeWidth();
+        });
     }
 
     private void setupTable() {

@@ -17,7 +17,7 @@
             stylesheets="@styles.css">
 
     <left>
-        <VBox spacing="12" styleClass="sidebar">
+        <VBox fx:id="sidebarBox" spacing="12" styleClass="sidebar">
             <children>
                 <VBox spacing="4" styleClass="sidebar-header">
                     <children>

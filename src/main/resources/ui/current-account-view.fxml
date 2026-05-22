@@ -73,8 +73,8 @@
                         <Label fx:id="customerLimitLabel" text="Sin limite" styleClass="customers-summary-value" wrapText="true"/>
                     </VBox>
                     <VBox GridPane.columnIndex="4" spacing="4">
-                        <Label text="Saldo cliente" styleClass="customers-summary-title"/>
-                        <Label fx:id="customerBalanceLabel" text="\$ 0,00" styleClass="customers-summary-value" wrapText="true"/>
+                        <Label text="Disponible" styleClass="customers-summary-title"/>
+                        <Label fx:id="customerAvailableLabel" text="-" styleClass="customers-summary-value" wrapText="true"/>
                     </VBox>
                 </GridPane>
 
@@ -85,7 +85,7 @@
                         <ColumnConstraints percentWidth="50"/>
                     </columnConstraints>
                     <VBox styleClass="customers-summary-card-primary" GridPane.columnIndex="0" spacing="4">
-                        <Label text="Saldo actual" styleClass="customers-summary-title"/>
+                        <Label text="Deuda actual" styleClass="customers-summary-title"/>
                         <Label fx:id="summaryBalanceLabel" text="\$ 0,00" styleClass="customers-summary-value"/>
                     </VBox>
                     <VBox styleClass="customers-summary-card-neutral" GridPane.columnIndex="1" spacing="4">

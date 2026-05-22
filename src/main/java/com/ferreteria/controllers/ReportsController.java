@@ -183,6 +183,7 @@ public class ReportsController {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
+                setAlignment(javafx.geometry.Pos.CENTER);
                 if (empty || item == null || item.isBlank()) {
                     setText("");
                 } else {
@@ -551,7 +552,7 @@ public class ReportsController {
                                       String extra1Title, String extra1Val,
                                       String extra2Title, String extra2Val) {
         sCard1Title.setText("Total vendido");    sCard1Value.setText(formatCurrency(totalVendido));
-        sCard2Title.setText("Cobrado (caja)");   sCard2Value.setText(formatCurrency(totalCobrado));
+        sCard2Title.setText("Cobrado");   sCard2Value.setText(formatCurrency(totalCobrado));
         sCard3Title.setText("Ventas CC");        sCard3Value.setText(formatCurrency(totalVentasCC));
         sCard4Title.setText("Pagos CC");         sCard4Value.setText(formatCurrency(totalPagosCC));
         sCard5Title.setText(extra1Title);        sCard5Value.setText(extra1Val);
@@ -626,9 +627,15 @@ public class ReportsController {
         if (profitCcPaymentsLabel != null) profitCcPaymentsLabel.setText(formatCurrency(ccPayments));
 
         // Narrative
-        double contadoSales = devengado - ccSales;
-        double pendienteCC  = Math.max(0, ccSales - ccPayments);
+        double contadoSales  = devengado - ccSales;
 
+        // Sum payment methods from daily rows (sales + CC payments merged, excludes CC sales)
+        double totalCash     = dailyRows.stream().mapToDouble(SalesByDay::getCash).sum();
+        double totalTransfer = dailyRows.stream().mapToDouble(SalesByDay::getTransfer).sum();
+        double totalDebit    = dailyRows.stream().mapToDouble(SalesByDay::getDebit).sum();
+        double totalCredit   = dailyRows.stream().mapToDouble(SalesByDay::getCredit).sum();
+
+        // Line 1: sales only — contado vs CC
         if (devengado < 0.005) {
             profitLine1.setText("No se registraron ventas en el período.");
         } else if (ccSales < 0.005) {
@@ -641,29 +648,40 @@ public class ReportsController {
                     + formatCurrency(ccSales) + " en cuenta corriente (fiado).");
         }
 
-        if (ccSales > 0.005) {
-            if (pendienteCC < 0.005) {
-                profitLine2.setText("Las ventas CC del período están totalmente cobradas (" + formatCurrency(ccPayments) + " recibidos).");
-            } else {
-                profitLine2.setText("De las ventas CC cobraste " + formatCurrency(ccPayments)
-                        + " en el período — quedan " + formatCurrency(pendienteCC) + " pendientes de cobro.");
-            }
+        // Line 2: CC payments received (simplified, no claim about whether debt is fully covered)
+        if (ccPayments > 0.005) {
+            profitLine2.setText("Se cobraron " + formatCurrency(ccPayments) + " de deudas de cuenta corriente en el período.");
+            profitLine2.setVisible(true);
+            profitLine2.setManaged(true);
         } else {
             profitLine2.setText("");
+            profitLine2.setVisible(false);
+            profitLine2.setManaged(false);
         }
+
+        // Line 3: total cobrado with method breakdown + gastos
+        ArrayList<String> cobradoParts = new ArrayList<>();
+        if (totalCash     > 0.005) cobradoParts.add(formatCurrency(totalCash)     + " efectivo");
+        if (totalTransfer > 0.005) cobradoParts.add(formatCurrency(totalTransfer) + " transferencia");
+        if (totalDebit    > 0.005) cobradoParts.add(formatCurrency(totalDebit)    + " débito");
+        if (totalCredit   > 0.005) cobradoParts.add(formatCurrency(totalCredit)   + " crédito");
+
+        String cobradoStr = cobradoParts.isEmpty()
+                ? formatCurrency(cobrado)
+                : formatCurrency(cobrado) + " (" + String.join(", ", cobradoParts) + ")";
 
         if (gastos < 0.005) {
-            profitLine3.setText("No se registraron gastos en el período. Ingresos de caja: " + formatCurrency(cobrado) + ".");
+            profitLine3.setText("Total cobrado: " + cobradoStr + ".");
         } else {
-            profitLine3.setText("Gastos del período: " + formatCurrency(gastos)
-                    + ".  Ingresos de caja: " + formatCurrency(cobrado) + ".");
+            profitLine3.setText("Total cobrado: " + cobradoStr + ".  Gastos: " + formatCurrency(gastos) + ".");
         }
 
+        // Line 4: resultado neto
         if (netoCaja >= 0) {
-            profitLine4.setText("Resultado neto de caja: " + formatCurrency(netoCaja) + " — ganancia del período.");
+            profitLine4.setText("Resultado neto: " + formatCurrency(netoCaja) + " — ganancia del período.");
             profitLine4.setStyle("-fx-text-fill: #16a34a; -fx-font-weight: bold;");
         } else {
-            profitLine4.setText("Resultado neto de caja: " + formatCurrency(netoCaja)
+            profitLine4.setText("Resultado neto: " + formatCurrency(netoCaja)
                     + " — los gastos superan los ingresos en " + formatCurrency(Math.abs(netoCaja)) + ".");
             profitLine4.setStyle("-fx-text-fill: #dc2626; -fx-font-weight: bold;");
         }

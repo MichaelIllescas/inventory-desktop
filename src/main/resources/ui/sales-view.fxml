@@ -41,9 +41,9 @@
                         <Label text="Cliente de cuenta corriente" styleClass="sales-customer-title"/>
                         <HBox spacing="8" alignment="CENTER_LEFT">
                             <children>
-                                <TextField fx:id="customerSearchField" promptText="Buscar cliente por nombre o apellido" HBox.hgrow="ALWAYS" onAction="#onSearchCustomer"/>
+                                <TextField fx:id="customerSearchField" promptText="Buscar cliente por nombre o apellido" HBox.hgrow="ALWAYS" prefHeight="34" onAction="#onSearchCustomer"/>
                                 <Button text="Buscar" onAction="#onSearchCustomer" styleClass="sales-toolbar-button" style="-fx-background-color: #1d4ed8; -fx-text-fill: white; -fx-font-weight: bold;"/>
-                                <ComboBox fx:id="customerCombo" prefWidth="260" promptText="Seleccionar cliente"/>
+                                <ComboBox fx:id="customerCombo" prefWidth="260" prefHeight="34" promptText="Seleccionar cliente"/>
                                 <Button text="Nuevo cliente" onAction="#onNewCustomerForSale" styleClass="sales-toolbar-button" style="-fx-background-color: #16a34a; -fx-text-fill: white; -fx-font-weight: bold;"/>
                             </children>
                         </HBox>

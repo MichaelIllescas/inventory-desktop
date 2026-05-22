@@ -131,10 +131,11 @@ public class SQLiteSaleRepository implements SaleRepository {
                 "WHERE datetime(s.date) >= ? AND datetime(s.date) <= ? " +
                 "AND (s.payment_method IS NULL OR s.payment_method NOT IN (?, ?)) " +
                 "AND EXISTS (SELECT 1 FROM sale_items si WHERE si.sale_id = s.id)";
-        String currentAccountPaymentsSql = "SELECT COALESCE(SUM(cpa.applied_amount), 0) " +
-                "FROM customer_payment_applications cpa " +
-                "JOIN customer_payments cp ON cp.id = cpa.payment_id " +
-                "WHERE datetime(cp.date) >= ? AND datetime(cp.date) <= ?";
+        String currentAccountPaymentsSql = "SELECT COALESCE(SUM(m.amount), 0) " +
+                "FROM customer_account_movements m " +
+                "WHERE m.type = 'CREDITO' " +
+                "AND datetime(replace(substr(m.date,1,19),'T',' ')) >= ? " +
+                "AND datetime(replace(substr(m.date,1,19),'T',' ')) <= ?";
         Connection conn = DatabaseManager.getConnection();
         try (PreparedStatement cashStmt = conn.prepareStatement(cashSalesSql);
              PreparedStatement paymentsStmt = conn.prepareStatement(currentAccountPaymentsSql)) {
@@ -161,10 +162,11 @@ public class SQLiteSaleRepository implements SaleRepository {
 
     @Override
     public double getCurrentAccountPaymentsTotalInRange(String dateFrom, String dateTo) {
-        String sql = "SELECT COALESCE(SUM(cpa.applied_amount), 0) " +
-                "FROM customer_payment_applications cpa " +
-                "JOIN customer_payments cp ON cp.id = cpa.payment_id " +
-                "WHERE datetime(cp.date) >= ? AND datetime(cp.date) <= ?";
+        String sql = "SELECT COALESCE(SUM(m.amount), 0) " +
+                "FROM customer_account_movements m " +
+                "WHERE m.type = 'CREDITO' " +
+                "AND datetime(replace(substr(m.date,1,19),'T',' ')) >= ? " +
+                "AND datetime(replace(substr(m.date,1,19),'T',' ')) <= ?";
         Connection conn = DatabaseManager.getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, dateFrom);
@@ -200,14 +202,26 @@ public class SQLiteSaleRepository implements SaleRepository {
     @Override
     public List<SalesByDay> getSalesByDayInRange(String dateFrom, String dateTo) {
         String sql = "SELECT date(s.date) AS day," +
-                " SUM(s.total) AS total," +
-                " SUM(CASE WHEN s.payment_method = 'Efectivo' THEN s.total ELSE 0 END) AS cash," +
-                " SUM(CASE WHEN s.payment_method = 'Transferencia' THEN s.total ELSE 0 END) AS transfer," +
-                " SUM(CASE WHEN s.payment_method = 'Debito' OR s.payment_method = 'Débito' THEN s.total ELSE 0 END) AS debit," +
-                " SUM(CASE WHEN s.payment_method = 'Credito' OR s.payment_method = 'Crédito' THEN s.total ELSE 0 END) AS credit," +
+                " SUM(s.total) + COALESCE(p.cash, 0) + COALESCE(p.transfer, 0) + COALESCE(p.debit, 0) + COALESCE(p.credit, 0) AS total," +
+                " SUM(CASE WHEN s.payment_method = 'Efectivo' THEN s.total ELSE 0 END) + COALESCE(p.cash, 0) AS cash," +
+                " SUM(CASE WHEN s.payment_method = 'Transferencia' THEN s.total ELSE 0 END) + COALESCE(p.transfer, 0) AS transfer," +
+                " SUM(CASE WHEN s.payment_method = 'Debito' OR s.payment_method = 'Débito' THEN s.total ELSE 0 END) + COALESCE(p.debit, 0) AS debit," +
+                " SUM(CASE WHEN s.payment_method = 'Credito' OR s.payment_method = 'Crédito' THEN s.total ELSE 0 END) + COALESCE(p.credit, 0) AS credit," +
                 " SUM(CASE WHEN s.payment_method IN (?, ?) THEN s.total ELSE 0 END) AS current_account" +
-                " FROM sales s WHERE datetime(s.date) >= ? AND datetime(s.date) <= ? " +
-                " AND EXISTS (SELECT 1 FROM sale_items si WHERE si.sale_id = s.id) " +
+                " FROM sales s" +
+                " LEFT JOIN (" +
+                "   SELECT date(replace(substr(cp.date,1,19),'T',' ')) AS pay_day," +
+                "     SUM(CASE WHEN cp.payment_method = 'Efectivo' THEN cp.amount ELSE 0 END) AS cash," +
+                "     SUM(CASE WHEN cp.payment_method = 'Transferencia' THEN cp.amount ELSE 0 END) AS transfer," +
+                "     SUM(CASE WHEN cp.payment_method = 'Debito' OR cp.payment_method = 'Débito' THEN cp.amount ELSE 0 END) AS debit," +
+                "     SUM(CASE WHEN cp.payment_method = 'Credito' OR cp.payment_method = 'Crédito' THEN cp.amount ELSE 0 END) AS credit" +
+                "   FROM customer_payments cp" +
+                "   WHERE datetime(replace(substr(cp.date,1,19),'T',' ')) >= ?" +
+                "     AND datetime(replace(substr(cp.date,1,19),'T',' ')) <= ?" +
+                "   GROUP BY pay_day" +
+                " ) p ON date(s.date) = p.pay_day" +
+                " WHERE datetime(s.date) >= ? AND datetime(s.date) <= ?" +
+                " AND EXISTS (SELECT 1 FROM sale_items si WHERE si.sale_id = s.id)" +
                 " GROUP BY date(s.date) ORDER BY day";
         Connection conn = DatabaseManager.getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -215,6 +229,8 @@ public class SQLiteSaleRepository implements SaleRepository {
             stmt.setString(2, PAYMENT_CURRENT_ACCOUNT_LEGACY);
             stmt.setString(3, dateFrom);
             stmt.setString(4, dateTo);
+            stmt.setString(5, dateFrom);
+            stmt.setString(6, dateTo);
             try (ResultSet rs = stmt.executeQuery()) {
                 List<SalesByDay> list = new ArrayList<>();
                 while (rs.next()) {

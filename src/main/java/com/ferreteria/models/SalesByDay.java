@@ -12,6 +12,7 @@ public class SalesByDay {
     private double debit;
     private double credit;
     private double currentAccount;
+    private double ccPayments;
 
     public SalesByDay(String day, double total) {
         this.day = day;
@@ -19,10 +20,14 @@ public class SalesByDay {
     }
 
     public SalesByDay(String day, double total, double cash, double transfer, double debit, double credit) {
-        this(day, total, cash, transfer, debit, credit, 0);
+        this(day, total, cash, transfer, debit, credit, 0, 0);
     }
 
     public SalesByDay(String day, double total, double cash, double transfer, double debit, double credit, double currentAccount) {
+        this(day, total, cash, transfer, debit, credit, currentAccount, 0);
+    }
+
+    public SalesByDay(String day, double total, double cash, double transfer, double debit, double credit, double currentAccount, double ccPayments) {
         this.day = day;
         this.total = total;
         this.cash = cash;
@@ -30,6 +35,7 @@ public class SalesByDay {
         this.debit = debit;
         this.credit = credit;
         this.currentAccount = currentAccount;
+        this.ccPayments = ccPayments;
     }
 
     public String getDay() {
@@ -86,5 +92,13 @@ public class SalesByDay {
 
     public void setCurrentAccount(double currentAccount) {
         this.currentAccount = currentAccount;
+    }
+
+    public double getCcPayments() {
+        return ccPayments;
+    }
+
+    public void setCcPayments(double ccPayments) {
+        this.ccPayments = ccPayments;
     }
 }

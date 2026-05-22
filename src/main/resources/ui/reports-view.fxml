@@ -89,7 +89,7 @@
                         <Label fx:id="profitDevengadoLabel" text="\$ 0,00" styleClass="report-card-value"/>
                     </VBox>
                     <VBox styleClass="report-card report-card-green" HBox.hgrow="ALWAYS">
-                        <Label text="Ingresos cobrados (caja)" styleClass="report-card-title"/>
+                        <Label text="Ingresos cobrados" styleClass="report-card-title"/>
                         <Label fx:id="profitCobradoLabel" text="\$ 0,00" styleClass="report-card-value"/>
                     </VBox>
                     <VBox styleClass="report-card report-card-red" HBox.hgrow="ALWAYS">
@@ -97,7 +97,7 @@
                         <Label fx:id="profitGastosLabel" text="\$ 0,00" styleClass="report-card-value"/>
                     </VBox>
                     <VBox styleClass="report-card report-card-neutral" HBox.hgrow="ALWAYS">
-                        <Label text="Neto caja" styleClass="report-card-title"/>
+                        <Label text="Neto" styleClass="report-card-title"/>
                         <Label fx:id="profitNetoCajaLabel" text="\$ 0,00" styleClass="report-card-value"/>
                     </VBox>
                 </HBox>

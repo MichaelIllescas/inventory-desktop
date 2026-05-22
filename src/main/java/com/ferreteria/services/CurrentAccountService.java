@@ -382,11 +382,10 @@ public class CurrentAccountService {
                 total += n;
             }
 
-            // 3. Borrar movimientos CREDITO para pagos sin aplicaciones restantes
+            // 3. Borrar movimientos CREDITO cuyo payment_id no existe en customer_payments (registro de pago eliminado)
             String cleanMovements = "DELETE FROM customer_account_movements " +
                     "WHERE type = 'CREDITO' AND payment_id IS NOT NULL " +
-                    "AND payment_id NOT IN " +
-                    "(SELECT DISTINCT payment_id FROM customer_payment_applications WHERE payment_id IS NOT NULL)";
+                    "AND payment_id NOT IN (SELECT id FROM customer_payments)";
             try (PreparedStatement stmt = conn.prepareStatement(cleanMovements)) {
                 int n = stmt.executeUpdate();
                 if (n > 0) AppLogger.info("CurrentAccountService", "cleanup", "Movimientos CREDITO huerfanos: " + n);

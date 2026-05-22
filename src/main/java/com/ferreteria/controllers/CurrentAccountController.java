@@ -56,7 +56,7 @@ public class CurrentAccountController {
     @FXML
     private Label customerLimitLabel;
     @FXML
-    private Label customerBalanceLabel;
+    private Label customerAvailableLabel;
     @FXML
     private TableView<CustomerDebtRow> debtTable;
     @FXML
@@ -233,7 +233,7 @@ public class CurrentAccountController {
             @Override
             protected void updateItem(Number item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty || item == null ? "" : formatCurrency(item.doubleValue()));
+                setText(empty || item == null ? "" : formatCurrency(Math.abs(item.doubleValue())));
                 setAlignment(javafx.geometry.Pos.CENTER);
             }
         });
@@ -467,7 +467,7 @@ public class CurrentAccountController {
         customerPhoneLabel.setText(valueOrDash(customer.getPhone()));
         customerAddressLabel.setText(valueOrDash(customer.getAddress()));
         customerLimitLabel.setText(formatCreditLimit(customer.getCreditLimit()));
-        customerBalanceLabel.setText(formatBalanceWithState(balance));
+        customerAvailableLabel.setText(formatAvailableCredit(customer.getCreditLimit(), balance));
     }
 
     private void clearCustomerPreview() {
@@ -475,7 +475,7 @@ public class CurrentAccountController {
         customerPhoneLabel.setText("-");
         customerAddressLabel.setText("-");
         customerLimitLabel.setText("Sin limite");
-        customerBalanceLabel.setText("Sin deuda");
+        customerAvailableLabel.setText("-");
     }
 
     private String valueOrDash(String value) {
@@ -490,6 +490,17 @@ public class CurrentAccountController {
             return "Sin limite";
         }
         return formatCurrency(value);
+    }
+
+    private String formatAvailableCredit(double creditLimit, double balance) {
+        if (creditLimit < 0) {
+            return "Sin limite";
+        }
+        double available = creditLimit - balance;
+        if (available < 0) {
+            return "Superado: " + formatCurrency(Math.abs(available));
+        }
+        return formatCurrency(available);
     }
 
     private void updatePaymentButtonState() {

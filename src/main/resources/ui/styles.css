@@ -1755,6 +1755,54 @@ TableColumn {
   -fx-padding: 6 10;
 }
 
+/* ===== Tablas de cuenta corriente ===== */
+.current-account-view-root .customers-table {
+  -fx-background-color: linear-gradient(to bottom, #ffffff, #fcfdff);
+  -fx-background-radius: 14;
+  -fx-border-color: #dbe4ee;
+  -fx-border-radius: 14;
+  -fx-border-width: 1;
+  -fx-padding: 6;
+  -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.06), 14, 0.12, 0, 4);
+}
+
+.current-account-view-root .customers-table .column-header-background {
+  -fx-background-color: linear-gradient(to bottom, #334155, #1e293b);
+  -fx-background-radius: 10 10 0 0;
+}
+
+.current-account-view-root .customers-table .column-header {
+  -fx-background-color: transparent;
+  -fx-border-color: transparent rgba(255,255,255,0.12) transparent transparent;
+  -fx-padding: 10 8;
+}
+
+.current-account-view-root .customers-table .column-header .label {
+  -fx-text-fill: #f1f5f9;
+  -fx-font-size: 13px;
+  -fx-font-weight: bold;
+}
+
+.current-account-view-root .customers-table .table-row-cell {
+  -fx-background-color: white;
+  -fx-border-color: transparent transparent #eef2f7 transparent;
+}
+
+.current-account-view-root .customers-table .table-row-cell:filled:hover {
+  -fx-background-color: #f8fbff;
+}
+
+.current-account-view-root .customers-table .table-row-cell:filled:selected {
+  -fx-background-color: #dbeafe;
+  -fx-text-background-color: #0f172a;
+}
+
+.current-account-view-root .customers-table .table-cell {
+  -fx-padding: 10 8;
+  -fx-text-fill: #334155;
+  -fx-border-color: transparent;
+}
+
 .current-account-export-button {
   -fx-base: #0ea5e9;
   -fx-background-color: #0ea5e9;

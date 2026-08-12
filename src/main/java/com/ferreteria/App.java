@@ -1,6 +1,7 @@
 package com.ferreteria;
 
 import com.ferreteria.services.CurrentAccountService;
+import com.ferreteria.services.LicenseService;
 import com.ferreteria.util.AppLogger;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -35,12 +36,16 @@ public class App extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         AppLogger.info("App", "start", "Iniciando aplicación");
-        new CurrentAccountService().cleanupOrphanedCreditMovements();
+        if (new LicenseService().isCurrentAccountsEnabled()) {
+            new CurrentAccountService().cleanupOrphanedCreditMovements();
+        }
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/main-layout.fxml"));
         Parent root = loader.load();
 
         Scene scene = new Scene(root, 1200, 700);
         primaryStage.setTitle("Sistema de inventario");
+        primaryStage.setMinWidth(1280);
+        primaryStage.setMinHeight(760);
         try {
             primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/images/app_icon.png")));
         } catch (Exception ignored) { }
@@ -115,4 +120,3 @@ public class App extends Application {
         } catch (Exception ignored) { }
     }
 }
-

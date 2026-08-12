@@ -283,34 +283,55 @@ public class SQLiteSaleRepository implements SaleRepository {
 
     @Override
     public List<SaleDetailRow> getSaleDetailsInRange(String dateFrom, String dateTo) {
-        String sql = "SELECT s.id AS sale_id, s.date AS sale_date, p.code, p.name, si.quantity, si.price, (si.quantity * si.price) AS subtotal, s.total AS sale_total, s.payment_method " +
-                "FROM sales s JOIN sale_items si ON s.id = si.sale_id JOIN products p ON si.product_id = p.id " +
+        String sql = SALE_DETAIL_SELECT +
                 "WHERE datetime(s.date) >= ? AND datetime(s.date) <= ? ORDER BY s.date, s.id, si.id";
         Connection conn = DatabaseManager.getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, dateFrom);
             stmt.setString(2, dateTo);
-            try (ResultSet rs = stmt.executeQuery()) {
-                List<SaleDetailRow> list = new ArrayList<>();
-                while (rs.next()) {
-                    String code = rs.getString("code");
-                    if (code == null) code = "";
-                    list.add(new SaleDetailRow(
-                            rs.getInt("sale_id"),
-                            rs.getString("sale_date"),
-                            code,
-                            rs.getString("name"),
-                            rs.getDouble("quantity"),
-                            rs.getDouble("price"),
-                            rs.getDouble("subtotal"),
-                            rs.getDouble("sale_total"),
-                            rs.getString("payment_method")
-                    ));
-                }
-                return list;
-            }
+            return readSaleDetails(stmt);
         } catch (SQLException e) {
             throw new RuntimeException("Error al obtener detalle de ventas", e);
+        }
+    }
+
+    @Override
+    public List<SaleDetailRow> getSaleDetailsBySaleId(int saleId) {
+        String sql = SALE_DETAIL_SELECT + "WHERE s.id = ? ORDER BY si.id";
+        Connection conn = DatabaseManager.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, saleId);
+            return readSaleDetails(stmt);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al obtener el detalle de la venta " + saleId, e);
+        }
+    }
+
+    private static final String SALE_DETAIL_SELECT =
+            "SELECT s.id AS sale_id, s.date AS sale_date, p.id AS product_id, p.code, p.name, si.quantity, si.price, " +
+            "(si.quantity * si.price) AS subtotal, s.total AS sale_total, s.payment_method " +
+            "FROM sales s JOIN sale_items si ON s.id = si.sale_id JOIN products p ON si.product_id = p.id ";
+
+    private static List<SaleDetailRow> readSaleDetails(PreparedStatement stmt) throws SQLException {
+        try (ResultSet rs = stmt.executeQuery()) {
+            List<SaleDetailRow> list = new ArrayList<>();
+            while (rs.next()) {
+                String code = rs.getString("code");
+                if (code == null) code = "";
+                list.add(new SaleDetailRow(
+                        rs.getInt("sale_id"),
+                        rs.getInt("product_id"),
+                        rs.getString("sale_date"),
+                        code,
+                        rs.getString("name"),
+                        rs.getDouble("quantity"),
+                        rs.getDouble("price"),
+                        rs.getDouble("subtotal"),
+                        rs.getDouble("sale_total"),
+                        rs.getString("payment_method")
+                ));
+            }
+            return list;
         }
     }
 

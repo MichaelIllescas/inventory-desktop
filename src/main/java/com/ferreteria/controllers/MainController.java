@@ -1,10 +1,12 @@
 package com.ferreteria.controllers;
 
 import com.ferreteria.util.AppLogger;
+import com.ferreteria.services.LicenseService;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
@@ -17,9 +19,16 @@ public class MainController {
     private static MainController instance;
     private static final double SIDEBAR_COMPACT_BREAKPOINT = 1460;
     private static final double SIDEBAR_XCOMPACT_BREAKPOINT = 1260;
+    private static final double APP_SHORT_HEIGHT_BREAKPOINT = 860;
+    private static final double APP_XSHORT_HEIGHT_BREAKPOINT = 760;
     private static final String SIDEBAR_COMPACT_CLASS = "sidebar-compact";
     private static final String SIDEBAR_XCOMPACT_CLASS = "sidebar-xcompact";
+    private static final String APP_SHORT_CLASS = "app-short";
+    private static final String APP_XSHORT_CLASS = "app-xshort";
+    private final LicenseService licenseService = new LicenseService();
 
+    @FXML
+    private BorderPane rootPane;
     @FXML
     private StackPane contentArea;
     @FXML
@@ -48,8 +57,18 @@ public class MainController {
     @FXML
     public void initialize() {
         instance = this;
+        applyLicensedModules();
         setupSidebarResponsiveMode();
         showDashboard();
+    }
+
+    private void applyLicensedModules() {
+        if (btnCurrentAccount == null) {
+            return;
+        }
+        boolean enabled = licenseService.isCurrentAccountsEnabled();
+        btnCurrentAccount.setVisible(enabled);
+        btnCurrentAccount.setManaged(enabled);
     }
 
     private void setupSidebarResponsiveMode() {
@@ -57,7 +76,9 @@ public class MainController {
         sidebarBox.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene == null) return;
             applySidebarResponsiveMode(newScene.getWidth());
+            applyAppHeightMode(newScene.getHeight());
             newScene.widthProperty().addListener((o, oldW, newW) -> applySidebarResponsiveMode(newW.doubleValue()));
+            newScene.heightProperty().addListener((o, oldH, newH) -> applyAppHeightMode(newH.doubleValue()));
         });
     }
 
@@ -97,6 +118,10 @@ public class MainController {
 
     @FXML
     private void showCurrentAccount() {
+        if (!licenseService.isCurrentAccountsEnabled()) {
+            showDashboard();
+            return;
+        }
         setActiveSidebarButton(btnCurrentAccount);
         loadView("current-account-view.fxml");
     }
@@ -140,13 +165,14 @@ public class MainController {
         }
     }
 
-    private void loadView(String fxmlName) {
+    private Object loadView(String fxmlName) {
         AppLogger.info("MainController", "loadView", "Cargando vista: " + fxmlName);
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/" + fxmlName));
             Node node = loader.load();
             contentArea.getChildren().setAll(node);
             AppLogger.info("MainController", "loadView", "Vista cargada OK: " + fxmlName);
+            return loader.getController();
         } catch (IOException e) {
             AppLogger.error("MainController", "loadView", "Error al cargar vista: " + fxmlName, e);
             throw new RuntimeException("No se pudo cargar la vista: " + fxmlName, e);
@@ -157,7 +183,10 @@ public class MainController {
         return instance;
     }
 
-    public void openSection(String fxmlName) {
+    public Object openSection(String fxmlName) {
+        if ("current-account-view.fxml".equals(fxmlName) && !licenseService.isCurrentAccountsEnabled()) {
+            fxmlName = "dashboard-view.fxml";
+        }
         Button activeButton = switch (fxmlName) {
             case "dashboard-view.fxml" -> btnDashboard;
             case "products-view.fxml" -> btnProducts;
@@ -171,7 +200,7 @@ public class MainController {
             default -> null;
         };
         setActiveSidebarButton(activeButton);
-        loadView(fxmlName);
+        return loadView(fxmlName);
     }
 
     private void setActiveSidebarButton(Button activeButton) {
@@ -184,6 +213,16 @@ public class MainController {
         }
         if (activeButton != null && !activeButton.getStyleClass().contains("sidebar-button-active")) {
             activeButton.getStyleClass().add("sidebar-button-active");
+        }
+    }
+
+    private void applyAppHeightMode(double height) {
+        if (rootPane == null) return;
+        rootPane.getStyleClass().removeAll(APP_SHORT_CLASS, APP_XSHORT_CLASS);
+        if (height < APP_XSHORT_HEIGHT_BREAKPOINT) {
+            rootPane.getStyleClass().addAll(APP_SHORT_CLASS, APP_XSHORT_CLASS);
+        } else if (height < APP_SHORT_HEIGHT_BREAKPOINT) {
+            rootPane.getStyleClass().add(APP_SHORT_CLASS);
         }
     }
 }

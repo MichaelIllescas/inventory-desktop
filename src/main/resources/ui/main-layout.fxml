@@ -3,6 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
@@ -14,9 +15,11 @@
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.ferreteria.controllers.MainController"
+            fx:id="rootPane"
             stylesheets="@styles.css">
 
     <left>
+        <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="sidebar-scroll">
         <VBox fx:id="sidebarBox" spacing="12" styleClass="sidebar">
             <children>
                 <VBox spacing="4" styleClass="sidebar-header">
@@ -41,7 +44,7 @@
                 <Label text="Desarrollado por" styleClass="sidebar-footer-label"/>
                 <Button fx:id="logoImperialNet" styleClass="sidebar-logo-button" onAction="#openImperialNet">
                     <graphic>
-                        <ImageView fitHeight="86" preserveRatio="true" pickOnBounds="true">
+                        <ImageView fitWidth="170" fitHeight="86" preserveRatio="true" pickOnBounds="true">
                             <image>
                                 <Image url="@../images/logo_imperial_net.png"/>
                             </image>
@@ -54,12 +57,17 @@
                 <Insets top="24" right="16" bottom="24" left="16"/>
             </padding>
         </VBox>
+        </ScrollPane>
     </left>
 
     <center>
-        <StackPane fx:id="contentArea" styleClass="content-area">
-            <!-- Las vistas de cada mÃ³dulo se cargan dinÃ¡micamente aquÃ­ -->
-        </StackPane>
+        <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="AS_NEEDED" vbarPolicy="AS_NEEDED" styleClass="content-scroll">
+            <content>
+                <StackPane fx:id="contentArea" styleClass="content-area">
+                    <!-- Las vistas de cada módulo se cargan dinámicamente aquí -->
+                </StackPane>
+            </content>
+        </ScrollPane>
     </center>
 
 </BorderPane>

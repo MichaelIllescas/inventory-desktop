@@ -155,14 +155,11 @@
             <TableView fx:id="tableDetail" visible="false" maxWidth="Infinity" maxHeight="Infinity">
                 <columns>
                     <TableColumn fx:id="colDetailDate" text="Fecha y hora" prefWidth="115" minWidth="100"/>
-                    <TableColumn fx:id="colDetailSaleId" text="N° Venta" prefWidth="58" minWidth="52" styleClass="numeric-column"/>
-                    <TableColumn fx:id="colDetailCode" text="Código" prefWidth="62" minWidth="55"/>
-                    <TableColumn fx:id="colDetailProduct" text="Producto" prefWidth="130" minWidth="100"/>
-                    <TableColumn fx:id="colDetailQty" text="Cant." prefWidth="46" minWidth="42" styleClass="numeric-column"/>
-                    <TableColumn fx:id="colDetailPrice" text="P. unit. ($)" prefWidth="88" minWidth="78" styleClass="numeric-column"/>
-                    <TableColumn fx:id="colDetailSubtotal" text="Subtotal ($)" prefWidth="92" minWidth="82" styleClass="numeric-column"/>
-                    <TableColumn fx:id="colDetailSaleTotal" text="Total venta ($)" prefWidth="98" minWidth="86" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDetailSaleId" text="Nro Venta" prefWidth="80" minWidth="70" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colDetailSummary" text="Resumen" prefWidth="260" minWidth="180"/>
+                    <TableColumn fx:id="colDetailSaleTotal" text="Total venta ($)" prefWidth="120" minWidth="100" styleClass="numeric-column"/>
                     <TableColumn fx:id="colDetailPayment" text="Medio pago" prefWidth="100" minWidth="90"/>
+                    <TableColumn fx:id="colDetailActions" text="Acciones" prefWidth="170" minWidth="155"/>
                 </columns>
             </TableView>
 
@@ -172,7 +169,7 @@
                     <TableColumn fx:id="colCcSales" text="Ventas CC ($)" prefWidth="115" minWidth="100" styleClass="numeric-column"/>
                     <TableColumn fx:id="colCcPayments" text="Pagos CC ($)" prefWidth="105" minWidth="92" styleClass="numeric-column"/>
                     <TableColumn fx:id="colCcFinalDebt" text="Saldo final ($)" prefWidth="110" minWidth="96" styleClass="numeric-column"/>
-                    <TableColumn fx:id="colCcExport" text="Comprobante" prefWidth="110" minWidth="100"/>
+                    <TableColumn fx:id="colCcExport" text="Comprobante" prefWidth="190" minWidth="180"/>
                 </columns>
             </TableView>
         </StackPane>

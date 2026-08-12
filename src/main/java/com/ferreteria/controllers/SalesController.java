@@ -7,6 +7,7 @@ import com.ferreteria.repositories.sqlite.SQLiteCustomerRepository;
 import com.ferreteria.repositories.sqlite.SQLiteProductRepository;
 import com.ferreteria.repositories.sqlite.SQLiteSaleRepository;
 import com.ferreteria.services.CustomerService;
+import com.ferreteria.services.LicenseService;
 import com.ferreteria.services.SaleService;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -46,8 +47,12 @@ public class SalesController {
     private static final String PAYMENT_CURRENT_ACCOUNT = "Cuenta corriente";
     private static final double BREAKPOINT_COMPACT = 1700;
     private static final double BREAKPOINT_XCOMPACT = 1460;
+    private static final double HEIGHT_BREAKPOINT_SHORT = 980;
+    private static final double HEIGHT_BREAKPOINT_XSHORT = 840;
     private static final String STYLE_COMPACT = "sales-compact";
     private static final String STYLE_XCOMPACT = "sales-xcompact";
+    private static final String STYLE_SHORT = "sales-short";
+    private static final String STYLE_XSHORT = "sales-xshort";
 
     @FXML private BorderPane rootPane;
     @FXML private TextField scanField;
@@ -86,6 +91,7 @@ public class SalesController {
     private final SQLiteProductRepository productRepository;
     private final SupplierService supplierService;
     private final CustomerService customerService;
+    private final LicenseService licenseService;
     private final ObservableList<SaleLineItem> items = FXCollections.observableArrayList();
     private boolean syncingTotal = false;
 
@@ -97,6 +103,7 @@ public class SalesController {
         );
         this.supplierService = new SupplierService(new SQLiteSupplierRepository());
         this.customerService = new CustomerService(new SQLiteCustomerRepository());
+        this.licenseService = new LicenseService();
     }
 
     @FXML
@@ -114,7 +121,7 @@ public class SalesController {
 
         scanField.setPromptText("Escanee o escriba codigo y pulse Enter");
 
-        // Click en la tabla devuelve el foco al campo de escaneo (si no estÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ editando una celda)
+        // Click en la tabla devuelve el foco al campo de escaneo (si no está editando una celda)
         itemsTable.addEventFilter(javafx.scene.input.MouseEvent.MOUSE_CLICKED, e -> {
             if (itemsTable.getEditingCell() == null) {
                 Platform.runLater(() -> scanField.requestFocus());
@@ -125,14 +132,14 @@ public class SalesController {
             scanField.requestFocus();
             if (scanField.getScene() != null) {
                 // FILTER (no handler) para capturar Enter antes que la tabla lo consuma.
-                // Verificamos que scanField siga en la escena: si el usuario navegÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³ a otra
+                // Verificamos que scanField siga en la escena: si el usuario navegó a otra
                 // vista, getScene() devuelve null y el filtro se ignora sin efectos.
                 scanField.getScene().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
                     if (event.getCode() != KeyCode.ENTER) return;
-                    if (scanField.getScene() == null) return; // vista de ventas ya no estÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ activa
+                    if (scanField.getScene() == null) return; // vista de ventas ya no está activa
                     if (scanField.isFocused()) return;
                     if (totalField.isFocused()) return;
-                    if (itemsTable.getEditingCell() != null) return; // hay una celda en ediciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n
+                    if (itemsTable.getEditingCell() != null) return; // hay una celda en edición
                     if (!items.isEmpty()) {
                         event.consume();
                         confirmAndRegisterSale();
@@ -142,9 +149,13 @@ public class SalesController {
         });
 
         if (paymentMethodCombo != null) {
-            paymentMethodCombo.setItems(FXCollections.observableArrayList(
-                    "Efectivo", "Transferencia", "Debito", "Credito", PAYMENT_CURRENT_ACCOUNT
-            ));
+            ObservableList<String> paymentMethods = FXCollections.observableArrayList(
+                    "Efectivo", "Transferencia", "Debito", "Credito"
+            );
+            if (licenseService.isCurrentAccountsEnabled()) {
+                paymentMethods.add(PAYMENT_CURRENT_ACCOUNT);
+            }
+            paymentMethodCombo.setItems(paymentMethods);
             paymentMethodCombo.getSelectionModel().selectFirst();
             paymentMethodCombo.valueProperty().addListener((obs, oldVal, newVal) -> updateCustomerSelectorState());
         }
@@ -180,10 +191,10 @@ public class SalesController {
                     com.ferreteria.database.DatabaseManager.VARIOS_CODE, 1.5, 50));
         }
 
-        // Acepta dÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­gitos, punto (separador de miles al mostrar) y coma decimal
+        // Acepta dígitos, punto (separador de miles al mostrar) y coma decimal
         totalField.setTextFormatter(new TextFormatter<>(change -> {
             String newText = change.getControlNewText();
-            // Solo nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âºmeros, punto de miles y coma decimal
+            // Solo números, punto de miles y coma decimal
             if (newText.matches("[0-9.]*[,]?[0-9]*")) return change;
             return null;
         }));
@@ -199,14 +210,14 @@ public class SalesController {
 
         totalField.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
             if (isFocused) {
-                // Al entrar: quita puntos de miles para ediciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n limpia
+                // Al entrar: quita puntos de miles para edición limpia
                 syncingTotal = true;
                 String raw = totalField.getText().replace(".", "");
                 totalField.setText(raw);
                 syncingTotal = false;
                 Platform.runLater(() -> { totalField.end(); totalField.deselect(); });
             } else {
-                // Al salir: restaura si vacÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­o, luego formatea con miles
+                // Al salir: restaura si está vacío, luego formatea con miles
                 String text = totalField.getText();
                 if (text == null || text.isBlank()) {
                     double calculated = items.stream().mapToDouble(SaleLineItem::getSubtotal).sum();
@@ -274,23 +285,42 @@ public class SalesController {
         if (rootPane == null) return;
         rootPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene == null) return;
-            applyResponsiveMode(newScene.getWidth());
-            newScene.widthProperty().addListener((o, oldW, newW) -> applyResponsiveMode(newW.doubleValue()));
+            applyResponsiveMode(newScene.getWidth(), newScene.getHeight());
+            newScene.widthProperty().addListener((o, oldW, newW) -> applyResponsiveMode(newW.doubleValue(), newScene.getHeight()));
+            newScene.heightProperty().addListener((o, oldH, newH) -> applyResponsiveMode(newScene.getWidth(), newH.doubleValue()));
         });
     }
 
-    private void applyResponsiveMode(double width) {
+    private void applyResponsiveMode(double width, double height) {
         if (rootPane == null) return;
-        rootPane.getStyleClass().removeAll(STYLE_COMPACT, STYLE_XCOMPACT);
+        rootPane.getStyleClass().removeAll(STYLE_COMPACT, STYLE_XCOMPACT, STYLE_SHORT, STYLE_XSHORT);
         if (width < BREAKPOINT_XCOMPACT) {
             rootPane.getStyleClass().addAll(STYLE_COMPACT, STYLE_XCOMPACT);
         } else if (width < BREAKPOINT_COMPACT) {
             rootPane.getStyleClass().add(STYLE_COMPACT);
         }
+        if (height < HEIGHT_BREAKPOINT_XSHORT) {
+            rootPane.getStyleClass().addAll(STYLE_SHORT, STYLE_XSHORT);
+        } else if (height < HEIGHT_BREAKPOINT_SHORT) {
+            rootPane.getStyleClass().add(STYLE_SHORT);
+        }
+        applyDecorativeBarcodeMode(height);
         Platform.runLater(() -> {
             updateTotalFieldWidth();
             updateBarcodeWidth();
         });
+    }
+
+    private void applyDecorativeBarcodeMode(double height) {
+        if (barcodeBox == null) return;
+
+        boolean hideBarcode = height < HEIGHT_BREAKPOINT_XSHORT;
+        barcodeBox.setVisible(!hideBarcode);
+        barcodeBox.setManaged(!hideBarcode);
+
+        if (!hideBarcode && variosBarcode != null) {
+            variosBarcode.setFitHeight(height < HEIGHT_BREAKPOINT_SHORT ? 24 : 50);
+        }
     }
 
     private void setupTable() {
@@ -318,7 +348,7 @@ public class SalesController {
             }
         };
 
-        // Cantidad ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â editable
+        // Cantidad editable
         colQuantity.setCellFactory(col -> buildEditableCell(converter));
         colQuantity.setOnEditCommit(e -> {
             SaleLineItem line = e.getRowValue();
@@ -330,7 +360,7 @@ public class SalesController {
             }
         });
 
-        // Precio unitario ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â editable
+        // Precio unitario editable
         colUnitPrice.setCellFactory(col -> buildEditableCell(converter));
         colUnitPrice.setOnEditCommit(e -> {
             SaleLineItem line = e.getRowValue();
@@ -342,7 +372,7 @@ public class SalesController {
             }
         });
 
-        // Subtotal ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â editable como override libre (descuento, ajuste), no toca el precio unitario
+        // Subtotal editable como override libre (descuento, ajuste), no toca el precio unitario
         colSubtotal.setCellFactory(col -> buildEditableCell(converter));
         colSubtotal.setOnEditCommit(e -> {
             SaleLineItem line = e.getRowValue();
@@ -516,8 +546,8 @@ public class SalesController {
     private double resolveAvailableAmountWidth() {
         double rowWidth = totalRow.getWidth();
         if (bottomMainRow != null && bottomMainRow.getWidth() > 0) {
-            double reservedBarcodeWidth = 180;
-            if (barcodeBox != null) {
+            double reservedBarcodeWidth = 0;
+            if (barcodeBox != null && barcodeBox.isManaged() && barcodeBox.isVisible()) {
                 reservedBarcodeWidth = Math.max(180, barcodeBox.getWidth());
             }
             double labelWidth = 0;
@@ -648,11 +678,11 @@ public class SalesController {
         if ("0".equals(normalizedCode)) {
             normalizedCode = com.ferreteria.database.DatabaseManager.VARIOS_CODE;
         }
-        AppLogger.info("SalesController", "addProductByCode", "Buscando cÃ³digo: " + normalizedCode);
+        AppLogger.info("SalesController", "addProductByCode", "Buscando código: " + normalizedCode);
         Optional<Product> opt = saleService.findProductByCode(normalizedCode);
         if (opt.isEmpty()) {
-            AppLogger.warn("SalesController", "addProductByCode", "CÃ³digo no encontrado: " + normalizedCode);
-            showWarning("No se encontrÃ³ ningÃºn producto con cÃ³digo: " + normalizedCode);
+            AppLogger.warn("SalesController", "addProductByCode", "Código no encontrado: " + normalizedCode);
+            showWarning("No se encontró ningún producto con código: " + normalizedCode);
             return;
         }
         Product product = opt.get();
@@ -670,7 +700,7 @@ public class SalesController {
         List<com.ferreteria.models.Supplier> suppliers = supplierService.getAllSuppliers();
         ProductFormDialog dialog = new ProductFormDialog(product, suppliers);
         dialog.setTitle("Configurar producto");
-        dialog.setHeaderText("Este producto no tiene precio ni stock. CompletÃ¡ los datos para activarlo.");
+        dialog.setHeaderText("Este producto no tiene precio ni stock. Completá los datos para activarlo.");
         dialog.showAndWait().ifPresent(configured -> {
             try {
                 configured.setPrecarga(false);
@@ -699,7 +729,7 @@ public class SalesController {
                 updateTotal();
                 updateSummary();
                 if (isVarios) {
-                    // Abrir ediciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n del precio directamente para que el usuario lo ingrese
+                    // Abrir edición del precio directamente para que el usuario lo ingrese
                     int row = items.size() - 1;
                     itemsTable.getSelectionModel().select(row);
                     itemsTable.scrollTo(row);
@@ -740,6 +770,10 @@ public class SalesController {
         String payment = paymentMethodCombo != null ? paymentMethodCombo.getSelectionModel().getSelectedItem() : null;
         if (payment == null || payment.isBlank()) {
             showWarning("Seleccione un medio de pago.");
+            return;
+        }
+        if (PAYMENT_CURRENT_ACCOUNT.equals(payment) && !licenseService.isCurrentAccountsEnabled()) {
+            showWarning("El módulo de cuentas corrientes no está habilitado en esta edición.");
             return;
         }
         Integer customerId = resolveCurrentAccountCustomerId(payment);

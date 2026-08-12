@@ -19,6 +19,8 @@ import java.util.Optional;
 public class ProductSelectionDialog extends Dialog<Product> {
 
     private final TextField searchField = new TextField();
+    // Por defecto solo se listan los productos del negocio; el catálogo de precarga queda opt-in.
+    private final CheckBox includeCatalogCheck = new CheckBox("Incluir catálogo de precarga");
     private final TableView<Product> table = new TableView<>();
     private final ProductService productService;
     private final SQLiteProductRepository productRepository;
@@ -75,6 +77,12 @@ public class ProductSelectionDialog extends Dialog<Product> {
         top.add(searchBtn, 2, 0);
         GridPane.setMargin(searchBtn, new Insets(0, 0, 8, 0));
 
+        includeCatalogCheck.setSelected(false);
+        includeCatalogCheck.setTooltip(new Tooltip(
+                "Muestra también los productos precargados del catálogo, que todavía no tienen precio ni stock."));
+        includeCatalogCheck.selectedProperty().addListener((obs, was, is) -> doSearch());
+        top.add(includeCatalogCheck, 1, 1);
+
         BorderPane content = new BorderPane();
         content.setTop(top);
         content.setCenter(table);
@@ -97,14 +105,21 @@ public class ProductSelectionDialog extends Dialog<Product> {
     }
 
     private void loadProducts() {
-        table.getItems().setAll(productRepository.findAllIncludingPrecarga());
+        doSearch();
     }
 
     private void doSearch() {
         String q = searchField.getText();
-        List<Product> list = q == null || q.isBlank()
-                ? productRepository.findAllIncludingPrecarga()
-                : productRepository.searchIncludingPrecarga(q.trim());
+        boolean withCatalog = includeCatalogCheck.isSelected();
+        boolean blank = q == null || q.isBlank();
+        List<Product> list;
+        if (withCatalog) {
+            list = blank ? productRepository.findAllIncludingPrecarga()
+                         : productRepository.searchIncludingPrecarga(q.trim());
+        } else {
+            list = blank ? productRepository.findAllSellable()
+                         : productRepository.searchSellable(q.trim());
+        }
         table.getItems().setAll(list);
         if (!list.isEmpty()) {
             table.getSelectionModel().selectFirst();

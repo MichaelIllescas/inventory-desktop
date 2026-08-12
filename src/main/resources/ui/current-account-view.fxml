@@ -61,15 +61,15 @@
                         <Label fx:id="customerNameLabel" text="-" styleClass="customers-summary-value" wrapText="true"/>
                     </VBox>
                     <VBox GridPane.columnIndex="1" spacing="4">
-                        <Label text="Telefono" styleClass="customers-summary-title"/>
+                        <Label text="Teléfono" styleClass="customers-summary-title"/>
                         <Label fx:id="customerPhoneLabel" text="-" styleClass="customers-summary-value" wrapText="true"/>
                     </VBox>
                     <VBox GridPane.columnIndex="2" spacing="4">
-                        <Label text="Direccion" styleClass="customers-summary-title"/>
+                        <Label text="Dirección" styleClass="customers-summary-title"/>
                         <Label fx:id="customerAddressLabel" text="-" styleClass="customers-summary-value" wrapText="true"/>
                     </VBox>
                     <VBox GridPane.columnIndex="3" spacing="4">
-                        <Label text="Limite" styleClass="customers-summary-title"/>
+                        <Label text="Límite" styleClass="customers-summary-title"/>
                         <Label fx:id="customerLimitLabel" text="Sin limite" styleClass="customers-summary-value" wrapText="true"/>
                     </VBox>
                     <VBox GridPane.columnIndex="4" spacing="4">
@@ -104,7 +104,11 @@
         <ScrollPane fitToWidth="true" pannable="true" styleClass="summary-scroll">
             <content>
                 <VBox spacing="10">
-                    <Label text="Deuda por venta" styleClass="summary-panel-title"/>
+                    <HBox alignment="BOTTOM_LEFT" spacing="10">
+                        <Label text="Deuda por venta" styleClass="summary-panel-title"/>
+                        <Label text="(doble clic en una venta para ver qué productos incluye)"
+                               styleClass="summary-panel-hint"/>
+                    </HBox>
                     <TableView fx:id="debtTable" prefHeight="200" styleClass="customers-table">
                         <columns>
                             <TableColumn fx:id="colDebtSaleId" text="Venta" minWidth="60" prefWidth="70"/>

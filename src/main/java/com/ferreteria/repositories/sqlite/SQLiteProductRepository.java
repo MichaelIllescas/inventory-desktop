@@ -13,6 +13,11 @@ import java.util.Optional;
 
 public class SQLiteProductRepository implements ProductRepository {
 
+    private static final String NATURAL_CODE_ORDER =
+            "CASE WHEN trim(p.code) <> '' AND trim(p.code) NOT GLOB '*[^0-9]*' THEN 0 ELSE 1 END, " +
+            "CASE WHEN trim(p.code) <> '' AND trim(p.code) NOT GLOB '*[^0-9]*' THEN CAST(p.code AS INTEGER) END, " +
+            "p.code COLLATE NOCASE, p.name COLLATE NOCASE";
+
     @Override
     public Product save(Product product) {
         if (product.getId() == null) {
@@ -275,7 +280,7 @@ public class SQLiteProductRepository implements ProductRepository {
 
     @Override
     public int countAll() {
-        String sql = "SELECT COUNT(*) FROM products WHERE code != ? AND (skip_stock = 0 OR skip_stock IS NULL) AND precarga = 0 AND deleted = 0";
+        String sql = "SELECT COUNT(*) FROM products WHERE code != ? AND precarga = 0 AND deleted = 0";
         Connection conn = DatabaseManager.getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, DatabaseManager.VARIOS_CODE);
@@ -303,7 +308,7 @@ public class SQLiteProductRepository implements ProductRepository {
 
     @Override
     public int countSearch(String query) {
-        String sql = "SELECT COUNT(*) FROM products WHERE (code LIKE ? OR name LIKE ? OR description LIKE ?) AND code != ? AND (skip_stock = 0 OR skip_stock IS NULL) AND precarga = 0 AND deleted = 0";
+        String sql = "SELECT COUNT(*) FROM products WHERE (code LIKE ? OR name LIKE ? OR description LIKE ?) AND code != ? AND precarga = 0 AND deleted = 0";
         Connection conn = DatabaseManager.getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             String pattern = "%" + query + "%";
@@ -323,8 +328,8 @@ public class SQLiteProductRepository implements ProductRepository {
     public List<Product> findPage(int offset, int pageSize) {
         String sql = "SELECT p.id, p.code, p.name, p.description, p.price, p.stock, p.minimum_stock, p.supplier_id, p.skip_stock, p.precarga, s.name AS supplier_name " +
                 "FROM products p LEFT JOIN suppliers s ON p.supplier_id = s.id " +
-                "WHERE p.code != ? AND (p.skip_stock = 0 OR p.skip_stock IS NULL) AND p.precarga = 0 AND p.deleted = 0 " +
-                "ORDER BY p.name LIMIT ? OFFSET ?";
+                "WHERE p.code != ? AND p.precarga = 0 AND p.deleted = 0 " +
+                "ORDER BY " + NATURAL_CODE_ORDER + " LIMIT ? OFFSET ?";
         Connection conn = DatabaseManager.getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, DatabaseManager.VARIOS_CODE);
@@ -344,8 +349,8 @@ public class SQLiteProductRepository implements ProductRepository {
     public List<Product> searchPage(String query, int offset, int pageSize) {
         String sql = "SELECT p.id, p.code, p.name, p.description, p.price, p.stock, p.minimum_stock, p.supplier_id, p.skip_stock, p.precarga, s.name AS supplier_name " +
                 "FROM products p LEFT JOIN suppliers s ON p.supplier_id = s.id " +
-                "WHERE (p.code LIKE ? OR p.name LIKE ? OR p.description LIKE ?) AND p.code != ? AND (p.skip_stock = 0 OR p.skip_stock IS NULL) AND p.precarga = 0 AND p.deleted = 0 " +
-                "ORDER BY p.name LIMIT ? OFFSET ?";
+                "WHERE (p.code LIKE ? OR p.name LIKE ? OR p.description LIKE ?) AND p.code != ? AND p.precarga = 0 AND p.deleted = 0 " +
+                "ORDER BY " + NATURAL_CODE_ORDER + " LIMIT ? OFFSET ?";
         Connection conn = DatabaseManager.getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             String pattern = "%" + query + "%";
@@ -412,6 +417,48 @@ public class SQLiteProductRepository implements ProductRepository {
         }
     }
 
+    /** Igual que {@link #findAllIncludingPrecarga()} pero solo con los productos propios del negocio. */
+    public List<Product> findAllSellable() {
+        String sql = "SELECT p.id, p.code, p.name, p.description, p.price, p.stock, p.minimum_stock, p.supplier_id, p.skip_stock, p.precarga, s.name AS supplier_name " +
+                "FROM products p LEFT JOIN suppliers s ON p.supplier_id = s.id " +
+                "WHERE p.code != ? AND p.skip_stock = 0 AND p.deleted = 0 AND p.precarga = 0 " +
+                "ORDER BY p.name ASC LIMIT 500";
+        Connection conn = DatabaseManager.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, DatabaseManager.VARIOS_CODE);
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Product> list = new ArrayList<>();
+                while (rs.next()) list.add(mapRowWithSupplier(rs));
+                return list;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al listar productos del negocio", e);
+        }
+    }
+
+    /** Igual que {@link #searchIncludingPrecarga(String)} pero solo con los productos propios del negocio. */
+    public List<Product> searchSellable(String query) {
+        String sql = "SELECT p.id, p.code, p.name, p.description, p.price, p.stock, p.minimum_stock, p.supplier_id, p.skip_stock, p.precarga, s.name AS supplier_name " +
+                "FROM products p LEFT JOIN suppliers s ON p.supplier_id = s.id " +
+                "WHERE (p.code LIKE ? OR p.name LIKE ? OR p.description LIKE ?) AND p.code != ? AND p.skip_stock = 0 AND p.deleted = 0 AND p.precarga = 0 " +
+                "ORDER BY p.name ASC LIMIT 200";
+        Connection conn = DatabaseManager.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            String pattern = "%" + query + "%";
+            stmt.setString(1, pattern);
+            stmt.setString(2, pattern);
+            stmt.setString(3, pattern);
+            stmt.setString(4, DatabaseManager.VARIOS_CODE);
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Product> list = new ArrayList<>();
+                while (rs.next()) list.add(mapRowWithSupplier(rs));
+                return list;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al buscar productos del negocio", e);
+        }
+    }
+
     public void activarProducto(int productId, double price, double stock, double minimumStock) {
         String sql = "UPDATE products SET price = ?, stock = ?, minimum_stock = ?, precarga = 0 WHERE id = ?";
         Connection conn = DatabaseManager.getConnection();
@@ -447,4 +494,3 @@ public class SQLiteProductRepository implements ProductRepository {
         return product;
     }
 }
-

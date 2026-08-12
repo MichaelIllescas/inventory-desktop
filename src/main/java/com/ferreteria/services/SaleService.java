@@ -13,8 +13,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class SaleService {
@@ -23,10 +26,12 @@ public class SaleService {
 
     private final SaleRepository saleRepository;
     private final ProductRepository productRepository;
+    private final LicenseService licenseService;
 
     public SaleService(SaleRepository saleRepository, ProductRepository productRepository) {
         this.saleRepository = saleRepository;
         this.productRepository = productRepository;
+        this.licenseService = new LicenseService();
     }
 
     public Optional<Product> findProductByCode(String code) {
@@ -69,6 +74,9 @@ public class SaleService {
         }
         boolean isCurrentAccount = PAYMENT_CURRENT_ACCOUNT.equals(paymentMethod)
                 || PAYMENT_CURRENT_ACCOUNT_LEGACY.equals(paymentMethod);
+        if (isCurrentAccount && !licenseService.isCurrentAccountsEnabled()) {
+            throw new IllegalArgumentException("El módulo de cuentas corrientes no está habilitado en esta edición.");
+        }
         if (isCurrentAccount && customerId == null) {
             throw new IllegalArgumentException("Debe seleccionar un cliente para cuenta corriente.");
         }
@@ -90,6 +98,10 @@ public class SaleService {
             items.add(new SaleItem(null, line.getProductId(), line.getQuantity(), line.getEffectiveUnitPrice()));
         }
 
+        // El descuento/aumento aplicado sobre el total se reparte entre los ítems, para que el precio
+        // guardado en cada línea sea el realmente cobrado (reportes por producto, ediciones posteriores).
+        final List<SaleItem> itemsToSave = distributeTotalAmongItems(items, customTotal);
+
         Sale sale = new Sale();
         sale.setDate(Sale.nowAsString());
         sale.setTotal(customTotal);
@@ -100,7 +112,7 @@ public class SaleService {
         DatabaseManager.runInTransaction(() -> {
             Sale saved = saleRepository.saveSale(sale);
             AppLogger.info("SaleService", "registerSale", "Venta guardada con id=" + saved.getId());
-            saleRepository.saveSaleItems(saved.getId(), items);
+            saleRepository.saveSaleItems(saved.getId(), itemsToSave);
 
             if (isCurrentAccount) {
                 insertCurrentAccountDebit(customerId, saved.getId(), sale.getDate(), customTotal);
@@ -264,6 +276,221 @@ public class SaleService {
             AppLogger.endOperation();
         }
     }
+
+    public void updateSale(int saleId, String newDate, List<SaleItem> newItems) {
+        updateSale(saleId, newDate, newItems, null);
+    }
+
+    /**
+     * Actualiza la venta. Si customTotal es null, el total se recalcula como la suma de los ítems;
+     * si viene informado, se respeta el total indicado (permite conservar descuentos/ajustes
+     * aplicados sobre el total de la venta).
+     */
+    public void updateSale(int saleId, String newDate, List<SaleItem> newItems, Double customTotal) {
+        if (saleId <= 0) {
+            throw new IllegalArgumentException("Venta inválida.");
+        }
+        if (newDate == null || newDate.isBlank()) {
+            throw new IllegalArgumentException("La fecha y hora son obligatorias.");
+        }
+        if (newItems == null || newItems.isEmpty()) {
+            throw new IllegalArgumentException("La venta debe tener al menos un ítem.");
+        }
+        for (SaleItem item : newItems) {
+            if (item.getProductId() == null || item.getProductId() <= 0) {
+                throw new IllegalArgumentException("Hay un ítem sin producto válido.");
+            }
+            if (item.getQuantity() <= 0) {
+                throw new IllegalArgumentException("Las cantidades deben ser mayores a 0.");
+            }
+            if (item.getPrice() < 0) {
+                throw new IllegalArgumentException("Los precios no pueden ser negativos.");
+            }
+        }
+
+        double itemsTotal = newItems.stream().mapToDouble(SaleItem::getSubtotal).sum();
+        if (customTotal != null && customTotal < 0) {
+            throw new IllegalArgumentException("El total de la venta no puede ser negativo.");
+        }
+        double newTotal = customTotal != null ? customTotal : itemsTotal;
+        final List<SaleItem> itemsToSave = distributeTotalAmongItems(newItems, newTotal);
+
+        DatabaseManager.runInTransaction(() -> {
+            SaleSnapshot snapshot = getSaleSnapshot(saleId);
+            List<SaleItem> oldItems = saleRepository.getSaleItemsBySaleId(saleId);
+            validateStockForSaleUpdate(oldItems, newItems);
+
+            updateSaleHeader(saleId, newDate, newTotal);
+            replaceSaleItems(saleId, itemsToSave);
+
+            if (isCurrentAccountPayment(snapshot.paymentMethod)) {
+                if (snapshot.customerId == null) {
+                    throw new IllegalStateException("La venta en cuenta corriente no tiene cliente asociado.");
+                }
+                updateCurrentAccountDebitForSale(saleId, newDate, newTotal);
+                deletePaymentApplicationsForSale(saleId);
+                applyAvailableCreditsToSale(snapshot.customerId, saleId, newTotal);
+            }
+
+            Map<Integer, Double> previousByProduct = sumQuantitiesByProduct(oldItems);
+            Map<Integer, Double> requestedByProduct = sumQuantitiesByProduct(newItems);
+            for (Map.Entry<Integer, Double> entry : requestedByProduct.entrySet()) {
+                Product product = productRepository.findById(entry.getKey()).orElseThrow();
+                if (!product.isSkipStock()) {
+                    double previousQuantity = previousByProduct.getOrDefault(entry.getKey(), 0d);
+                    double delta = entry.getValue() - previousQuantity;
+                    if (delta > 0) {
+                        productRepository.decreaseStock(entry.getKey(), delta);
+                    } else if (delta < 0) {
+                        productRepository.increaseStock(entry.getKey(), Math.abs(delta));
+                    }
+                }
+            }
+            for (Map.Entry<Integer, Double> entry : previousByProduct.entrySet()) {
+                if (!requestedByProduct.containsKey(entry.getKey())) {
+                    Product product = productRepository.findById(entry.getKey()).orElseThrow();
+                    if (!product.isSkipStock()) {
+                        productRepository.increaseStock(entry.getKey(), entry.getValue());
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Reparte proporcionalmente la diferencia entre el total cobrado y la suma de los ítems,
+     * de modo que el precio unitario guardado en cada línea sea el efectivamente cobrado.
+     * El resto por redondeo se absorbe en la última línea, así sum(cantidad * precio) == total.
+     * Las cantidades nunca se modifican (el stock no se ve afectado).
+     */
+    private static List<SaleItem> distributeTotalAmongItems(List<SaleItem> items, double targetTotal) {
+        double itemsSum = items.stream().mapToDouble(SaleItem::getSubtotal).sum();
+        if (itemsSum <= 0 || targetTotal < 0 || Math.abs(targetTotal - itemsSum) < 0.005) {
+            return items;
+        }
+
+        double factor = targetTotal / itemsSum;
+        List<SaleItem> adjusted = new ArrayList<>(items.size());
+        double accumulated = 0;
+        for (int i = 0; i < items.size(); i++) {
+            SaleItem item = items.get(i);
+            double subtotal;
+            if (i == items.size() - 1) {
+                subtotal = round2(targetTotal - accumulated);
+            } else {
+                subtotal = round2(item.getSubtotal() * factor);
+                accumulated += subtotal;
+            }
+            double price = item.getQuantity() > 0 ? subtotal / item.getQuantity() : 0d;
+            adjusted.add(new SaleItem(item.getSaleId(), item.getProductId(), item.getQuantity(), price));
+        }
+        return adjusted;
+    }
+
+    private static double round2(double value) {
+        return Math.round(value * 100d) / 100d;
+    }
+
+    private void validateStockForSaleUpdate(List<SaleItem> oldItems, List<SaleItem> newItems) {
+        Map<Integer, Double> previousByProduct = sumQuantitiesByProduct(oldItems);
+        Map<Integer, Double> requestedByProduct = sumQuantitiesByProduct(newItems);
+
+        for (Map.Entry<Integer, Double> entry : requestedByProduct.entrySet()) {
+            Product product = productRepository.findById(entry.getKey()).orElseThrow();
+            if (product.isSkipStock()) {
+                continue;
+            }
+            double previousQuantity = previousByProduct.getOrDefault(entry.getKey(), 0d);
+            double availableForThisSale = product.getStock() + previousQuantity;
+            double requestedQuantity = entry.getValue();
+            if (availableForThisSale < requestedQuantity) {
+                throw new IllegalArgumentException("Stock insuficiente para '" + product.getName()
+                        + "'. Disponible: " + availableForThisSale);
+            }
+        }
+    }
+
+    private Map<Integer, Double> sumQuantitiesByProduct(List<SaleItem> items) {
+        Map<Integer, Double> quantities = new HashMap<>();
+        for (SaleItem item : items) {
+            quantities.merge(item.getProductId(), item.getQuantity(), Double::sum);
+        }
+        return quantities;
+    }
+
+    private boolean isCurrentAccountPayment(String paymentMethod) {
+        return PAYMENT_CURRENT_ACCOUNT.equals(paymentMethod) || PAYMENT_CURRENT_ACCOUNT_LEGACY.equals(paymentMethod);
+    }
+
+    private SaleSnapshot getSaleSnapshot(int saleId) {
+        String sql = "SELECT payment_method, customer_id FROM sales WHERE id = ?";
+        Connection conn = DatabaseManager.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, saleId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    throw new IllegalArgumentException("Venta no encontrada.");
+                }
+                int customerIdRaw = rs.getInt("customer_id");
+                Integer customerId = rs.wasNull() ? null : customerIdRaw;
+                return new SaleSnapshot(rs.getString("payment_method"), customerId);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al obtener la venta", e);
+        }
+    }
+
+    private void updateSaleHeader(int saleId, String date, double total) {
+        String sql = "UPDATE sales SET date = ?, total = ? WHERE id = ?";
+        Connection conn = DatabaseManager.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, date);
+            stmt.setDouble(2, total);
+            stmt.setInt(3, saleId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al actualizar la venta", e);
+        }
+    }
+
+    private void replaceSaleItems(int saleId, List<SaleItem> items) {
+        Connection conn = DatabaseManager.getConnection();
+        try (PreparedStatement delete = conn.prepareStatement("DELETE FROM sale_items WHERE sale_id = ?")) {
+            delete.setInt(1, saleId);
+            delete.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al reemplazar ítems de venta", e);
+        }
+
+        String sql = "INSERT INTO sale_items(sale_id, product_id, quantity, price) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            for (SaleItem item : items) {
+                stmt.setInt(1, saleId);
+                stmt.setInt(2, item.getProductId());
+                stmt.setDouble(3, item.getQuantity());
+                stmt.setDouble(4, item.getPrice());
+                stmt.addBatch();
+            }
+            stmt.executeBatch();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al guardar ítems de venta", e);
+        }
+    }
+
+    private void updateCurrentAccountDebitForSale(int saleId, String date, double amount) {
+        String sql = "UPDATE customer_account_movements SET date = ?, amount = ? WHERE sale_id = ? AND type = 'DEBITO'";
+        Connection conn = DatabaseManager.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, date);
+            stmt.setDouble(2, amount);
+            stmt.setInt(3, saleId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al actualizar movimiento de cuenta corriente", e);
+        }
+    }
+
+    private record SaleSnapshot(String paymentMethod, Integer customerId) {}
 
     private void deletePaymentApplicationsForSale(int saleId) {
         Connection conn = DatabaseManager.getConnection();

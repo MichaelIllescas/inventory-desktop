@@ -8,6 +8,16 @@
   -fx-pref-width: 204;
 }
 
+.sidebar-scroll,
+.sidebar-scroll > .viewport {
+  -fx-background-color: transparent;
+}
+
+.content-scroll,
+.content-scroll > .viewport {
+  -fx-background-color: transparent;
+}
+
 .sidebar-header {
   -fx-padding: 0 0 14 4;
 }
@@ -107,6 +117,10 @@
   -fx-opacity: 0.9;
 }
 
+.sidebar-logo-button .image-view {
+  -fx-fit-width: 170;
+}
+
 .sidebar.sidebar-compact {
   -fx-pref-width: 184;
 }
@@ -188,6 +202,83 @@
 
 .content-area {
   -fx-padding: 16;
+}
+
+.app-short .content-area {
+  -fx-padding: 10;
+}
+
+.app-xshort .content-area {
+  -fx-padding: 6;
+}
+
+.app-short .dashboard-view-root,
+.app-short .products-view-root,
+.app-short .inventory-view-root,
+.app-short .sales-view-root,
+.app-short .suppliers-view-root,
+.app-short .customers-view-root,
+.app-short .reports-view-root {
+  -fx-padding: 10;
+}
+
+.app-xshort .dashboard-view-root,
+.app-xshort .products-view-root,
+.app-xshort .inventory-view-root,
+.app-xshort .sales-view-root,
+.app-xshort .suppliers-view-root,
+.app-xshort .customers-view-root,
+.app-xshort .reports-view-root {
+  -fx-padding: 6;
+}
+
+.app-short .sidebar {
+  -fx-padding: 16 12 12 12;
+}
+
+.app-short .sidebar-header {
+  -fx-padding: 0 0 8 4;
+}
+
+.app-short .sidebar-button {
+  -fx-font-size: 14px;
+  -fx-padding: 7 10 7 10;
+}
+
+.app-short .sidebar-logo-button .image-view {
+  -fx-fit-height: 58;
+}
+
+.app-short .sidebar-footer-label {
+  -fx-font-size: 11px;
+  -fx-padding: 0;
+}
+
+.app-xshort .sidebar {
+  -fx-padding: 12 10 10 10;
+}
+
+.app-xshort .sidebar-header {
+  -fx-padding: 0 0 4 4;
+}
+
+.app-xshort .sidebar-title {
+  -fx-font-size: 15px;
+}
+
+.app-xshort .sidebar-subtitle,
+.app-xshort .sidebar-footer-label,
+.app-xshort .sidebar-version-label {
+  -fx-font-size: 10px;
+}
+
+.app-xshort .sidebar-button {
+  -fx-font-size: 13px;
+  -fx-padding: 5 9 5 9;
+}
+
+.app-xshort .sidebar-logo-button .image-view {
+  -fx-fit-height: 42;
 }
 
 .view-title {
@@ -624,6 +715,26 @@ TableColumn {
   -fx-scale-y: 0.97;
 }
 
+.cc-manage-btn {
+  -fx-background-color: #16a34a;
+  -fx-text-fill: white;
+  -fx-font-size: 11px;
+  -fx-font-weight: bold;
+  -fx-background-radius: 6;
+  -fx-padding: 4 12;
+  -fx-cursor: hand;
+}
+
+.cc-manage-btn:hover {
+  -fx-background-color: #15803d;
+}
+
+.cc-manage-btn:pressed {
+  -fx-background-color: #166534;
+  -fx-scale-x: 0.97;
+  -fx-scale-y: 0.97;
+}
+
 .profit-narrative-box {
   -fx-background-color: #f8fafc;
   -fx-background-radius: 10;
@@ -675,7 +786,7 @@ TableColumn {
 }
 
 /* ===========================
-   Vistas principales (tipografÃƒÂ­a mÃƒÂ¡s grande)
+   Vistas principales (tipograf?a m?s grande)
    =========================== */
 .products-view-root,
 .inventory-view-root,
@@ -684,7 +795,7 @@ TableColumn {
 .customers-view-root,
 .reports-view-root,
 .dashboard-view-root {
-  -fx-font-size: 14px; /* texto general un poco mÃƒÂ¡s grande */
+  -fx-font-size: 14px; /* texto general un poco m?s grande */
 }
 
 .products-view-root .button,
@@ -763,6 +874,10 @@ TableColumn {
 
 .sales-toolbar-box {
   -fx-padding: 2 0 2 0;
+}
+
+.sales-toolbar-flow {
+  -fx-alignment: CENTER_LEFT;
 }
 
 /* ===== Reports toolbar: inputs uniform height ===== */
@@ -855,7 +970,37 @@ TableColumn {
   -fx-opacity: 0.45;
 }
 
-/* Tabla ventas Ã¢â‚¬â€ nÃƒÂºmeros mÃƒÂ¡s grandes */
+.report-detail-button {
+  -fx-base: #334155;
+  -fx-background-color: #334155;
+  -fx-background-radius: 8;
+  -fx-text-fill: white;
+  -fx-font-size: 12px;
+  -fx-font-weight: bold;
+  -fx-padding: 5 10;
+}
+
+.report-detail-button:hover {
+  -fx-base: #1f2937;
+  -fx-background-color: #1f2937;
+}
+
+.report-edit-button {
+  -fx-base: #2563eb;
+  -fx-background-color: #2563eb;
+  -fx-background-radius: 8;
+  -fx-text-fill: white;
+  -fx-font-size: 12px;
+  -fx-font-weight: bold;
+  -fx-padding: 5 10;
+}
+
+.report-edit-button:hover {
+  -fx-base: #1d4ed8;
+  -fx-background-color: #1d4ed8;
+}
+
+/* Tabla ventas ? n?meros m?s grandes */
 .sales-view-root .table-view .column-header,
 .sales-view-root .table-view .table-cell {
   -fx-font-size: 15px;
@@ -871,7 +1016,7 @@ TableColumn {
   -fx-font-size: 13px;
 }
 
-/* Tabla reportes Ã¢â‚¬â€ mismo tamaÃƒÂ±o que ventas */
+/* Tabla reportes ? mismo tama?o que ventas */
 .reports-view-root .table-view {
   -fx-background-color: linear-gradient(to bottom, #ffffff, #fcfdff);
   -fx-background-radius: 14;
@@ -921,7 +1066,7 @@ TableColumn {
   -fx-border-color: transparent;
 }
 
-/* Toolbar de reportes: DatePicker y ComboBox mÃƒÂ¡s grandes */
+/* Toolbar de reportes: DatePicker y ComboBox m?s grandes */
 .reports-view-root .date-picker,
 .reports-view-root .combo-box {
   -fx-font-size: 14px;
@@ -932,7 +1077,7 @@ TableColumn {
   -fx-padding: 6 8;
 }
 
-/* Columnas numÃƒÂ©ricas centradas en tablas */
+/* Columnas num?ricas centradas en tablas */
 .table-view .column-header.numeric-column,
 .table-view .table-cell.numeric-column {
   -fx-alignment: CENTER;
@@ -954,6 +1099,11 @@ TableColumn {
   -fx-text-fill: #374151;
 }
 
+.summary-panel-hint {
+  -fx-font-size: 12px;
+  -fx-text-fill: #6b7280;
+}
+
 .summary-scroll {
   -fx-background-color: transparent;
   -fx-background: transparent;
@@ -969,7 +1119,7 @@ TableColumn {
   -fx-text-fill: #6b7280;
 }
 
-/* ===== SecciÃƒÂ³n de total (ventas) ===== */
+/* ===== Secci?n de total (ventas) ===== */
 .total-calc-label {
   -fx-font-size: 14px;
   -fx-text-fill: #9ca3af;
@@ -992,7 +1142,7 @@ TableColumn {
   -fx-text-fill: #111827;
 }
 
-/* MÃƒÂ¡s especÃƒÂ­fico que .sales-view-root .text-field para que no sea pisado */
+/* M?s espec?fico que .sales-view-root .text-field para que no sea pisado */
 .sales-view-root .total-custom-field {
   -fx-font-size: 72px;
   -fx-font-weight: bold;
@@ -1153,6 +1303,87 @@ TableColumn {
 .sales-view-root.sales-xcompact .sales-customer-k,
 .sales-view-root.sales-xcompact .sales-customer-v {
   -fx-font-size: 10px;
+}
+
+.sales-view-root.sales-short {
+  -fx-padding: 10;
+}
+
+.sales-view-root.sales-short .view-title {
+  -fx-font-size: 18px;
+  -fx-padding: 0;
+}
+
+.sales-view-root.sales-short .sales-toolbar-button {
+  -fx-pref-height: 30px;
+  -fx-min-height: 30px;
+  -fx-max-height: 30px;
+  -fx-padding: 4 8;
+}
+
+.sales-view-root.sales-short #scanField,
+.sales-view-root.sales-short .sales-payment-combo {
+  -fx-pref-height: 30px;
+  -fx-min-height: 30px;
+  -fx-max-height: 30px;
+}
+
+.sales-view-root.sales-short .sales-customer-card {
+  -fx-padding: 7;
+}
+
+.sales-view-root.sales-short .total-calc-label,
+.sales-view-root.sales-short .total-calc-value,
+.sales-view-root.sales-short .ajuste-prefix-label,
+.sales-view-root.sales-short .ajuste-value-label {
+  -fx-font-size: 12px;
+}
+
+.sales-view-root.sales-short .varios-barcode-label {
+  -fx-font-size: 10px;
+}
+
+.sales-view-root.sales-short #variosBarcode {
+  -fx-fit-height: 30;
+}
+
+.sales-view-root.sales-short .sales-cash-row {
+  -fx-vgap: 4;
+}
+
+.sales-cash-row {
+  -fx-padding: 0;
+}
+
+.sales-view-root.sales-xshort {
+  -fx-padding: 8;
+}
+
+.sales-view-root.sales-xshort .view-title {
+  -fx-font-size: 16px;
+}
+
+.sales-view-root.sales-xshort .sales-toolbar-button {
+  -fx-font-size: 11px;
+  -fx-pref-height: 28px;
+  -fx-min-height: 28px;
+  -fx-max-height: 28px;
+  -fx-padding: 3 7;
+}
+
+.sales-view-root.sales-xshort #scanField,
+.sales-view-root.sales-xshort .sales-payment-combo {
+  -fx-pref-height: 28px;
+  -fx-min-height: 28px;
+  -fx-max-height: 28px;
+}
+
+.sales-view-root.sales-xshort .sales-summary-panel {
+  -fx-padding: 6;
+}
+
+.sales-view-root.sales-xshort #variosBarcode {
+  -fx-fit-height: 24;
 }
 
 /* ===== Inventario ===== */

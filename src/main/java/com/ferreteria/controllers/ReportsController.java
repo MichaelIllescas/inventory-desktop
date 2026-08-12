@@ -2,8 +2,10 @@ package com.ferreteria.controllers;
 
 import com.ferreteria.models.Customer;
 import com.ferreteria.models.CustomerDebtRow;
+import com.ferreteria.models.Product;
 import com.ferreteria.models.ProductSalesReport;
 import com.ferreteria.models.SaleDetailRow;
+import com.ferreteria.models.SaleItem;
 import com.ferreteria.models.SalesByDay;
 import com.ferreteria.models.CustomerCurrentAccountReportRow;
 import com.ferreteria.repositories.sqlite.SQLiteCustomerRepository;
@@ -11,9 +13,11 @@ import com.ferreteria.repositories.sqlite.SQLiteProductRepository;
 import com.ferreteria.repositories.sqlite.SQLiteSaleRepository;
 import com.ferreteria.services.CurrentAccountService;
 import com.ferreteria.services.CustomerService;
+import com.ferreteria.services.LicenseService;
 import com.ferreteria.services.ReportService;
 import com.ferreteria.services.SaleService;
 import com.ferreteria.util.CurrentAccountPdfExporter;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
@@ -23,6 +27,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import javafx.util.StringConverter;
 
 import static javafx.scene.control.TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN;
 
@@ -32,6 +37,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,7 +45,7 @@ public class ReportsController {
 
     private static final String VENTAS_POR_DIA = "Por dia";
     private static final String PRODUCTOS_MAS_VENDIDOS = "Productos mas vendidos";
-    private static final String VENTAS_CON_DETALLE = "Con detalle";
+    private static final String VENTAS_CON_DETALLE = "Historial";
     private static final String RENTABILIDAD = "Rentabilidad";
     private static final String REPORTE_CC = "Reporte CC";
     private static final int TOP_PRODUCTS_LIMIT = 50;
@@ -96,19 +102,13 @@ public class ReportsController {
     @FXML
     private TableColumn<SaleDetailRow, Number> colDetailSaleId;
     @FXML
-    private TableColumn<SaleDetailRow, String> colDetailCode;
-    @FXML
-    private TableColumn<SaleDetailRow, String> colDetailProduct;
-    @FXML
-    private TableColumn<SaleDetailRow, Number> colDetailQty;
-    @FXML
-    private TableColumn<SaleDetailRow, Number> colDetailPrice;
-    @FXML
-    private TableColumn<SaleDetailRow, Number> colDetailSubtotal;
+    private TableColumn<SaleDetailRow, String> colDetailSummary;
     @FXML
     private TableColumn<SaleDetailRow, Number> colDetailSaleTotal;
     @FXML
     private TableColumn<SaleDetailRow, String> colDetailPayment;
+    @FXML
+    private TableColumn<SaleDetailRow, Void> colDetailActions;
     @FXML
     private TableView<CustomerCurrentAccountReportRow> tableCurrentAccount;
     @FXML
@@ -157,6 +157,8 @@ public class ReportsController {
     private final com.ferreteria.repositories.sqlite.SQLiteExpenseRepository expenseRepo = new com.ferreteria.repositories.sqlite.SQLiteExpenseRepository();
     private final CurrentAccountService currentAccountService = new CurrentAccountService();
     private final CustomerService customerService = new CustomerService(new SQLiteCustomerRepository());
+    private final LicenseService licenseService = new LicenseService();
+    private final Map<Integer, List<SaleDetailRow>> saleDetailsBySaleId = new LinkedHashMap<>();
 
     @FXML
     public void initialize() {
@@ -165,7 +167,11 @@ public class ReportsController {
         tableDetail.setColumnResizePolicy(CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         tableCurrentAccount.setColumnResizePolicy(CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
-        reportTypeCombo.getItems().setAll(VENTAS_POR_DIA, VENTAS_CON_DETALLE, PRODUCTOS_MAS_VENDIDOS, RENTABILIDAD, REPORTE_CC);
+        if (licenseService.isCurrentAccountsEnabled()) {
+            reportTypeCombo.getItems().setAll(VENTAS_POR_DIA, VENTAS_CON_DETALLE, PRODUCTOS_MAS_VENDIDOS, RENTABILIDAD, REPORTE_CC);
+        } else {
+            reportTypeCombo.getItems().setAll(VENTAS_POR_DIA, VENTAS_CON_DETALLE, PRODUCTOS_MAS_VENDIDOS, RENTABILIDAD);
+        }
         reportTypeCombo.getSelectionModel().selectFirst();
 
         LocalDate today = LocalDate.now();
@@ -202,6 +208,7 @@ public class ReportsController {
         colDayDebit.setCellValueFactory(new PropertyValueFactory<>("debit"));
         colDayCredit.setCellValueFactory(new PropertyValueFactory<>("credit"));
         colDayCurrentAccount.setCellValueFactory(new PropertyValueFactory<>("currentAccount"));
+        colDayCurrentAccount.setVisible(licenseService.isCurrentAccountsEnabled());
         for (var col : List.of(colDayTotal, colDayCash, colDayTransfer, colDayDebit, colDayCredit, colDayCurrentAccount)) {
             col.setCellFactory(tc -> new TableCell<>() {
                 @Override protected void updateItem(Number item, boolean empty) {
@@ -250,29 +257,7 @@ public class ReportsController {
             }
         });
         colDetailSaleId.setCellValueFactory(new PropertyValueFactory<>("saleId"));
-        colDetailCode.setCellValueFactory(new PropertyValueFactory<>("productCode"));
-        colDetailProduct.setCellValueFactory(new PropertyValueFactory<>("productName"));
-        colDetailQty.setCellValueFactory(new PropertyValueFactory<>("quantity"));
-        colDetailQty.setCellFactory(tc -> new TableCell<>() {
-            @Override protected void updateItem(Number item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? "" : formatQuantity(item.doubleValue()));
-            }
-        });
-        colDetailPrice.setCellValueFactory(new PropertyValueFactory<>("unitPrice"));
-        colDetailPrice.setCellFactory(tc -> new TableCell<>() {
-            @Override protected void updateItem(Number item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? "" : formatCurrency(item.doubleValue()));
-            }
-        });
-        colDetailSubtotal.setCellValueFactory(new PropertyValueFactory<>("subtotal"));
-        colDetailSubtotal.setCellFactory(tc -> new TableCell<>() {
-            @Override protected void updateItem(Number item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? "" : formatCurrency(item.doubleValue()));
-            }
-        });
+        colDetailSummary.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getProductName()));
         if (colDetailSaleTotal != null) {
             colDetailSaleTotal.setCellValueFactory(new PropertyValueFactory<>("saleTotal"));
             colDetailSaleTotal.setCellFactory(tc -> new TableCell<>() {
@@ -284,6 +269,32 @@ public class ReportsController {
         }
         if (colDetailPayment != null) {
             colDetailPayment.setCellValueFactory(new PropertyValueFactory<>("paymentMethod"));
+        }
+        if (colDetailActions != null) {
+            colDetailActions.setCellFactory(tc -> new TableCell<>() {
+                private final Button detailButton = new Button("Ver detalle");
+                private final Button editButton = new Button("Editar");
+                private final HBox box = new HBox(6, detailButton, editButton);
+                {
+                    detailButton.getStyleClass().add("report-detail-button");
+                    editButton.getStyleClass().add("report-edit-button");
+                    detailButton.setOnAction(e -> {
+                        SaleDetailRow row = getTableView().getItems().get(getIndex());
+                        showSaleDetailDialog(row.getSaleId());
+                    });
+                    editButton.setOnAction(e -> {
+                        SaleDetailRow row = getTableView().getItems().get(getIndex());
+                        showEditSaleDialog(row.getSaleId());
+                    });
+                }
+
+                @Override
+                protected void updateItem(Void item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setGraphic(empty ? null : box);
+                    setAlignment(javafx.geometry.Pos.CENTER);
+                }
+            });
         }
 
         colCcCustomer.setCellValueFactory(new PropertyValueFactory<>("customerName"));
@@ -321,18 +332,25 @@ public class ReportsController {
 
         if (colCcExport != null) {
             colCcExport.setCellFactory(tc -> new TableCell<>() {
-                private final Button btn = new Button("↓ PDF");
+                private final Button pdfBtn = new Button("↓ PDF");
+                private final Button manageBtn = new Button("Gestionar");
+                private final HBox box = new HBox(6, pdfBtn, manageBtn);
                 {
-                    btn.getStyleClass().add("cc-export-btn");
-                    btn.setOnAction(e -> {
+                    pdfBtn.getStyleClass().add("cc-export-btn");
+                    manageBtn.getStyleClass().add("cc-manage-btn");
+                    pdfBtn.setOnAction(e -> {
                         CustomerCurrentAccountReportRow row = getTableView().getItems().get(getIndex());
                         exportCustomerPdf(row);
+                    });
+                    manageBtn.setOnAction(e -> {
+                        CustomerCurrentAccountReportRow row = getTableView().getItems().get(getIndex());
+                        manageCurrentAccount(row);
                     });
                 }
                 @Override
                 protected void updateItem(Void item, boolean empty) {
                     super.updateItem(item, empty);
-                    setGraphic(empty ? null : btn);
+                    setGraphic(empty ? null : box);
                     setAlignment(javafx.geometry.Pos.CENTER);
                 }
             });
@@ -448,12 +466,18 @@ public class ReportsController {
             return;
         }
         String type = reportTypeCombo.getSelectionModel().getSelectedItem();
+        if (REPORTE_CC.equals(type) && !licenseService.isCurrentAccountsEnabled()) {
+            showError("El módulo de cuentas corrientes no está habilitado en esta edición.");
+            reportTypeCombo.getSelectionModel().select(VENTAS_POR_DIA);
+            return;
+        }
 
         double totalExpenses = expenseRepo.getTotalInRange(fromStr, toStr);
         double totalDevengado = reportService.getSalesTotalInRange(fromStr, toStr);
         double totalCobrado = reportService.getCollectedTotalInRange(fromStr, toStr);
-        double totalVentasCC = reportService.getCurrentAccountSalesTotalInRange(fromStr, toStr);
-        double totalPagosCC = reportService.getCurrentAccountPaymentsTotalInRange(fromStr, toStr);
+        boolean currentAccountsEnabled = licenseService.isCurrentAccountsEnabled();
+        double totalVentasCC = currentAccountsEnabled ? reportService.getCurrentAccountSalesTotalInRange(fromStr, toStr) : 0;
+        double totalPagosCC = currentAccountsEnabled ? reportService.getCurrentAccountPaymentsTotalInRange(fromStr, toStr) : 0;
         double netoDevengado = totalDevengado - totalExpenses;
         double netoCaja = totalCobrado - totalExpenses;
 
@@ -493,7 +517,7 @@ public class ReportsController {
             setSummaryVisible(true);
         } else if (VENTAS_CON_DETALLE.equals(type)) {
             List<SaleDetailRow> rows = reportService.getSaleDetailsInRange(fromStr, toStr);
-            tableDetail.getItems().setAll(rows);
+            tableDetail.getItems().setAll(groupSaleDetails(rows));
             tableDetail.setVisible(true);
             tableDetail.setManaged(true);
             tableCurrentAccount.setVisible(false);
@@ -553,12 +577,25 @@ public class ReportsController {
                                       String extra2Title, String extra2Val) {
         sCard1Title.setText("Total vendido");    sCard1Value.setText(formatCurrency(totalVendido));
         sCard2Title.setText("Cobrado");   sCard2Value.setText(formatCurrency(totalCobrado));
-        sCard3Title.setText("Ventas CC");        sCard3Value.setText(formatCurrency(totalVentasCC));
-        sCard4Title.setText("Pagos CC");         sCard4Value.setText(formatCurrency(totalPagosCC));
+        if (licenseService.isCurrentAccountsEnabled()) {
+            sCard3Title.setText("Ventas CC");        sCard3Value.setText(formatCurrency(totalVentasCC));
+            sCard4Title.setText("Pagos CC");         sCard4Value.setText(formatCurrency(totalPagosCC));
+            setCardVisible(sCard3, true);
+            setCardVisible(sCard4, true);
+        } else {
+            setCardVisible(sCard3, false);
+            setCardVisible(sCard4, false);
+        }
         sCard5Title.setText(extra1Title);        sCard5Value.setText(extra1Val);
         sCard6Title.setText(extra2Title);        sCard6Value.setText(extra2Val);
         sCard6.setVisible(true);
         sCard6.setManaged(true);
+    }
+
+    private void setCardVisible(VBox card, boolean visible) {
+        if (card == null) return;
+        card.setVisible(visible);
+        card.setManaged(visible);
     }
 
     private void populateCCSummaryCards(double ccSales, double ccPayments,
@@ -612,6 +649,326 @@ public class ReportsController {
             tableDetail.setVisible(false);
             tableDetail.setManaged(false);
         }
+    }
+
+    private List<SaleDetailRow> groupSaleDetails(List<SaleDetailRow> rows) {
+        saleDetailsBySaleId.clear();
+        for (SaleDetailRow row : rows) {
+            saleDetailsBySaleId.computeIfAbsent(row.getSaleId(), ignored -> new ArrayList<>()).add(row);
+        }
+
+        List<SaleDetailRow> groupedRows = new ArrayList<>();
+        for (Map.Entry<Integer, List<SaleDetailRow>> entry : saleDetailsBySaleId.entrySet()) {
+            List<SaleDetailRow> details = entry.getValue();
+            if (details.isEmpty()) {
+                continue;
+            }
+            SaleDetailRow first = details.get(0);
+            double totalUnits = details.stream().mapToDouble(SaleDetailRow::getQuantity).sum();
+            String summary = details.size() + " producto" + (details.size() == 1 ? "" : "s")
+                    + " / " + formatQuantity(totalUnits) + " unidad" + (Math.abs(totalUnits - 1d) < 0.000001d ? "" : "es");
+            groupedRows.add(new SaleDetailRow(
+                    first.getSaleId(),
+                    first.getSaleDate(),
+                    "",
+                    summary,
+                    totalUnits,
+                    0,
+                    details.stream().mapToDouble(SaleDetailRow::getSubtotal).sum(),
+                    first.getSaleTotal(),
+                    first.getPaymentMethod()
+            ));
+        }
+        return groupedRows;
+    }
+
+    private void showSaleDetailDialog(int saleId) {
+        List<SaleDetailRow> details = saleDetailsBySaleId.getOrDefault(saleId, List.of());
+        if (details.isEmpty()) {
+            return;
+        }
+
+        SaleDetailDialog.show(tableDetail.getScene() != null ? tableDetail.getScene().getWindow() : null,
+                saleId, details);
+    }
+
+    private void showEditSaleDialog(int saleId) {
+        List<SaleDetailRow> originalDetails = saleDetailsBySaleId.getOrDefault(saleId, List.of());
+        if (originalDetails.isEmpty()) {
+            return;
+        }
+
+        List<SaleDetailRow> editableDetails = originalDetails.stream()
+                .map(row -> new SaleDetailRow(
+                        row.getSaleId(),
+                        row.getProductId(),
+                        row.getSaleDate(),
+                        row.getProductCode(),
+                        row.getProductName(),
+                        row.getQuantity(),
+                        row.getUnitPrice(),
+                        row.getSubtotal(),
+                        row.getSaleTotal(),
+                        row.getPaymentMethod()
+                ))
+                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+
+        SaleDetailRow first = editableDetails.get(0);
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Editar venta");
+        dialog.setHeaderText("Venta Nro " + saleId);
+        ButtonType saveButton = new ButtonType("Guardar cambios", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(saveButton, ButtonType.CANCEL);
+
+        DatePicker saleDatePicker = new DatePicker(resolveSaleDate(first.getSaleDate()));
+        ComboBox<String> saleTimeCombo = new ComboBox<>();
+        saleTimeCombo.getItems().setAll(buildTimeSlots());
+        saleTimeCombo.getSelectionModel().select(resolveSaleTime(first.getSaleDate()));
+
+        HBox dateRow = new HBox(8,
+                new Label("Fecha:"), saleDatePicker,
+                new Label("Hora:"), saleTimeCombo
+        );
+        dateRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+        // El total real de la venta puede incluir un descuento/ajuste aplicado al momento de venderla,
+        // por eso no se recalcula ciegamente desde los ítems.
+        Runnable[] refreshTotals = new Runnable[1];
+
+        TableView<SaleDetailRow> editTable = new TableView<>();
+        editTable.setEditable(true);
+        editTable.setColumnResizePolicy(CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+        editTable.setPrefSize(820, 320);
+
+        TableColumn<SaleDetailRow, String> productCol = new TableColumn<>("Producto");
+        productCol.setCellValueFactory(new PropertyValueFactory<>("productName"));
+        productCol.setPrefWidth(260);
+
+        StringConverter<Double> doubleConverter = new StringConverter<>() {
+            @Override
+            public String toString(Double value) {
+                return value == null ? "" : String.format("%.2f", value).replace('.', ',');
+            }
+
+            @Override
+            public Double fromString(String value) {
+                if (value == null || value.isBlank()) return null;
+                try {
+                    return Double.parseDouble(value.trim().replace(',', '.'));
+                } catch (NumberFormatException e) {
+                    return null;
+                }
+            }
+        };
+
+        TableColumn<SaleDetailRow, Double> qtyCol = new TableColumn<>("Cantidad");
+        qtyCol.setCellValueFactory(cell -> new javafx.beans.property.SimpleDoubleProperty(cell.getValue().getQuantity()).asObject());
+        qtyCol.setCellFactory(col -> new javafx.scene.control.cell.TextFieldTableCell<>(doubleConverter));
+        qtyCol.setOnEditCommit(e -> {
+            Double value = e.getNewValue();
+            if (value != null && value > 0) {
+                e.getRowValue().setQuantity(value);
+                e.getRowValue().setSubtotal(value * e.getRowValue().getUnitPrice());
+                editTable.refresh();
+                refreshTotals[0].run();
+            }
+        });
+
+        TableColumn<SaleDetailRow, Double> priceCol = new TableColumn<>("Precio unit.");
+        priceCol.setCellValueFactory(cell -> new javafx.beans.property.SimpleDoubleProperty(cell.getValue().getUnitPrice()).asObject());
+        priceCol.setCellFactory(col -> new javafx.scene.control.cell.TextFieldTableCell<>(doubleConverter));
+        priceCol.setOnEditCommit(e -> {
+            Double value = e.getNewValue();
+            if (value != null && value >= 0) {
+                e.getRowValue().setUnitPrice(value);
+                e.getRowValue().setSubtotal(value * e.getRowValue().getQuantity());
+                editTable.refresh();
+                refreshTotals[0].run();
+            }
+        });
+
+        TableColumn<SaleDetailRow, Number> subtotalCol = new TableColumn<>("Subtotal");
+        subtotalCol.setCellValueFactory(new PropertyValueFactory<>("subtotal"));
+        subtotalCol.setCellFactory(tc -> new TableCell<>() {
+            @Override protected void updateItem(Number item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : formatCurrency(item.doubleValue()));
+            }
+        });
+
+        TableColumn<SaleDetailRow, Void> removeCol = new TableColumn<>("Quitar");
+        removeCol.setCellFactory(tc -> new TableCell<>() {
+            private final Button removeButton = new Button("Quitar");
+            {
+                removeButton.getStyleClass().add("report-delete-button");
+                removeButton.setOnAction(e -> {
+                    SaleDetailRow row = getTableView().getItems().get(getIndex());
+                    getTableView().getItems().remove(row);
+                    refreshTotals[0].run();
+                });
+            }
+
+            @Override protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : removeButton);
+                setAlignment(javafx.geometry.Pos.CENTER);
+            }
+        });
+
+        editTable.getColumns().setAll(productCol, qtyCol, priceCol, subtotalCol, removeCol);
+        editTable.getItems().setAll(editableDetails);
+
+        Button addProductButton = new Button("+ Añadir producto");
+        addProductButton.getStyleClass().add("report-detail-button");
+        addProductButton.setOnAction(e -> {
+            Product product = ProductSelectionDialog.show(dialog.getDialogPane().getScene().getWindow());
+            if (product == null) {
+                return;
+            }
+            SaleDetailRow existing = editTable.getItems().stream()
+                    .filter(row -> row.getProductId() == product.getId())
+                    .findFirst()
+                    .orElse(null);
+            if (existing != null) {
+                existing.setQuantity(existing.getQuantity() + 1);
+                existing.setSubtotal(existing.getQuantity() * existing.getUnitPrice());
+                editTable.refresh();
+                refreshTotals[0].run();
+                return;
+            }
+            editTable.getItems().add(new SaleDetailRow(
+                    saleId,
+                    product.getId(),
+                    first.getSaleDate(),
+                    product.getCode(),
+                    product.getName(),
+                    1,
+                    product.getPrice(),
+                    product.getPrice(),
+                    first.getSaleTotal(),
+                    first.getPaymentMethod()
+            ));
+            refreshTotals[0].run();
+        });
+
+        // Total cobrado: arranca con el total real guardado (con su descuento/ajuste) y conserva
+        // ese ajuste en pesos si se modifican los ítems. Es editable.
+        double originalItemsSum = editableDetails.stream().mapToDouble(SaleDetailRow::getSubtotal).sum();
+        double[] adjustment = { first.getSaleTotal() - originalItemsSum };
+
+        Label itemsSumLabel = new Label();
+        Label adjustmentLabel = new Label();
+        TextField totalField = new TextField(formatAmount(first.getSaleTotal()));
+        totalField.setPrefWidth(140);
+
+        refreshTotals[0] = () -> {
+            double itemsSum = editTable.getItems().stream().mapToDouble(SaleDetailRow::getSubtotal).sum();
+            itemsSumLabel.setText("Suma de ítems: " + formatCurrency(itemsSum));
+            if (!totalField.isFocused()) {
+                totalField.setText(formatAmount(itemsSum + adjustment[0]));
+            }
+            double diff = parseAmount(totalField.getText(), itemsSum) - itemsSum;
+            if (Math.abs(diff) > 0.005) {
+                adjustmentLabel.setText((diff > 0 ? "Aumento: " : "Descuento: ") + formatCurrency(Math.abs(diff)));
+                adjustmentLabel.setStyle(diff > 0
+                        ? "-fx-text-fill: #16a34a; -fx-font-weight: bold;"
+                        : "-fx-text-fill: #dc2626; -fx-font-weight: bold;");
+            } else {
+                adjustmentLabel.setText("");
+            }
+        };
+
+        totalField.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
+            if (Boolean.TRUE.equals(wasFocused) && Boolean.FALSE.equals(isFocused)) {
+                double itemsSum = editTable.getItems().stream().mapToDouble(SaleDetailRow::getSubtotal).sum();
+                adjustment[0] = parseAmount(totalField.getText(), itemsSum) - itemsSum;
+                refreshTotals[0].run();
+            }
+        });
+        totalField.setOnAction(e -> totalField.getParent().requestFocus());
+
+        HBox totalRow = new HBox(12, itemsSumLabel, new Label("Total cobrado ($):"), totalField, adjustmentLabel);
+        totalRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        refreshTotals[0].run();
+
+        VBox content = new VBox(10, dateRow, editTable, addProductButton, totalRow);
+        content.setPadding(new javafx.geometry.Insets(8));
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().setMinWidth(900);
+        dialog.setResizable(true);
+
+        Button saveNode = (Button) dialog.getDialogPane().lookupButton(saveButton);
+        saveNode.addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
+            try {
+                if (editTable.getItems().isEmpty()) {
+                    throw new IllegalArgumentException("La venta debe tener al menos un ítem.");
+                }
+                LocalDate date = saleDatePicker.getValue();
+                String time = saleTimeCombo.getValue();
+                if (date == null || time == null || time.isBlank()) {
+                    throw new IllegalArgumentException("Debe indicar fecha y hora.");
+                }
+                LocalDateTime dateTime = LocalDateTime.of(date, LocalTime.parse(time));
+                List<SaleItem> newItems = editTable.getItems().stream()
+                        .map(row -> new SaleItem(saleId, row.getProductId(), row.getQuantity(), row.getUnitPrice()))
+                        .toList();
+                double itemsSum = editTable.getItems().stream().mapToDouble(SaleDetailRow::getSubtotal).sum();
+                double finalTotal = parseAmount(totalField.getText(), itemsSum);
+                if (finalTotal < 0) {
+                    throw new IllegalArgumentException("El total cobrado no puede ser negativo.");
+                }
+                saleService.updateSale(saleId, dateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), newItems, finalTotal);
+                onGenerate();
+            } catch (Exception ex) {
+                event.consume();
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("No se pudo editar la venta");
+                alert.setHeaderText("Revisá los datos ingresados");
+                alert.setContentText(ex.getMessage() != null ? ex.getMessage() : ex.getClass().getSimpleName());
+                alert.getDialogPane().setMinWidth(460);
+                alert.showAndWait();
+            }
+        });
+
+        dialog.showAndWait();
+    }
+
+    private LocalDate resolveSaleDate(String value) {
+        try {
+            return LocalDateTime.parse(value, DateTimeFormatter.ISO_LOCAL_DATE_TIME).toLocalDate();
+        } catch (Exception e) {
+            try {
+                return LocalDate.parse(value);
+            } catch (Exception ignored) {
+                return LocalDate.now();
+            }
+        }
+    }
+
+    private String resolveSaleTime(String value) {
+        try {
+            return LocalDateTime.parse(value, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                    .toLocalTime()
+                    .format(DateTimeFormatter.ofPattern("HH:mm"));
+        } catch (Exception e) {
+            return "00:00";
+        }
+    }
+
+    private String formatSaleDate(String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+        try {
+            return LocalDateTime.parse(value, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        } catch (Exception e) {
+            return value;
+        }
+    }
+
+    private String safePayment(String paymentMethod) {
+        return paymentMethod == null || paymentMethod.isBlank() ? "-" : paymentMethod;
     }
 
     private void updateProfitPanel(double devengado, double cobrado, double gastos,
@@ -705,7 +1062,7 @@ public class ReportsController {
     private String getTitleForType(String type) {
         return switch (type) {
             case VENTAS_POR_DIA -> "Ventas por Día";
-            case VENTAS_CON_DETALLE -> "Ventas con Detalle";
+            case VENTAS_CON_DETALLE -> "Historial de ventas";
             case PRODUCTOS_MAS_VENDIDOS -> "Productos Más Vendidos";
             case RENTABILIDAD -> "Rentabilidad";
             case REPORTE_CC -> "Cuenta Corriente";
@@ -753,6 +1110,25 @@ public class ReportsController {
         return "$ " + num;
     }
 
+    /** Monto sin símbolo, apto para campos editables ("1.234,56"). */
+    private static String formatAmount(double value) {
+        return formatCurrency(value).replace("$ ", "");
+    }
+
+    /** Acepta "1.234,56" (coma decimal) y "1234.56" (punto decimal). */
+    private static double parseAmount(String text, double fallback) {
+        if (text == null || text.isBlank()) return fallback;
+        try {
+            String clean = text.trim().replace("$", "").trim();
+            if (clean.contains(",")) {
+                clean = clean.replace(".", "").replace(',', '.');
+            }
+            return Double.parseDouble(clean);
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
     private static String formatQuantity(double quantity) {
         if (Math.abs(quantity - Math.rint(quantity)) < 0.000001d) {
             return String.format("%.0f", quantity);
@@ -793,6 +1169,20 @@ public class ReportsController {
                 showError("No se pudo exportar el PDF: " + e.getMessage());
             }
         }, () -> showError("No se encontró el cliente."));
+    }
+
+    private void manageCurrentAccount(CustomerCurrentAccountReportRow row) {
+        MainController mainController = MainController.getInstance();
+        if (mainController == null) {
+            showError("No se pudo abrir la cuenta corriente.");
+            return;
+        }
+        Object controller = mainController.openSection("current-account-view.fxml");
+        if (controller instanceof CurrentAccountController currentAccountController) {
+            currentAccountController.selectCustomer(row.getCustomerId());
+        } else {
+            showError("El módulo de cuentas corrientes no está disponible.");
+        }
     }
 }
 

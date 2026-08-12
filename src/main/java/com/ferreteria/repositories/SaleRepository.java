@@ -35,6 +35,8 @@ public interface SaleRepository {
 
     List<SaleDetailRow> getSaleDetailsInRange(String dateFrom, String dateTo);
 
+    List<SaleDetailRow> getSaleDetailsBySaleId(int saleId);
+
     List<CustomerCurrentAccountReportRow> getCurrentAccountReportByCustomer(String dateFrom, String dateTo);
 
     List<SaleItem> getSaleItemsBySaleId(int saleId);

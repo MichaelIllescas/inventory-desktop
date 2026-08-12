@@ -11,6 +11,16 @@ if not defined JAVA_HOME for /f "tokens=2 delims==" %%a in ('java -XshowSettings
 if defined JAVA_HOME if "!JAVA_HOME:~-4!"=="\jre" set "JAVA_HOME=!JAVA_HOME:~0,-4!"
 
 set "RUNTIME_JRE=target\runtime-jre"
+set "INSTALLER_EDITION=%~1"
+if not defined INSTALLER_EDITION set "INSTALLER_EDITION=%INVENTORY_EDITION%"
+if not defined INSTALLER_EDITION set "INSTALLER_EDITION=basic"
+if /I "%INSTALLER_EDITION%"=="basico" set "INSTALLER_EDITION=basic"
+if /I "%INSTALLER_EDITION%"=="completo" set "INSTALLER_EDITION=complete"
+if /I not "%INSTALLER_EDITION%"=="basic" if /I not "%INSTALLER_EDITION%"=="complete" (
+    echo [ERROR] Edicion invalida: %INSTALLER_EDITION%
+    echo Uso: build-installer.bat basic ^| complete
+    goto :fin
+)
 set "FX_VERSION=21.0.2"
 set "FX_JMODS_ZIP=openjfx-%FX_VERSION%_windows-x64_bin-jmods.zip"
 set "FX_JMODS_URL=https://download2.gluonhq.com/openjfx/%FX_VERSION%/%FX_JMODS_ZIP%"
@@ -19,6 +29,7 @@ set "FX_CACHE=target\fx-jmods"
 echo ============================================
 echo  Instalador .EXE - Sistema de Inventario
 echo ============================================
+echo  Edicion: %INSTALLER_EDITION%
 echo.
 
 where mvn >nul 2>&1
@@ -70,6 +81,15 @@ if exist "%APP_DIR%\data" (
     rmdir /s /q "%APP_DIR%\data"
     echo   Carpeta data eliminada para no incluir datos de desarrollo en el instalador.
 )
+
+set "LICENSE_SOURCE=installer\licenses\%INSTALLER_EDITION%.properties"
+if not exist "%LICENSE_SOURCE%" (
+    echo [ERROR] No se encontro licencia: %LICENSE_SOURCE%
+    goto :fin
+)
+copy /Y "%LICENSE_SOURCE%" "%APP_DIR%\license.properties" >nul
+echo   Licencia incluida: %LICENSE_SOURCE%
+
 echo [2/5] JavaFX para el runtime (para que la app instalada abra)...
 set "FX_JMODS="
 if exist "%JAVA_HOME%\jmods\javafx.controls.jmod" set "FX_JMODS=%JAVA_HOME%\jmods"
@@ -128,6 +148,8 @@ echo [5/5] Listo.
 echo.
 echo Instalador generado en:
 echo   %OUT_DIR%\Sistema de Inventario-3.0.0.exe
+copy /Y "%OUT_DIR%\Sistema de Inventario-3.0.0.exe" "%OUT_DIR%\Sistema de Inventario-3.0.0-%INSTALLER_EDITION%.exe" >nul
+echo   %OUT_DIR%\Sistema de Inventario-3.0.0-%INSTALLER_EDITION%.exe
 echo.
 echo Copia ese .exe a cualquier PC con Windows y ejecutalo para instalar.
 echo.

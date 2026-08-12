@@ -25,40 +25,40 @@
         <VBox spacing="10">
             <children>
                 <Label text="Nueva venta" styleClass="view-title"/>
-                <HBox spacing="6" alignment="CENTER_LEFT">
+                <FlowPane hgap="6" vgap="6" alignment="CENTER_LEFT" styleClass="sales-toolbar-flow">
                     <children>
-                        <TextField fx:id="scanField" promptText="Codigo / escanear..." HBox.hgrow="ALWAYS" minWidth="80" onKeyPressed="#onScanFieldKeyPressed"/>
-                        <Button text="+ Anadir" onAction="#onAddProduct" styleClass="sales-toolbar-button" style="-fx-background-color: #16a34a; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                        <TextField fx:id="scanField" promptText="Código / escanear..." minWidth="220" prefWidth="420" onKeyPressed="#onScanFieldKeyPressed"/>
+                        <Button text="+ Añadir" onAction="#onAddProduct" styleClass="sales-toolbar-button" style="-fx-background-color: #16a34a; -fx-text-fill: white; -fx-font-weight: bold;"/>
                         <Button text="- Quitar" onAction="#onRemoveLine" styleClass="sales-toolbar-button" style="-fx-background-color: #dc2626; -fx-text-fill: white; -fx-font-weight: bold;"/>
                         <ComboBox fx:id="paymentMethodCombo" prefWidth="170" minWidth="140" styleClass="sales-payment-combo"/>
                         <Button text="Registrar" onAction="#onRegisterSale" styleClass="sales-toolbar-button" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold;"/>
                         <Button text="Limpiar" onAction="#onClear" styleClass="sales-toolbar-button" style="-fx-background-color: #6b7280; -fx-text-fill: white; -fx-font-weight: bold;"/>
                     </children>
-                </HBox>
+                </FlowPane>
 
                 <VBox fx:id="customerBox" spacing="8" managed="false" visible="false" styleClass="sales-customer-card">
                     <children>
                         <Label text="Cliente de cuenta corriente" styleClass="sales-customer-title"/>
-                        <HBox spacing="8" alignment="CENTER_LEFT">
+                        <FlowPane hgap="8" vgap="6" alignment="CENTER_LEFT">
                             <children>
-                                <TextField fx:id="customerSearchField" promptText="Buscar cliente por nombre o apellido" HBox.hgrow="ALWAYS" prefHeight="34" onAction="#onSearchCustomer"/>
+                                <TextField fx:id="customerSearchField" promptText="Buscar cliente por nombre o apellido" prefWidth="320" prefHeight="34" onAction="#onSearchCustomer"/>
                                 <Button text="Buscar" onAction="#onSearchCustomer" styleClass="sales-toolbar-button" style="-fx-background-color: #1d4ed8; -fx-text-fill: white; -fx-font-weight: bold;"/>
                                 <ComboBox fx:id="customerCombo" prefWidth="260" prefHeight="34" promptText="Seleccionar cliente"/>
                                 <Button text="Nuevo cliente" onAction="#onNewCustomerForSale" styleClass="sales-toolbar-button" style="-fx-background-color: #16a34a; -fx-text-fill: white; -fx-font-weight: bold;"/>
                             </children>
-                        </HBox>
-                        <HBox spacing="14" alignment="CENTER_LEFT" styleClass="sales-customer-preview-row">
+                        </FlowPane>
+                        <FlowPane hgap="14" vgap="4" alignment="CENTER_LEFT" styleClass="sales-customer-preview-row">
                             <children>
                                 <Label text="Nombre:" styleClass="sales-customer-k"/>
                                 <Label fx:id="customerNameValue" text="-" styleClass="sales-customer-v"/>
-                                <Label text="Telefono:" styleClass="sales-customer-k"/>
+                                <Label text="Teléfono:" styleClass="sales-customer-k"/>
                                 <Label fx:id="customerPhoneValue" text="-" styleClass="sales-customer-v"/>
-                                <Label text="Direccion:" styleClass="sales-customer-k"/>
+                                <Label text="Dirección:" styleClass="sales-customer-k"/>
                                 <Label fx:id="customerAddressValue" text="-" styleClass="sales-customer-v"/>
-                                <Label text="Limite:" styleClass="sales-customer-k"/>
+                                <Label text="Límite:" styleClass="sales-customer-k"/>
                                 <Label fx:id="customerLimitValue" text="-" styleClass="sales-customer-v"/>
                             </children>
-                        </HBox>
+                        </FlowPane>
                     </children>
                 </VBox>
             </children>
@@ -69,10 +69,10 @@
     </top>
 
     <center>
-        <HBox spacing="12" fillHeight="false" alignment="TOP_LEFT">
-            <TableView fx:id="itemsTable" HBox.hgrow="ALWAYS">
+        <HBox spacing="12" fillHeight="true" alignment="TOP_LEFT">
+            <TableView fx:id="itemsTable" HBox.hgrow="ALWAYS" minHeight="120">
                 <columns>
-                    <TableColumn fx:id="colCode" text="Codigo" minWidth="80" maxWidth="140"/>
+                    <TableColumn fx:id="colCode" text="Código" minWidth="80" maxWidth="140"/>
                     <TableColumn fx:id="colName" text="Producto" minWidth="120"/>
                     <TableColumn fx:id="colQuantity" text="Cant." minWidth="60" maxWidth="90" styleClass="numeric-column"/>
                     <TableColumn fx:id="colUnitPrice" text="P. unit. ($)" minWidth="90" maxWidth="140" styleClass="numeric-column"/>
@@ -106,34 +106,40 @@
                 </HBox>
                 <HBox fx:id="bottomMainRow" alignment="CENTER_LEFT" spacing="10">
                     <children>
-                        <VBox fx:id="barcodeBox" spacing="2" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS" minWidth="180" prefWidth="240">
-                            <Label text="Varios / Sin Codigo" styleClass="varios-barcode-label"/>
-                            <ImageView fx:id="variosBarcode" fitHeight="50" fitWidth="320" preserveRatio="true" smooth="false"/>
+                        <VBox spacing="6" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS" minWidth="180" prefWidth="360">
+                            <VBox fx:id="barcodeBox" spacing="2" alignment="CENTER_LEFT">
+                                <Label text="Varios / Sin Código" styleClass="varios-barcode-label"/>
+                                <ImageView fx:id="variosBarcode" fitHeight="50" fitWidth="320" preserveRatio="true" smooth="false"/>
+                            </VBox>
+                            <FlowPane fx:id="cashBox" hgap="8" vgap="6" prefWrapLength="560" styleClass="sales-cash-row">
+                                <children>
+                                    <Label text="Abona con:" styleClass="ajuste-prefix-label"/>
+                                    <TextField fx:id="paymentReceivedField" promptText="0,00" prefWidth="180" alignment="CENTER_RIGHT"/>
+                                    <Label fx:id="changeLabel" text="Vuelto: $ 0,00" styleClass="ajuste-value-label"/>
+                                </children>
+                            </FlowPane>
                         </VBox>
-                        <HBox fx:id="totalRow" alignment="CENTER_RIGHT" spacing="10" HBox.hgrow="ALWAYS">
+                        <VBox alignment="CENTER_RIGHT" spacing="2" HBox.hgrow="ALWAYS">
                             <children>
-                                <Label fx:id="totalTextLabel" text="Total a cobrar:" styleClass="total-custom-label"/>
-                                <HBox fx:id="totalAmountBox" alignment="CENTER_RIGHT" spacing="4">
-                                    <Label fx:id="pesoLabel" styleClass="total-peso-label"/>
-                                    <TextField fx:id="totalField" styleClass="total-custom-field" prefWidth="300" minWidth="0" alignment="CENTER_RIGHT"/>
+                                <HBox fx:id="totalRow" alignment="CENTER_RIGHT" spacing="10">
+                                    <children>
+                                        <Label fx:id="totalTextLabel" text="Total a cobrar:" styleClass="total-custom-label"/>
+                                        <HBox fx:id="totalAmountBox" alignment="CENTER_RIGHT" spacing="4">
+                                            <Label fx:id="pesoLabel" styleClass="total-peso-label"/>
+                                            <TextField fx:id="totalField" styleClass="total-custom-field" prefWidth="300" minWidth="0" alignment="CENTER_RIGHT"/>
+                                        </HBox>
+                                    </children>
+                                </HBox>
+                                <HBox fx:id="ajusteBox" alignment="CENTER_RIGHT" spacing="8" visible="false" managed="false">
+                                    <children>
+                                        <Label text="Ajuste:" styleClass="ajuste-prefix-label"/>
+                                        <Label fx:id="ajusteLabel" styleClass="ajuste-value-label"/>
+                                    </children>
                                 </HBox>
                             </children>
-                        </HBox>
+                        </VBox>
                     </children>
                 </HBox>
-                <HBox fx:id="ajusteBox" alignment="CENTER_RIGHT" spacing="8" visible="false" managed="false">
-                    <children>
-                        <Label text="Ajuste:" styleClass="ajuste-prefix-label"/>
-                        <Label fx:id="ajusteLabel" styleClass="ajuste-value-label"/>
-                    </children>
-                </HBox>
-                <FlowPane fx:id="cashBox" hgap="8" vgap="6" prefWrapLength="560" styleClass="sales-cash-row">
-                    <children>
-                        <Label text="Abona con:" styleClass="ajuste-prefix-label"/>
-                        <TextField fx:id="paymentReceivedField" promptText="0,00" prefWidth="180" alignment="CENTER_RIGHT"/>
-                        <Label fx:id="changeLabel" text="Vuelto: $ 0,00" styleClass="ajuste-value-label"/>
-                    </children>
-                </FlowPane>
             </children>
             <padding>
                 <Insets top="12" right="0" bottom="10" left="0"/>

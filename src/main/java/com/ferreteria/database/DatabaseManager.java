@@ -92,6 +92,7 @@ public final class DatabaseManager {
                     migrateAddExpenses(connection);
                     migrateAddCodeIndex(connection);
                     migrateAddPrecarga(connection);
+                    repairSoldProductsVisibility(connection);
                     migrateAddDeleted(connection);
                     migrateAddCustomersAndCurrentAccount(connection);
                     migrateAddAppSettings(connection);
@@ -344,6 +345,23 @@ public final class DatabaseManager {
         } catch (SQLException e) {
             AppLogger.error("DatabaseManager", "migrateAddPrecarga", "Error al migrar precarga: " + e.getMessage(), e);
             throw new RuntimeException("Error al migrar columna precarga", e);
+        }
+    }
+
+    private static void repairSoldProductsVisibility(Connection conn) {
+        String sql = "UPDATE products SET precarga = 0 " +
+                "WHERE precarga = 1 AND EXISTS (" +
+                "SELECT 1 FROM sale_items si WHERE si.product_id = products.id)";
+        try (Statement statement = conn.createStatement()) {
+            int repaired = statement.executeUpdate(sql);
+            if (repaired > 0) {
+                AppLogger.info("DatabaseManager", "repairSoldProductsVisibility",
+                        "Productos vendidos restaurados al listado: " + repaired);
+            }
+        } catch (SQLException e) {
+            AppLogger.error("DatabaseManager", "repairSoldProductsVisibility",
+                    "Error al restaurar productos vendidos: " + e.getMessage(), e);
+            throw new RuntimeException("Error al reparar visibilidad de productos", e);
         }
     }
 

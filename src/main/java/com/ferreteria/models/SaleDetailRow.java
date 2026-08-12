@@ -6,6 +6,7 @@ package com.ferreteria.models;
 public class SaleDetailRow {
 
     private int saleId;
+    private int productId;
     private String saleDate;
     private String productCode;
     private String productName;
@@ -17,7 +18,13 @@ public class SaleDetailRow {
 
     public SaleDetailRow(int saleId, String saleDate, String productCode, String productName,
                          double quantity, double unitPrice, double subtotal, double saleTotal, String paymentMethod) {
+        this(saleId, 0, saleDate, productCode, productName, quantity, unitPrice, subtotal, saleTotal, paymentMethod);
+    }
+
+    public SaleDetailRow(int saleId, int productId, String saleDate, String productCode, String productName,
+                         double quantity, double unitPrice, double subtotal, double saleTotal, String paymentMethod) {
         this.saleId = saleId;
+        this.productId = productId;
         this.saleDate = saleDate;
         this.productCode = productCode != null ? productCode : "";
         this.productName = productName;
@@ -30,6 +37,9 @@ public class SaleDetailRow {
 
     public int getSaleId() { return saleId; }
     public void setSaleId(int saleId) { this.saleId = saleId; }
+
+    public int getProductId() { return productId; }
+    public void setProductId(int productId) { this.productId = productId; }
 
     public String getSaleDate() { return saleDate; }
     public void setSaleDate(String saleDate) { this.saleDate = saleDate; }

@@ -3,7 +3,9 @@ package com.ferreteria.controllers;
 import com.ferreteria.models.Customer;
 import com.ferreteria.models.CustomerAccountMovementRow;
 import com.ferreteria.models.CustomerDebtRow;
+import com.ferreteria.models.SaleDetailRow;
 import com.ferreteria.repositories.sqlite.SQLiteCustomerRepository;
+import com.ferreteria.repositories.sqlite.SQLiteSaleRepository;
 import com.ferreteria.services.CurrentAccountService;
 import com.ferreteria.services.CustomerService;
 import com.ferreteria.util.CurrentAccountPdfExporter;
@@ -106,12 +108,14 @@ public class CurrentAccountController {
 
     private final CustomerService customerService;
     private final CurrentAccountService currentAccountService;
+    private final SQLiteSaleRepository saleRepository;
     private final ObservableList<CustomerDebtRow> debtRows = FXCollections.observableArrayList();
     private final ObservableList<CustomerAccountMovementRow> movementRows = FXCollections.observableArrayList();
 
     public CurrentAccountController() {
         this.customerService = new CustomerService(new SQLiteCustomerRepository());
         this.currentAccountService = new CurrentAccountService();
+        this.saleRepository = new SQLiteSaleRepository();
     }
 
     @FXML
@@ -125,6 +129,18 @@ public class CurrentAccountController {
         clearSummary();
         clearCustomerPreview();
         updatePaymentButtonState();
+    }
+
+    public void selectCustomer(int customerId) {
+        customerCombo.getItems().stream()
+                .filter(c -> c.getId() != null && c.getId() == customerId)
+                .findFirst()
+                .ifPresentOrElse(
+                        c -> customerCombo.getSelectionModel().select(c),
+                        () -> customerService.findById(customerId).ifPresent(c -> {
+                            customerCombo.getItems().add(c);
+                            customerCombo.getSelectionModel().select(c);
+                        }));
     }
 
     private void setupResponsiveMode() {
@@ -197,6 +213,33 @@ public class CurrentAccountController {
         }
         debtTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         debtTable.setItems(debtRows);
+
+        // Doble clic sobre una venta: muestra qué productos compró el cliente esa vez.
+        debtTable.setRowFactory(tv -> {
+            javafx.scene.control.TableRow<CustomerDebtRow> row = new javafx.scene.control.TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && !row.isEmpty()) {
+                    showSaleDetail(row.getItem().getSaleId());
+                }
+            });
+            row.setCursor(javafx.scene.Cursor.HAND);
+            return row;
+        });
+    }
+
+    private void showSaleDetail(int saleId) {
+        try {
+            List<SaleDetailRow> details = saleRepository.getSaleDetailsBySaleId(saleId);
+            if (details.isEmpty()) {
+                showInfo("No se encontraron productos para la venta " + saleId + ".");
+                return;
+            }
+            SaleDetailDialog.show(debtTable.getScene() != null ? debtTable.getScene().getWindow() : null,
+                    saleId, details);
+        } catch (Exception e) {
+            showError("No se pudo abrir el detalle de la venta " + saleId + ": "
+                    + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName()));
+        }
     }
 
     private void setupMovementTable() {

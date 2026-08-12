@@ -16,6 +16,8 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 
+import java.math.BigInteger;
+import java.util.Comparator;
 import java.util.List;
 
 public class ProductsController {
@@ -61,6 +63,7 @@ public class ProductsController {
 
     private void setupTable() {
         colCode.setCellValueFactory(new PropertyValueFactory<>("code"));
+        colCode.setComparator(this::compareProductCodes);
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
         colDescription.setCellValueFactory(new PropertyValueFactory<>("description"));
         colPrice.setCellValueFactory(new PropertyValueFactory<>("price"));
@@ -68,6 +71,21 @@ public class ProductsController {
         colMinStock.setCellValueFactory(new PropertyValueFactory<>("minimumStock"));
         colSupplier.setCellValueFactory(new PropertyValueFactory<>("supplierName"));
         productsTable.setItems(tableData);
+    }
+
+    private int compareProductCodes(String first, String second) {
+        String left = first == null ? "" : first.trim();
+        String right = second == null ? "" : second.trim();
+        boolean leftNumeric = left.matches("\\d+");
+        boolean rightNumeric = right.matches("\\d+");
+        if (leftNumeric && rightNumeric) {
+            int result = new BigInteger(left).compareTo(new BigInteger(right));
+            return result != 0 ? result : left.compareToIgnoreCase(right);
+        }
+        if (leftNumeric != rightNumeric) {
+            return leftNumeric ? -1 : 1;
+        }
+        return Comparator.nullsFirst(String.CASE_INSENSITIVE_ORDER).compare(first, second);
     }
 
     private void loadPage() {

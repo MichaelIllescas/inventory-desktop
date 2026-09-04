@@ -1,4 +1,4 @@
-# Sistema de Inventario — v3.0
+# Sistema de Inventario — v3.1
 
 Aplicación de escritorio para gestión de inventario, ventas, gastos y reportes. Desarrollada en **Java 17**, **JavaFX** y **SQLite**.
 

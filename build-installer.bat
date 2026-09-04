@@ -68,7 +68,16 @@ if %ERRORLEVEL% neq 0 (
     goto :fin
 )
 
-set "APP_JAR=inventory-app-3.0.0.jar"
+rem La version sale del pom, unica fuente de verdad. Antes estaba repetida en
+rem cinco lugares de este script y bastaba olvidar uno para romper el build.
+for /f "delims=" %%v in ('mvn -q help:evaluate -Dexpression^=project.version -DforceStdout') do set "APP_VERSION=%%v"
+if not defined APP_VERSION (
+    echo [ERROR] No se pudo leer la version del pom.xml
+    goto :fin
+)
+echo   Version: %APP_VERSION%
+
+set "APP_JAR=inventory-app-%APP_VERSION%.jar"
 set "APP_DIR=target\app"
 set "OUT_DIR=target\installer"
 
@@ -137,7 +146,7 @@ set "ICON_PATH=%~dp0src\main\resources\images\logo-nuevo.ico"
 set "ICON_OPT="
 if exist "%ICON_PATH%" set "ICON_OPT=--icon "%ICON_PATH%""
 
-"%JPKG%" --type exe --name "Sistema de Inventario" --input "%APP_DIR%" --main-jar "%APP_JAR%" --main-class com.ferreteria.App --runtime-image "%RUNTIME_JRE%" --dest "%OUT_DIR%" --app-version 3.0.0 --vendor "Inventario" --description "Sistema de inventario, ventas y reportes" --win-shortcut --win-menu %ICON_OPT%
+"%JPKG%" --type exe --name "Sistema de Inventario" --input "%APP_DIR%" --main-jar "%APP_JAR%" --main-class com.ferreteria.App --runtime-image "%RUNTIME_JRE%" --dest "%OUT_DIR%" --app-version %APP_VERSION% --vendor "Inventario" --description "Sistema de inventario, ventas y reportes" --win-shortcut --win-menu %ICON_OPT%
 
 if %ERRORLEVEL% neq 0 (
     echo [ERROR] Fallo jpackage.
@@ -147,9 +156,9 @@ if %ERRORLEVEL% neq 0 (
 echo [5/5] Listo.
 echo.
 echo Instalador generado en:
-echo   %OUT_DIR%\Sistema de Inventario-3.0.0.exe
-copy /Y "%OUT_DIR%\Sistema de Inventario-3.0.0.exe" "%OUT_DIR%\Sistema de Inventario-3.0.0-%INSTALLER_EDITION%.exe" >nul
-echo   %OUT_DIR%\Sistema de Inventario-3.0.0-%INSTALLER_EDITION%.exe
+echo   %OUT_DIR%\Sistema de Inventario-%APP_VERSION%.exe
+copy /Y "%OUT_DIR%\Sistema de Inventario-%APP_VERSION%.exe" "%OUT_DIR%\Sistema de Inventario-%APP_VERSION%-%INSTALLER_EDITION%.exe" >nul
+echo   %OUT_DIR%\Sistema de Inventario-%APP_VERSION%-%INSTALLER_EDITION%.exe
 echo.
 echo Copia ese .exe a cualquier PC con Windows y ejecutalo para instalar.
 echo.

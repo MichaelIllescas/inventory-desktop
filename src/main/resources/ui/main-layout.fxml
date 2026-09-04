@@ -51,7 +51,7 @@
                         </ImageView>
                     </graphic>
                 </Button>
-                <Label text="v3.0" styleClass="sidebar-version-label"/>
+                <Label text="v3.1" styleClass="sidebar-version-label"/>
             </children>
             <padding>
                 <Insets top="24" right="16" bottom="24" left="16"/>

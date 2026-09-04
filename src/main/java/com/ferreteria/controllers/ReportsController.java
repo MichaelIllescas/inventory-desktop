@@ -14,6 +14,7 @@ import com.ferreteria.repositories.sqlite.SQLiteSaleRepository;
 import com.ferreteria.services.CurrentAccountService;
 import com.ferreteria.services.CustomerService;
 import com.ferreteria.services.LicenseService;
+import com.ferreteria.services.TicketService;
 import com.ferreteria.services.ReportService;
 import com.ferreteria.services.SaleService;
 import com.ferreteria.util.CurrentAccountPdfExporter;
@@ -142,6 +143,8 @@ public class ReportsController {
     @FXML
     private Label profitCcPaymentsLabel;
     @FXML
+    private HBox profitCcRow;
+    @FXML
     private Label profitLine1;
     @FXML
     private Label profitLine2;
@@ -158,6 +161,7 @@ public class ReportsController {
     private final CurrentAccountService currentAccountService = new CurrentAccountService();
     private final CustomerService customerService = new CustomerService(new SQLiteCustomerRepository());
     private final LicenseService licenseService = new LicenseService();
+    private final TicketService ticketService = new TicketService();
     private final Map<Integer, List<SaleDetailRow>> saleDetailsBySaleId = new LinkedHashMap<>();
 
     @FXML
@@ -274,10 +278,16 @@ public class ReportsController {
             colDetailActions.setCellFactory(tc -> new TableCell<>() {
                 private final Button detailButton = new Button("Ver detalle");
                 private final Button editButton = new Button("Editar");
-                private final HBox box = new HBox(6, detailButton, editButton);
+                private final Button ticketButton = new Button("Ticket");
+                private final HBox box = new HBox(6, detailButton, editButton, ticketButton);
                 {
                     detailButton.getStyleClass().add("report-detail-button");
                     editButton.getStyleClass().add("report-edit-button");
+                    ticketButton.getStyleClass().add("report-detail-button");
+                    ticketButton.setOnAction(e -> {
+                        SaleDetailRow row = getTableView().getItems().get(getIndex());
+                        printTicket(row.getSaleId());
+                    });
                     detailButton.setOnAction(e -> {
                         SaleDetailRow row = getTableView().getItems().get(getIndex());
                         showSaleDetailDialog(row.getSaleId());
@@ -651,6 +661,24 @@ public class ReportsController {
         }
     }
 
+    /** Reimprime el ticket de una venta ya registrada. */
+    private void printTicket(int saleId) {
+        List<SaleDetailRow> rows = saleDetailsBySaleId.get(saleId);
+        if (rows == null || rows.isEmpty()) {
+            showError("No se encontraron los items de la venta " + saleId + ".");
+            return;
+        }
+        try {
+            ticketService.print(ticketService.fromHistory(rows, ticketService.findCustomerName(saleId)));
+        } catch (Exception e) {
+            com.ferreteria.util.AppLogger.error("ReportsController", "printTicket",
+                    "Error al reimprimir ticket de la venta " + saleId, e);
+            showError("No se pudo imprimir el ticket."
+                    + System.lineSeparator()
+                    + "Revisá la impresora configurada en Configuración.");
+        }
+    }
+
     private List<SaleDetailRow> groupSaleDetails(List<SaleDetailRow> rows) {
         saleDetailsBySaleId.clear();
         for (SaleDetailRow row : rows) {
@@ -982,6 +1010,11 @@ public class ReportsController {
         profitNetoCajaLabel.setText(formatCurrency(netoCaja));
         if (profitCcSalesLabel != null) profitCcSalesLabel.setText(formatCurrency(ccSales));
         if (profitCcPaymentsLabel != null) profitCcPaymentsLabel.setText(formatCurrency(ccPayments));
+        if (profitCcRow != null) {
+            boolean ccEnabled = licenseService.isCurrentAccountsEnabled();
+            profitCcRow.setVisible(ccEnabled);
+            profitCcRow.setManaged(ccEnabled);
+        }
 
         // Narrative
         double contadoSales  = devengado - ccSales;

@@ -44,30 +44,30 @@ public class SaleService {
     /**
      * Registra la venta: crea la venta, guarda items y descuenta stock en una transaccion.
      */
-    public void registerSale(List<SaleLineItem> lines, String paymentMethod) {
+    public int registerSale(List<SaleLineItem> lines, String paymentMethod) {
         double total = lines.stream().mapToDouble(SaleLineItem::getSubtotal).sum();
-        registerSale(lines, paymentMethod, total, null, null);
+        return registerSale(lines, paymentMethod, total, null, null);
     }
 
     /**
      * Registra la venta con un total personalizado.
      */
-    public void registerSale(List<SaleLineItem> lines, String paymentMethod, double customTotal) {
-        registerSale(lines, paymentMethod, customTotal, null, null);
+    public int registerSale(List<SaleLineItem> lines, String paymentMethod, double customTotal) {
+        return registerSale(lines, paymentMethod, customTotal, null, null);
     }
 
     /**
      * Registra la venta con trazabilidad por operationId.
      */
-    public void registerSale(List<SaleLineItem> lines, String paymentMethod, double customTotal, String operationId) {
-        registerSale(lines, paymentMethod, customTotal, null, operationId);
+    public int registerSale(List<SaleLineItem> lines, String paymentMethod, double customTotal, String operationId) {
+        return registerSale(lines, paymentMethod, customTotal, null, operationId);
     }
 
     /**
      * Registra venta opcionalmente asociada a un cliente.
      * Si paymentMethod es CUENTA_CORRIENTE, customerId es obligatorio y se genera DEBITO.
      */
-    public void registerSale(List<SaleLineItem> lines, String paymentMethod, double customTotal, Integer customerId, String operationId) {
+    public int registerSale(List<SaleLineItem> lines, String paymentMethod, double customTotal, Integer customerId, String operationId) {
         if (operationId != null) AppLogger.setOperationId(operationId);
         if (lines == null || lines.isEmpty()) {
             throw new IllegalArgumentException("No hay items en la venta.");
@@ -109,8 +109,11 @@ public class SaleService {
         sale.setCustomerId(customerId);
 
         AppLogger.info("SaleService", "registerSale", "Iniciando transaccion en BD");
+        // El id se necesita fuera de la transaccion para poder imprimir el ticket.
+        final int[] savedId = new int[1];
         DatabaseManager.runInTransaction(() -> {
             Sale saved = saleRepository.saveSale(sale);
+            savedId[0] = saved.getId();
             AppLogger.info("SaleService", "registerSale", "Venta guardada con id=" + saved.getId());
             saleRepository.saveSaleItems(saved.getId(), itemsToSave);
 
@@ -129,6 +132,7 @@ public class SaleService {
             }
         });
         AppLogger.info("SaleService", "registerSale", "Transaccion completada OK");
+        return savedId[0];
     }
 
     private void validateCreditLimit(int customerId, double saleAmount) {

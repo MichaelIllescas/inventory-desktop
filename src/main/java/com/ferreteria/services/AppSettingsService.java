@@ -15,6 +15,8 @@ public class AppSettingsService {
     private static final String KEY_PHONE   = "business_phone";
     private static final String KEY_CUIT    = "business_cuit";
     private static final String KEY_LOGO    = "business_logo_path";
+    private static final String KEY_PRINTER = "ticket_printer";
+    private static final String KEY_PAPER   = "ticket_paper_width_mm";
 
     public AppSettings load() {
         AppSettings s = new AppSettings();
@@ -31,6 +33,8 @@ public class AppSettingsService {
                     case KEY_PHONE   -> s.setBusinessPhone(val);
                     case KEY_CUIT    -> s.setBusinessCuit(val);
                     case KEY_LOGO    -> s.setLogoPath(val);
+                    case KEY_PRINTER -> s.setTicketPrinter(val);
+                    case KEY_PAPER   -> s.setTicketPaperWidthMm(parseWidth(val));
                 }
             }
         } catch (SQLException e) {
@@ -49,8 +53,19 @@ public class AppSettingsService {
             upsert(stmt, KEY_PHONE,   s.getBusinessPhone());
             upsert(stmt, KEY_CUIT,    s.getBusinessCuit());
             upsert(stmt, KEY_LOGO,    s.getLogoPath());
+            upsert(stmt, KEY_PRINTER, s.getTicketPrinter());
+            upsert(stmt, KEY_PAPER,   String.valueOf((int) s.getTicketPaperWidthMm()));
         } catch (SQLException e) {
             throw new RuntimeException("Error al guardar configuración", e);
+        }
+    }
+
+    /** Ancho guardado; ante cualquier valor raro volvemos a 80 mm. */
+    private static double parseWidth(String value) {
+        try {
+            return Double.parseDouble(value.trim());
+        } catch (Exception e) {
+            return 80;
         }
     }
 

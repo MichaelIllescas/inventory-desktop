@@ -2226,10 +2226,25 @@ TableColumn {
   -fx-border-width: 1;
 }
 
-.expenses-view-root .expenses-combo .list-cell {
+.expenses-view-root .expenses-combo > .list-cell {
   -fx-padding: 8 12;
   -fx-font-size: 14px;
   -fx-background-color: transparent;
+  -fx-text-fill: #111827;
+}
+
+.expenses-view-root .expenses-combo .combo-box-popup .list-view .list-cell {
+  -fx-padding: 8 12;
+  -fx-font-size: 14px;
+  -fx-background-color: white;
+  -fx-text-fill: #111827;
+}
+
+.expenses-view-root .expenses-combo .combo-box-popup .list-view .list-cell:filled:hover,
+.expenses-view-root .expenses-combo .combo-box-popup .list-view .list-cell:filled:selected,
+.expenses-view-root .expenses-combo .combo-box-popup .list-view .list-cell:filled:selected:hover {
+  -fx-background-color: #2563eb;
+  -fx-text-fill: white;
 }
 
 .expenses-primary-button {

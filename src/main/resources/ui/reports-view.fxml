@@ -101,7 +101,7 @@
                         <Label fx:id="profitNetoCajaLabel" text="\$ 0,00" styleClass="report-card-value"/>
                     </VBox>
                 </HBox>
-                <HBox spacing="12">
+                <HBox fx:id="profitCcRow" spacing="12">
                     <VBox styleClass="report-card report-card-cyan" HBox.hgrow="ALWAYS">
                         <Label text="Ventas en cuenta corriente" styleClass="report-card-title"/>
                         <Label fx:id="profitCcSalesLabel" text="\$ 0,00" styleClass="report-card-value"/>

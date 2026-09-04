@@ -8,6 +8,7 @@ import com.ferreteria.repositories.sqlite.SQLiteProductRepository;
 import com.ferreteria.repositories.sqlite.SQLiteSaleRepository;
 import com.ferreteria.services.CustomerService;
 import com.ferreteria.services.LicenseService;
+import com.ferreteria.services.TicketService;
 import com.ferreteria.services.SaleService;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -15,6 +16,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
@@ -40,6 +42,7 @@ import com.ferreteria.util.AppLogger;
 
 import javafx.geometry.Insets;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -92,6 +95,7 @@ public class SalesController {
     private final SupplierService supplierService;
     private final CustomerService customerService;
     private final LicenseService licenseService;
+    private final TicketService ticketService = new TicketService();
     private final ObservableList<SaleLineItem> items = FXCollections.observableArrayList();
     private boolean syncingTotal = false;
 
@@ -808,7 +812,11 @@ public class SalesController {
         try {
             AppLogger.info("SalesController", "confirmAndRegisterSale",
                     "Iniciando registro: items=" + items.size() + " total=" + customTotal + " pago=" + payment);
-            saleService.registerSale(items, payment, customTotal, customerId, opId);
+            // Copiamos los items antes de limpiar la grilla: el ticket los necesita.
+            List<SaleLineItem> soldItems = new ArrayList<>(items);
+            Customer soldTo = customerCombo == null
+                    ? null : customerCombo.getSelectionModel().getSelectedItem();
+            int saleId = saleService.registerSale(items, payment, customTotal, customerId, opId);
             AppLogger.info("SalesController", "confirmAndRegisterSale", "Venta registrada correctamente");
             items.clear();
             if (paymentReceivedField != null) paymentReceivedField.clear();
@@ -820,7 +828,8 @@ public class SalesController {
             Platform.runLater(() -> { totalField.end(); totalField.deselect(); });
             updateSummary();
             updateChangePreview();
-            showInfo("Venta registrada correctamente.");
+            offerTicket(saleId, soldItems, customTotal, payment,
+                    customerId == null || soldTo == null ? null : soldTo.getName());
             scanField.requestFocus();
         } catch (IllegalArgumentException e) {
             AppLogger.warn("SalesController", "confirmAndRegisterSale", "Validacion fallida: " + e.getMessage());
@@ -884,6 +893,36 @@ public class SalesController {
             alert.getDialogPane().setPrefWidth(400);
         }
         alert.showAndWait();
+    }
+
+    /**
+     * Avisa que la venta se registró y ofrece imprimir el ticket.
+     * El ticket es opcional: si falla la impresión, la venta ya quedó guardada.
+     */
+    private void offerTicket(int saleId, List<SaleLineItem> soldItems, double total,
+                             String payment, String customerName) {
+        ButtonType print = new ButtonType("Imprimir ticket", ButtonBar.ButtonData.OK_DONE);
+        ButtonType close = new ButtonType("Cerrar", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Informacion");
+        alert.setHeaderText(null);
+        alert.setContentText("Venta registrada correctamente.");
+        alert.getButtonTypes().setAll(print, close);
+        Optional<ButtonType> choice = alert.showAndWait();
+
+        if (choice.isEmpty() || choice.get() != print) {
+            return;
+        }
+        try {
+            ticketService.print(ticketService.fromNewSale(
+                    saleId, soldItems, total, payment, customerName));
+        } catch (Exception e) {
+            AppLogger.error("SalesController", "offerTicket", "Error al imprimir ticket", e);
+            showError("La venta se registró correctamente, pero no se pudo imprimir el ticket."
+                    + System.lineSeparator()
+                    + "Revisá la impresora configurada en Configuración.");
+        }
     }
 
     private void showInfo(String message) {

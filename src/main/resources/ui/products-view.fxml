@@ -33,8 +33,9 @@
                 </FlowPane>
                 <GridPane hgap="14" vgap="14" styleClass="products-summary-grid">
                     <columnConstraints>
-                        <ColumnConstraints percentWidth="50"/>
-                        <ColumnConstraints percentWidth="50"/>
+                        <ColumnConstraints percentWidth="33.34"/>
+                        <ColumnConstraints percentWidth="33.33"/>
+                        <ColumnConstraints percentWidth="33.33"/>
                     </columnConstraints>
                     <VBox styleClass="products-summary-card-primary" GridPane.columnIndex="0" spacing="4">
                         <Label text="Productos mostrados" styleClass="products-summary-title"/>
@@ -45,6 +46,11 @@
                         <Label text="Búsqueda actual" styleClass="products-summary-title"/>
                         <Label fx:id="summaryCurrentFilterLabel" text="Todos" styleClass="products-summary-value"/>
                         <Label text="Muestra si estás viendo todos los productos o un filtro puntual" styleClass="products-summary-note" wrapText="true"/>
+                    </VBox>
+                    <VBox styleClass="products-summary-card-primary" GridPane.columnIndex="2" spacing="4">
+                        <Label text="Capital en mercadería" styleClass="products-summary-title"/>
+                        <Label fx:id="summaryInventoryValueLabel" text="\$ 0,00" styleClass="products-summary-value"/>
+                        <Label text="Valor de todo el stock a precio de venta" styleClass="products-summary-note" wrapText="true"/>
                     </VBox>
                 </GridPane>
             </children>

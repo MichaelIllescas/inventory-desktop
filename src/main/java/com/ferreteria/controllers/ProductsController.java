@@ -35,6 +35,7 @@ public class ProductsController {
     @FXML private TableColumn<Product, String> colSupplier;
     @FXML private Label summaryTotalProductsLabel;
     @FXML private Label summaryCurrentFilterLabel;
+    @FXML private Label summaryInventoryValueLabel;
     @FXML private Button btnPrev;
     @FXML private Button btnNext;
     @FXML private Label pageLabel;
@@ -71,6 +72,20 @@ public class ProductsController {
         colMinStock.setCellValueFactory(new PropertyValueFactory<>("minimumStock"));
         colSupplier.setCellValueFactory(new PropertyValueFactory<>("supplierName"));
         productsTable.setItems(tableData);
+    }
+
+    /** Formato de moneda local: "$ 1.234,56". */
+    private static String formatCurrency(double total) {
+        String num = String.format("%.2f", total).replace('.', ',');
+        int i = num.indexOf(',');
+        if (i > 3) {
+            StringBuilder sb = new StringBuilder(num);
+            for (int j = i - 3; j > 0; j -= 3) {
+                sb.insert(j, '.');
+            }
+            num = sb.toString();
+        }
+        return "$ " + num;
     }
 
     private int compareProductCodes(String first, String second) {
@@ -118,6 +133,9 @@ public class ProductsController {
         }
         if (summaryCurrentFilterLabel != null) {
             summaryCurrentFilterLabel.setText(currentQuery.isBlank() ? "Todos" : "Filtrado");
+        }
+        if (summaryInventoryValueLabel != null) {
+            summaryInventoryValueLabel.setText(formatCurrency(productRepository.getTotalInventoryValue()));
         }
     }
 

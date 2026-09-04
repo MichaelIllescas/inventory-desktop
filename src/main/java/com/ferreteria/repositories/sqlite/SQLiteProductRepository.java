@@ -293,6 +293,21 @@ public class SQLiteProductRepository implements ProductRepository {
     }
 
     @Override
+    public double getTotalInventoryValue() {
+        String sql = "SELECT COALESCE(SUM(stock * price), 0) FROM products "
+                + "WHERE code != ? AND precarga = 0 AND deleted = 0 AND skip_stock = 0";
+        Connection conn = DatabaseManager.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, DatabaseManager.VARIOS_CODE);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getDouble(1) : 0;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al calcular el valor del inventario", e);
+        }
+    }
+
+    @Override
     public int countLowStock() {
         String sql = "SELECT COUNT(*) FROM products WHERE stock <= minimum_stock AND code != ? AND (skip_stock = 0 OR skip_stock IS NULL) AND precarga = 0 AND deleted = 0";
         Connection conn = DatabaseManager.getConnection();

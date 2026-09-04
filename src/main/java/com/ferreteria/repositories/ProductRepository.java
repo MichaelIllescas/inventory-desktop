@@ -36,6 +36,9 @@ public interface ProductRepository {
     /** Total de productos con stock bajo o igual al mínimo (excluye __VARIOS__). */
     int countLowStock();
 
+    /** Valor total del inventario a precio de venta: SUM(stock * price). Excluye __VARIOS__, precarga y borrados. */
+    double getTotalInventoryValue();
+
     /** Total de productos que coinciden con la búsqueda. */
     int countSearch(String query);
 

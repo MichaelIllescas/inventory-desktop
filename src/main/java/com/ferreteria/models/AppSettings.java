@@ -7,6 +7,10 @@ public class AppSettings {
     private String businessPhone;
     private String businessCuit;
     private String logoPath;
+    /** Impresora de tickets. Vacío = usar la predeterminada de Windows. */
+    private String ticketPrinter;
+    /** Ancho del rollo en milímetros (80 o 58). */
+    private double ticketPaperWidthMm = 80;
 
     public String getBusinessName()    { return businessName; }
     public void setBusinessName(String v)    { this.businessName = v; }
@@ -22,6 +26,15 @@ public class AppSettings {
 
     public String getLogoPath()        { return logoPath; }
     public void setLogoPath(String v)        { this.logoPath = v; }
+
+    public String getTicketPrinter()          { return ticketPrinter; }
+    public void setTicketPrinter(String v)    { this.ticketPrinter = v; }
+
+    public double getTicketPaperWidthMm()     { return ticketPaperWidthMm; }
+    public void setTicketPaperWidthMm(double v) {
+        // Solo aceptamos los dos anchos de rollo estándar.
+        this.ticketPaperWidthMm = (v == 58) ? 58 : 80;
+    }
 
     public boolean hasLogo() {
         if (logoPath == null || logoPath.isBlank()) return false;

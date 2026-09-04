@@ -26,6 +26,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.util.StringConverter;
@@ -144,6 +145,8 @@ public class ReportsController {
     private Label profitCcPaymentsLabel;
     @FXML
     private HBox profitCcRow;
+    @FXML
+    private VBox profitCobradoCard;
     @FXML
     private Label profitLine1;
     @FXML
@@ -284,6 +287,13 @@ public class ReportsController {
                     detailButton.getStyleClass().add("report-detail-button");
                     editButton.getStyleClass().add("report-edit-button");
                     ticketButton.getStyleClass().add("report-detail-button");
+                    // Sin esto la politica de resize de la tabla achica la columna
+                    // y los botones truncan su texto a "Ver det...", "Ed...", "Tic...".
+                    for (Button b : List.of(detailButton, editButton, ticketButton)) {
+                        b.setMinWidth(Region.USE_PREF_SIZE);
+                    }
+                    box.setMinWidth(Region.USE_PREF_SIZE);
+                    box.setAlignment(javafx.geometry.Pos.CENTER);
                     ticketButton.setOnAction(e -> {
                         SaleDetailRow row = getTableView().getItems().get(getIndex());
                         printTicket(row.getSaleId());
@@ -587,6 +597,9 @@ public class ReportsController {
                                       String extra2Title, String extra2Val) {
         sCard1Title.setText("Total vendido");    sCard1Value.setText(formatCurrency(totalVendido));
         sCard2Title.setText("Cobrado");   sCard2Value.setText(formatCurrency(totalCobrado));
+        // Sin cuentas corrientes no hay ventas fiadas, asi que lo cobrado es siempre
+        // igual a lo vendido: la tarjeta repetiria el numero de al lado.
+        setCardVisible(sCard2, licenseService.isCurrentAccountsEnabled());
         if (licenseService.isCurrentAccountsEnabled()) {
             sCard3Title.setText("Ventas CC");        sCard3Value.setText(formatCurrency(totalVentasCC));
             sCard4Title.setText("Pagos CC");         sCard4Value.setText(formatCurrency(totalPagosCC));
@@ -1010,10 +1023,15 @@ public class ReportsController {
         profitNetoCajaLabel.setText(formatCurrency(netoCaja));
         if (profitCcSalesLabel != null) profitCcSalesLabel.setText(formatCurrency(ccSales));
         if (profitCcPaymentsLabel != null) profitCcPaymentsLabel.setText(formatCurrency(ccPayments));
+        boolean ccEnabled = licenseService.isCurrentAccountsEnabled();
         if (profitCcRow != null) {
-            boolean ccEnabled = licenseService.isCurrentAccountsEnabled();
             profitCcRow.setVisible(ccEnabled);
             profitCcRow.setManaged(ccEnabled);
+        }
+        // Mismo motivo que en las tarjetas de resumen: sin fiado, cobrado == vendido.
+        if (profitCobradoCard != null) {
+            profitCobradoCard.setVisible(ccEnabled);
+            profitCobradoCard.setManaged(ccEnabled);
         }
 
         // Narrative
@@ -1028,6 +1046,8 @@ public class ReportsController {
         // Line 1: sales only — contado vs CC
         if (devengado < 0.005) {
             profitLine1.setText("No se registraron ventas en el período.");
+        } else if (!ccEnabled) {
+            profitLine1.setText("Vendiste " + formatCurrency(devengado) + " en total.");
         } else if (ccSales < 0.005) {
             profitLine1.setText("Vendiste " + formatCurrency(devengado) + " en total, todo cobrado al contado.");
         } else if (contadoSales < 0.005) {

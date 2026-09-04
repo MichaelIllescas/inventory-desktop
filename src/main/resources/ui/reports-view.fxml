@@ -88,7 +88,7 @@
                         <Label text="Total en ventas" styleClass="report-card-title"/>
                         <Label fx:id="profitDevengadoLabel" text="\$ 0,00" styleClass="report-card-value"/>
                     </VBox>
-                    <VBox styleClass="report-card report-card-green" HBox.hgrow="ALWAYS">
+                    <VBox fx:id="profitCobradoCard" styleClass="report-card report-card-green" HBox.hgrow="ALWAYS">
                         <Label text="Ingresos cobrados" styleClass="report-card-title"/>
                         <Label fx:id="profitCobradoLabel" text="\$ 0,00" styleClass="report-card-value"/>
                     </VBox>
@@ -159,7 +159,7 @@
                     <TableColumn fx:id="colDetailSummary" text="Resumen" prefWidth="260" minWidth="180"/>
                     <TableColumn fx:id="colDetailSaleTotal" text="Total venta ($)" prefWidth="120" minWidth="100" styleClass="numeric-column"/>
                     <TableColumn fx:id="colDetailPayment" text="Medio pago" prefWidth="100" minWidth="90"/>
-                    <TableColumn fx:id="colDetailActions" text="Acciones" prefWidth="170" minWidth="155"/>
+                    <TableColumn fx:id="colDetailActions" text="Acciones" prefWidth="250" minWidth="250"/>
                 </columns>
             </TableView>
 

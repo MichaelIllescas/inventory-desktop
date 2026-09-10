@@ -43,6 +43,29 @@ La definicion de cada una esta en `installer/licenses/<edicion>.properties`. El 
 
 El script usa **`src/main/resources/images/logo-nuevo.ico`** si existe. Si no hay `.ico`, el instalador usa el icono por defecto.
 
+## Actualizar una instalacion existente
+
+Desde la **v3.2.0** el instalador reemplaza solo a la version anterior: no hace falta
+desinstalar a mano antes. Al ejecutarlo en una PC que ya tiene el sistema, Windows
+desinstala la version vieja e instala la nueva, conservando la base de datos (que vive
+en `%LOCALAPPDATA%`, fuera de la carpeta del programa).
+
+Esto lo habilita el `--win-upgrade-uuid` fijo del script: es el identificador que le dice
+a Windows que se trata del mismo producto. **Ese GUID no se debe cambiar nunca**; si cambia,
+las instalaciones existentes dejan de reconocerse y quedan dos programas duplicados.
+
+Dos aclaraciones importantes:
+
+- **La primera actualizacion no es automatica.** Las instalaciones hechas con la v3.1.0 o
+  anteriores se generaron sin ese identificador, asi que el instalador de la v3.2.0 no las
+  reconoce. Esa vez todavia hay que desinstalar a mano. De la v3.2.0 en adelante ya funciona solo.
+- **Siempre subir la version del `pom.xml`** antes de generar un instalador nuevo. Windows
+  decide si reemplaza comparando numeros de version: con la misma version puede rechazar la
+  instalacion o no reemplazar nada.
+
+Como las tres ediciones comparten el identificador, instalar la edicion Plus sobre una
+Basica tambien reemplaza la instalacion, que es lo deseable para ampliarle la licencia a un cliente.
+
 ## Instalar en otra PC
 
 Copiar **`Sistema de Inventario-<version>.exe`** a la otra PC y ejecutarlo. No hace falta instalar Java.  

@@ -142,11 +142,17 @@ if exist "data\productos_supermercado.db" (
 echo [4/5] Generando instalador .exe con jpackage...
 if not exist "%OUT_DIR%" mkdir "%OUT_DIR%"
 
+rem UpgradeCode fijo: es lo que le dice a Windows que este instalador es una version
+rem nueva del mismo producto y no un programa distinto. Con esto, al instalar una
+rem version mas nueva se desinstala sola la anterior. NO CAMBIAR NUNCA este GUID:
+rem si cambia, las instalaciones existentes dejan de reconocerse y quedan duplicadas.
+set "UPGRADE_UUID=5793FE01-D674-47FE-A93E-214D601CF24E"
+
 set "ICON_PATH=%~dp0src\main\resources\images\logo-nuevo.ico"
 set "ICON_OPT="
 if exist "%ICON_PATH%" set "ICON_OPT=--icon "%ICON_PATH%""
 
-"%JPKG%" --type exe --name "Sistema de Inventario" --input "%APP_DIR%" --main-jar "%APP_JAR%" --main-class com.ferreteria.App --runtime-image "%RUNTIME_JRE%" --dest "%OUT_DIR%" --app-version %APP_VERSION% --vendor "Inventario" --description "Sistema de inventario, ventas y reportes" --win-shortcut --win-menu %ICON_OPT%
+"%JPKG%" --type exe --name "Sistema de Inventario" --input "%APP_DIR%" --main-jar "%APP_JAR%" --main-class com.ferreteria.App --runtime-image "%RUNTIME_JRE%" --dest "%OUT_DIR%" --app-version %APP_VERSION% --vendor "Inventario" --description "Sistema de inventario, ventas y reportes" --win-shortcut --win-menu --win-upgrade-uuid %UPGRADE_UUID% %ICON_OPT%
 
 if %ERRORLEVEL% neq 0 (
     echo [ERROR] Fallo jpackage.

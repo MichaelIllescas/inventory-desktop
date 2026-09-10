@@ -52,23 +52,49 @@ public class MainController {
     @FXML
     private Button btnExpenses;
     @FXML
+    private Button btnQuotes;
+    @FXML
     private Button btnSettings;
+    @FXML
+    private javafx.scene.control.Label versionLabel;
 
     @FXML
     public void initialize() {
         instance = this;
         applyLicensedModules();
+        applyEditionLabel();
         setupSidebarResponsiveMode();
         showDashboard();
     }
 
     private void applyLicensedModules() {
-        if (btnCurrentAccount == null) {
+        if (btnCurrentAccount != null) {
+            boolean enabled = licenseService.isCurrentAccountsEnabled();
+            btnCurrentAccount.setVisible(enabled);
+            btnCurrentAccount.setManaged(enabled);
+        }
+        if (btnQuotes != null) {
+            boolean enabled = licenseService.isQuotesEnabled();
+            btnQuotes.setVisible(enabled);
+            btnQuotes.setManaged(enabled);
+        }
+    }
+
+    /** Muestra la edicion instalada al lado del numero de version: "v3.2 - Plus". */
+    private void applyEditionLabel() {
+        if (versionLabel == null) {
             return;
         }
-        boolean enabled = licenseService.isCurrentAccountsEnabled();
-        btnCurrentAccount.setVisible(enabled);
-        btnCurrentAccount.setManaged(enabled);
+        String edition = licenseService.getEdition();
+        String name = switch (edition == null ? "" : edition.toLowerCase()) {
+            case "plus" -> "Plus";
+            case "complete" -> "Completa";
+            case "basic" -> "Básica";
+            default -> edition;
+        };
+        if (name != null && !name.isBlank()) {
+            versionLabel.setText(versionLabel.getText() + "  ·  " + name);
+        }
     }
 
     private void setupSidebarResponsiveMode() {
@@ -124,6 +150,16 @@ public class MainController {
         }
         setActiveSidebarButton(btnCurrentAccount);
         loadView("current-account-view.fxml");
+    }
+
+    @FXML
+    private void showQuotes() {
+        if (!licenseService.isQuotesEnabled()) {
+            showDashboard();
+            return;
+        }
+        setActiveSidebarButton(btnQuotes);
+        loadView("quotes-view.fxml");
     }
 
     @FXML
@@ -187,6 +223,9 @@ public class MainController {
         if ("current-account-view.fxml".equals(fxmlName) && !licenseService.isCurrentAccountsEnabled()) {
             fxmlName = "dashboard-view.fxml";
         }
+        if ("quotes-view.fxml".equals(fxmlName) && !licenseService.isQuotesEnabled()) {
+            fxmlName = "dashboard-view.fxml";
+        }
         Button activeButton = switch (fxmlName) {
             case "dashboard-view.fxml" -> btnDashboard;
             case "products-view.fxml" -> btnProducts;
@@ -197,6 +236,7 @@ public class MainController {
             case "inventory-view.fxml" -> btnInventory;
             case "reports-view.fxml" -> btnReports;
             case "expenses-view.fxml" -> btnExpenses;
+            case "quotes-view.fxml" -> btnQuotes;
             default -> null;
         };
         setActiveSidebarButton(activeButton);
@@ -204,7 +244,7 @@ public class MainController {
     }
 
     private void setActiveSidebarButton(Button activeButton) {
-        Button[] buttons = {btnDashboard, btnProducts, btnSales, btnCustomers, btnCurrentAccount, btnSuppliers, btnInventory, btnReports, btnExpenses, btnSettings};
+        Button[] buttons = {btnDashboard, btnProducts, btnSales, btnCustomers, btnCurrentAccount, btnSuppliers, btnInventory, btnReports, btnExpenses, btnQuotes, btnSettings};
         for (Button button : buttons) {
             if (button == null) {
                 continue;

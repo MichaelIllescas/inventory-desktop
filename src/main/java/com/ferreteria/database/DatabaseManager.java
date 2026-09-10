@@ -96,6 +96,8 @@ public final class DatabaseManager {
                     migrateAddDeleted(connection);
                     migrateAddCustomersAndCurrentAccount(connection);
                     migrateAddAppSettings(connection);
+                    migrateAddQuotes(connection);
+                    migrateAddCustomerTaxId(connection);
                     ensureExternalDb();
                     schemaInitialized = true;
                     AppLogger.info("DatabaseManager", "getConnection", "BD inicializada correctamente");
@@ -312,6 +314,58 @@ public final class DatabaseManager {
     }
 
     /** Crea la tabla expenses si no existe (instalaciones anteriores la obtendrán sin perder datos). */
+    /** Agrega columna tax_id a customers: DNI o CUIT del cliente, opcional. */
+    private static void migrateAddCustomerTaxId(Connection conn) {
+        try (Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery("PRAGMA table_info(customers)")) {
+            boolean hasColumn = false;
+            while (rs.next()) {
+                if ("tax_id".equalsIgnoreCase(rs.getString("name"))) {
+                    hasColumn = true;
+                    break;
+                }
+            }
+            if (!hasColumn) {
+                AppLogger.info("DatabaseManager", "migrateAddCustomerTaxId", "Aplicando migracion: columna tax_id");
+                try (Statement alter = conn.createStatement()) {
+                    alter.execute("ALTER TABLE customers ADD COLUMN tax_id TEXT");
+                }
+            }
+        } catch (SQLException e) {
+            AppLogger.error("DatabaseManager", "migrateAddCustomerTaxId", "Error al migrar tax_id: " + e.getMessage(), e);
+            throw new RuntimeException("Error al agregar columna tax_id", e);
+        }
+    }
+
+    /** Crea las tablas de presupuestos (modulo disponible en las ediciones plus y complete). */
+    private static void migrateAddQuotes(Connection conn) {
+        try (Statement st = conn.createStatement()) {
+            st.execute("CREATE TABLE IF NOT EXISTS quotes (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "date TEXT NOT NULL, " +
+                    "customer_id INTEGER, " +
+                    "customer_name TEXT, " +
+                    "valid_days INTEGER NOT NULL DEFAULT 15, " +
+                    "notes TEXT, " +
+                    "total REAL NOT NULL DEFAULT 0, " +
+                    "FOREIGN KEY (customer_id) REFERENCES customers(id))");
+
+            st.execute("CREATE TABLE IF NOT EXISTS quote_items (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "quote_id INTEGER NOT NULL, " +
+                    "product_id INTEGER, " +
+                    "code TEXT, " +
+                    "description TEXT NOT NULL, " +
+                    "quantity REAL NOT NULL, " +
+                    "price REAL NOT NULL, " +
+                    "subtotal REAL NOT NULL, " +
+                    "FOREIGN KEY (quote_id) REFERENCES quotes(id) ON DELETE CASCADE)");
+        } catch (SQLException e) {
+            AppLogger.error("DatabaseManager", "migrateAddQuotes", "Error al crear tablas de presupuestos: " + e.getMessage(), e);
+            throw new RuntimeException("Error al crear estructura de presupuestos", e);
+        }
+    }
+
     private static void migrateAddExpenses(Connection conn) {
         try (Statement st = conn.createStatement()) {
             st.execute("CREATE TABLE IF NOT EXISTS expenses (" +

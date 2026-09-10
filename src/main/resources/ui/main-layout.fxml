@@ -36,6 +36,7 @@
                 <Button fx:id="btnProducts" text="Productos" styleClass="sidebar-button" onAction="#showProducts"/>
                 <Button fx:id="btnInventory" text="Inventario" styleClass="sidebar-button" onAction="#showInventory"/>
                 <Button fx:id="btnSuppliers" text="Proveedores" styleClass="sidebar-button" onAction="#showSuppliers"/>
+                <Button fx:id="btnQuotes" text="Presupuestos" styleClass="sidebar-button" onAction="#showQuotes"/>
                 <Button fx:id="btnExpenses" text="Gastos" styleClass="sidebar-button" onAction="#showExpenses"/>
                 <Button fx:id="btnReports" text="Reportes" styleClass="sidebar-button" onAction="#showReports"/>
 
@@ -51,7 +52,7 @@
                         </ImageView>
                     </graphic>
                 </Button>
-                <Label text="v3.1" styleClass="sidebar-version-label"/>
+                <Label fx:id="versionLabel" text="v3.2" styleClass="sidebar-version-label"/>
             </children>
             <padding>
                 <Insets top="24" right="16" bottom="24" left="16"/>

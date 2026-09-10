@@ -30,6 +30,8 @@ public class CustomersController {
     @FXML
     private TableColumn<Customer, Number> colCreditLimit;
     @FXML
+    private TableColumn<Customer, String> colTaxId;
+    @FXML
     private Label summaryTotalCustomersLabel;
     @FXML
     private Label summaryCurrentFilterLabel;
@@ -52,6 +54,7 @@ public class CustomersController {
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
         colPhone.setCellValueFactory(new PropertyValueFactory<>("phone"));
         colAddress.setCellValueFactory(new PropertyValueFactory<>("address"));
+        colTaxId.setCellValueFactory(new PropertyValueFactory<>("taxId"));
         colCreditLimit.setCellValueFactory(new PropertyValueFactory<>("creditLimit"));
         colCreditLimit.setCellFactory(tc -> new javafx.scene.control.TableCell<>() {
             @Override
@@ -60,6 +63,11 @@ public class CustomersController {
                 setText(empty || item == null ? "" : formatCurrency(item.doubleValue()));
             }
         });
+        // El limite de credito solo aplica con cuentas corrientes, igual que en el formulario.
+        if (!new com.ferreteria.services.LicenseService().isCurrentAccountsEnabled()) {
+            colCreditLimit.setVisible(false);
+        }
+
         customersTable.setItems(tableData);
     }
 

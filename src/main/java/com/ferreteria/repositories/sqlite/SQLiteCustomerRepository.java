@@ -72,13 +72,14 @@ public class SQLiteCustomerRepository implements CustomerRepository {
     @Override
     public List<Customer> searchActive(String query) {
         String sql = "SELECT * FROM customers WHERE active = 1 AND (" +
-                "name LIKE ? OR phone LIKE ? OR address LIKE ?) ORDER BY name";
+                "name LIKE ? OR phone LIKE ? OR address LIKE ? OR tax_id LIKE ?) ORDER BY name";
         Connection conn = DatabaseManager.getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             String pattern = "%" + query + "%";
             stmt.setString(1, pattern);
             stmt.setString(2, pattern);
             stmt.setString(3, pattern);
+            stmt.setString(4, pattern);
             try (ResultSet rs = stmt.executeQuery()) {
                 List<Customer> customers = new ArrayList<>();
                 while (rs.next()) customers.add(mapRow(rs));
@@ -124,19 +125,20 @@ public class SQLiteCustomerRepository implements CustomerRepository {
     }
 
     private Customer insert(Customer customer) {
-        String sql = "INSERT INTO customers(name, phone, address, credit_limit, active, created_at) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO customers(name, phone, address, tax_id, credit_limit, active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
         Connection conn = DatabaseManager.getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, customer.getName());
             stmt.setString(2, customer.getPhone());
             stmt.setString(3, customer.getAddress());
-            stmt.setDouble(4, customer.getCreditLimit());
-            stmt.setInt(5, customer.isActive() ? 1 : 0);
+            stmt.setString(4, customer.getTaxId());
+            stmt.setDouble(5, customer.getCreditLimit());
+            stmt.setInt(6, customer.isActive() ? 1 : 0);
             String createdAt = customer.getCreatedAt();
             if (createdAt == null || createdAt.isBlank()) {
                 createdAt = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
             }
-            stmt.setString(6, createdAt);
+            stmt.setString(7, createdAt);
             stmt.executeUpdate();
             try (ResultSet keys = stmt.getGeneratedKeys()) {
                 if (keys.next()) customer.setId(keys.getInt(1));
@@ -149,15 +151,16 @@ public class SQLiteCustomerRepository implements CustomerRepository {
     }
 
     private Customer update(Customer customer) {
-        String sql = "UPDATE customers SET name = ?, phone = ?, address = ?, credit_limit = ?, active = ? WHERE id = ?";
+        String sql = "UPDATE customers SET name = ?, phone = ?, address = ?, tax_id = ?, credit_limit = ?, active = ? WHERE id = ?";
         Connection conn = DatabaseManager.getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, customer.getName());
             stmt.setString(2, customer.getPhone());
             stmt.setString(3, customer.getAddress());
-            stmt.setDouble(4, customer.getCreditLimit());
-            stmt.setInt(5, customer.isActive() ? 1 : 0);
-            stmt.setInt(6, customer.getId());
+            stmt.setString(4, customer.getTaxId());
+            stmt.setDouble(5, customer.getCreditLimit());
+            stmt.setInt(6, customer.isActive() ? 1 : 0);
+            stmt.setInt(7, customer.getId());
             stmt.executeUpdate();
             return customer;
         } catch (SQLException e) {
@@ -171,6 +174,7 @@ public class SQLiteCustomerRepository implements CustomerRepository {
         customer.setName(rs.getString("name"));
         customer.setPhone(rs.getString("phone"));
         customer.setAddress(rs.getString("address"));
+        customer.setTaxId(rs.getString("tax_id"));
         customer.setCreditLimit(rs.getDouble("credit_limit"));
         customer.setActive(rs.getInt("active") == 1);
         customer.setCreatedAt(rs.getString("created_at"));

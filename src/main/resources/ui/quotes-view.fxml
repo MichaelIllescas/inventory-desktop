@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.ferreteria.controllers.QuotesController"
+            styleClass="quotes-view-root">
+
+    <top>
+        <VBox spacing="12">
+            <Label text="Presupuestos" styleClass="view-title"/>
+
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Button text="Nuevo presupuesto" onAction="#onNewQuote" styleClass="expenses-primary-button"/>
+                <Button text="Actualizar" onAction="#onRefresh" styleClass="expenses-secondary-button"/>
+                <Label text="Buscar:" styleClass="expenses-filter-label"/>
+                <TextField fx:id="searchField" prefWidth="260" promptText="Cliente o N° de presupuesto..." styleClass="expenses-field"/>
+            </HBox>
+
+            <padding>
+                <Insets bottom="8"/>
+            </padding>
+        </VBox>
+    </top>
+
+    <center>
+        <TableView fx:id="quotesTable" maxWidth="Infinity" maxHeight="Infinity" styleClass="expenses-table">
+            <columns>
+                <TableColumn fx:id="colId" text="N°" minWidth="70"/>
+                <TableColumn fx:id="colDate" text="Fecha" minWidth="150"/>
+                <TableColumn fx:id="colCustomer" text="Cliente" minWidth="240"/>
+                <TableColumn fx:id="colItems" text="Items" minWidth="80"/>
+                <TableColumn fx:id="colValidUntil" text="Válido hasta" minWidth="130"/>
+                <TableColumn fx:id="colTotal" text="Total ($)" minWidth="130" styleClass="numeric-column"/>
+                <TableColumn fx:id="colActions" text="Acciones" minWidth="260"/>
+            </columns>
+        </TableView>
+    </center>
+
+    <padding>
+        <Insets top="16" right="16" bottom="16" left="16"/>
+    </padding>
+
+</BorderPane>

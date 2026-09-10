@@ -1,4 +1,4 @@
-# Sistema de Inventario — v3.1
+# Sistema de Inventario — v3.2
 
 Aplicación de escritorio para gestión de inventario, ventas, gastos y reportes. Desarrollada en **Java 17**, **JavaFX** y **SQLite**.
 
@@ -16,6 +16,7 @@ Aplicación de escritorio para gestión de inventario, ventas, gastos y reportes
   - Confirmación rápida con **Enter** y limpieza de la venta con un click.
   - **Producto "Varios / Sin código"** (`__VARIOS__`): se crea automáticamente al iniciar la app, no afecta el inventario, precio comienza en 0 y se abre para editar al agregarlo. Incluye **código de barras Code 128** en la pantalla de ventas para escanearlo directamente con un lector.
 - **Medios de pago**: selección de **Efectivo, Transferencia, Débito y Crédito** al registrar la venta; cada venta queda asociada a su medio de pago.
+- **Clientes**: nombre, teléfono, dirección y **DNI / CUIT** _(nuevo en v3.2, opcional)_. El buscador encuentra por cualquiera de esos campos.
 - **Cuentas corrientes** _(nuevo en v3.0)_:
   - Venta en cuenta corriente asociada a cliente obligatorio.
   - Registro de pagos parciales y aplicacion FIFO a ventas pendientes.
@@ -24,6 +25,15 @@ Aplicación de escritorio para gestión de inventario, ventas, gastos y reportes
   - Bloqueo de venta por limite de credito del cliente (si tiene limite definido).
   - Bloqueo de eliminacion de clientes con deuda pendiente.
   - Exportacion de PDF de estado de cuenta con logo del negocio y desglose de deuda.
+- **Presupuestos** _(nuevo en v3.2, ediciones Plus y Completa)_:
+  - Listado de presupuestos con buscador por **cliente** o **número**, y acciones por fila: descargar PDF, editar y eliminar.
+  - Alta con **búsqueda de cliente en vivo** (por nombre, teléfono, dirección o DNI/CUIT) y previsualización de sus datos.
+  - Items tomados de **productos de la base** o cargados como **fila manual** (descripción, cantidad y precio a mano).
+  - Cantidad, precio unitario y subtotal **editables** en la tabla; el subtotal se puede sobrescribir sin tocar el precio.
+  - **Descuentos y recargos** como items con importe negativo o positivo. El total no puede quedar negativo.
+  - **Validez en días** (calcula la fecha de vencimiento) y observaciones para el cliente.
+  - **Exportación a PDF** con logo y datos del negocio, datos del cliente, detalle de items y total al pie. Los descuentos salen resaltados.
+  - No afecta stock ni genera venta: es un documento informativo.
 - **Proveedores**: CRUD de proveedores (nombre, teléfono, email, dirección).
 - **Inventario**: vista de stock y ajuste de cantidades con diálogos dedicados.
 - **Gastos** _(nuevo en v2.0)_:
@@ -43,6 +53,30 @@ Aplicación de escritorio para gestión de inventario, ventas, gastos y reportes
 La base de datos es **SQLite**; en instalación los datos se guardan en la carpeta de usuario (por usuario de Windows). La aplicación se distribuye como **instalador .exe** para Windows (sin necesidad de instalar Java en el cliente).
 
 > **Actualización desde v1.x**: la base de datos se migra automáticamente al iniciar la app. No se pierden datos.
+
+---
+
+## Ediciones
+
+El sistema se distribuye en tres ediciones. Cada una habilita distintos módulos:
+
+| Edición | Cuentas corrientes | Presupuestos |
+|---------|--------------------|--------------|
+| **Básica** (`basic`) | No | No |
+| **Plus** (`plus`) | No | Sí |
+| **Completa** (`complete`) | Sí | Sí |
+
+La edición activa se define en `license.properties` y se muestra en el sidebar junto al número de versión. Los módulos deshabilitados no aparecen en el menú.
+
+Para generar el instalador de una edición: `build-installer.bat basic|plus|complete` (ver [INSTALADOR.md](INSTALADOR.md)).
+
+Detalle del módulo de presupuestos en [MODULO_PRESUPUESTOS.md](MODULO_PRESUPUESTOS.md).
+
+En desarrollo se cambia copiando el archivo correspondiente:
+
+```bash
+cp installer/licenses/plus.properties data/license.properties
+```
 
 ---
 
@@ -72,6 +106,7 @@ DESKTOP INVENTIORY/
 │   │   └── schema.sql              # Definición de tablas
 │   ├── images/                     # Iconos y logos (app, Imperial Net)
 │   └── ui/                         # Vistas FXML y estilos CSS
+├── installer/licenses/              # Un .properties por edición (basic, plus, complete)
 ├── build-installer.bat             # Script para generar el .exe
 ├── Ejecutar-crear-instalador.bat   # Lanza el script y mantiene la ventana abierta
 ├── pom.xml

@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS customers (
     name TEXT NOT NULL,
     phone TEXT,
     address TEXT,
+    tax_id TEXT,
     credit_limit REAL NOT NULL DEFAULT -1,
     active INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL
@@ -88,3 +89,26 @@ CREATE TABLE IF NOT EXISTS customer_payment_applications (
     FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE
 );
 
+
+CREATE TABLE IF NOT EXISTS quotes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT NOT NULL,
+    customer_id INTEGER,
+    customer_name TEXT,
+    valid_days INTEGER NOT NULL DEFAULT 15,
+    notes TEXT,
+    total REAL NOT NULL DEFAULT 0,
+    FOREIGN KEY (customer_id) REFERENCES customers(id)
+);
+
+CREATE TABLE IF NOT EXISTS quote_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    quote_id INTEGER NOT NULL,
+    product_id INTEGER,
+    code TEXT,
+    description TEXT NOT NULL,
+    quantity REAL NOT NULL,
+    price REAL NOT NULL,
+    subtotal REAL NOT NULL,
+    FOREIGN KEY (quote_id) REFERENCES quotes(id) ON DELETE CASCADE
+);

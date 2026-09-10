@@ -60,6 +60,7 @@
                 <TableColumn fx:id="colName" text="Nombre" prefWidth="220.0"/>
                 <TableColumn fx:id="colPhone" text="Teléfono" prefWidth="140.0"/>
                 <TableColumn fx:id="colAddress" text="Dirección" prefWidth="250.0"/>
+                <TableColumn fx:id="colTaxId" text="DNI / CUIT" prefWidth="150.0"/>
                 <TableColumn fx:id="colCreditLimit" text="Límite crédito" prefWidth="130.0"/>
             </columns>
         </TableView>

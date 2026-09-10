@@ -6,6 +6,7 @@ public class Customer {
     private String name;
     private String phone;
     private String address;
+    private String taxId;
     private double creditLimit;
     private boolean active = true;
     private String createdAt;
@@ -40,6 +41,15 @@ public class Customer {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    /** DNI o CUIT. Opcional: puede quedar en null. */
+    public String getTaxId() {
+        return taxId;
+    }
+
+    public void setTaxId(String taxId) {
+        this.taxId = taxId;
     }
 
     public double getCreditLimit() {

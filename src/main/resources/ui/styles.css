@@ -2517,3 +2517,16 @@ TableColumn {
 .reports-view-root.reports-xcompact .report-summary-card-title {
   -fx-font-size: 10px;
 }
+
+/* Presupuestos: los tres botones de la columna Acciones con el mismo tamano. */
+.quotes-view-root .report-delete-button,
+.quotes-view-root .report-edit-button,
+.quotes-view-root .report-detail-button {
+  -fx-font-size: 12px;
+  -fx-padding: 5 10;
+}
+
+/* Presupuestos: todas las celdas centradas, para que la tabla se lea pareja. */
+.quotes-view-root .table-view .table-cell {
+  -fx-alignment: CENTER;
+}

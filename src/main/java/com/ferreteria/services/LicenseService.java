@@ -13,6 +13,7 @@ public class LicenseService {
 
     private static final String LICENSE_FILE = "license.properties";
     private static final String CURRENT_ACCOUNTS_KEY = "module.current_accounts";
+    private static final String QUOTES_KEY = "module.quotes";
     private static final String EDITION_KEY = "edition";
 
     private final Properties properties;
@@ -23,6 +24,10 @@ public class LicenseService {
 
     public boolean isCurrentAccountsEnabled() {
         return Boolean.parseBoolean(properties.getProperty(CURRENT_ACCOUNTS_KEY, "false"));
+    }
+
+    public boolean isQuotesEnabled() {
+        return Boolean.parseBoolean(properties.getProperty(QUOTES_KEY, "false"));
     }
 
     public String getEdition() {

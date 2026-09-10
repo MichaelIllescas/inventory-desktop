@@ -8,11 +8,27 @@ Resumen rápido. Para requisitos y estructura del proyecto ver [README.md](READM
 - **Maven** en el PATH (o `MAVEN_HOME`).
 - **Conexión a internet** la primera vez (descarga de JavaFX jmods).
 
+## Ediciones
+
+El instalador se genera para una edicion. Cada una activa distintos modulos:
+
+| Edicion | Cuentas corrientes | Presupuestos |
+|---------|--------------------|--------------|
+| `basic` | No | No |
+| `plus` | No | Si |
+| `complete` | Si | Si |
+
+La definicion de cada una esta en `installer/licenses/<edicion>.properties`. El script copia ese archivo como `license.properties` dentro del .exe, y la app lo lee al iniciar.
+
 ## Pasos
 
 1. Abrir CMD en la carpeta del proyecto.
-2. Ejecutar: **`build-installer.bat`**  
-   (o **`Ejecutar-crear-instalador.bat`** para que la ventana no se cierre).
+2. Ejecutar: **`build-installer.bat <edicion>`**, por ejemplo:  
+   - `build-installer.bat basic`  
+   - `build-installer.bat plus`  
+   - `build-installer.bat complete`  
+   Sin parametro usa la variable `INVENTORY_EDITION` y, si tampoco existe, **`basic`**.  
+   (O **`Ejecutar-crear-instalador.bat`** para que la ventana no se cierre.)
 3. Al terminar, el instalador queda en:  
    **`target\installer\Sistema de Inventario-<version>.exe`**
 

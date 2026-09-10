@@ -16,9 +16,9 @@ if not defined INSTALLER_EDITION set "INSTALLER_EDITION=%INVENTORY_EDITION%"
 if not defined INSTALLER_EDITION set "INSTALLER_EDITION=basic"
 if /I "%INSTALLER_EDITION%"=="basico" set "INSTALLER_EDITION=basic"
 if /I "%INSTALLER_EDITION%"=="completo" set "INSTALLER_EDITION=complete"
-if /I not "%INSTALLER_EDITION%"=="basic" if /I not "%INSTALLER_EDITION%"=="complete" (
+if /I not "%INSTALLER_EDITION%"=="basic" if /I not "%INSTALLER_EDITION%"=="plus" if /I not "%INSTALLER_EDITION%"=="complete" (
     echo [ERROR] Edicion invalida: %INSTALLER_EDITION%
-    echo Uso: build-installer.bat basic ^| complete
+    echo Uso: build-installer.bat basic ^| plus ^| complete
     goto :fin
 )
 set "FX_VERSION=21.0.2"

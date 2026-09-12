@@ -92,6 +92,11 @@ public class QuoteFormDialog extends Dialog<Quote> {
         customerRow.setAlignment(Pos.CENTER_LEFT);
         validDaysSpinner.setEditable(true);
         validDaysSpinner.setPrefWidth(90);
+        // Un Spinner editable solo confirma lo tipeado al presionar Enter: si el usuario
+        // escribe y va directo a Guardar, getValue() devolveria el valor anterior.
+        validDaysSpinner.getEditor().focusedProperty().addListener((obs, was, isFocused) -> {
+            if (!isFocused) commitValidDays();
+        });
         customerSearchField.setPrefWidth(220);
         customerCombo.setPrefWidth(280);
 
@@ -364,7 +369,24 @@ public class QuoteFormDialog extends Dialog<Quote> {
         updateTotal();
     }
 
+    /** Confirma en el valueFactory el texto tipeado en el spinner de validez. */
+    private void commitValidDays() {
+        SpinnerValueFactory<Integer> factory = validDaysSpinner.getValueFactory();
+        if (factory == null) return;
+        String text = validDaysSpinner.getEditor().getText();
+        try {
+            Integer parsed = factory.getConverter().fromString(text);
+            if (parsed != null) {
+                factory.setValue(Math.min(365, Math.max(1, parsed)));
+            }
+        } catch (Exception ignored) {
+            // Texto no numerico: se descarta y se restaura el ultimo valor valido.
+        }
+        validDaysSpinner.getEditor().setText(String.valueOf(factory.getValue()));
+    }
+
     private Quote buildQuote() {
+        commitValidDays();
         Customer customer = customerCombo.getSelectionModel().getSelectedItem();
         Quote quote = new Quote();
         quote.setId(editing == null ? null : editing.getId());

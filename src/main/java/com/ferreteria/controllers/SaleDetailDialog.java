@@ -82,11 +82,14 @@ public final class SaleDetailDialog {
         detailTable.getItems().setAll(details);
 
         SaleDetailRow first = details.get(0);
+        Label customerLabel = new Label("Cliente: " + safeCustomer(first.getCustomerName()));
+        customerLabel.setStyle("-fx-font-size: 13px;");
+
         Label totalLabel = new Label("Total: " + formatCurrency(first.getSaleTotal())
                 + "   |   Medio de pago: " + safePayment(first.getPaymentMethod()));
         totalLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
 
-        VBox content = new VBox(10, detailTable, totalLabel);
+        VBox content = new VBox(10, customerLabel, detailTable, totalLabel);
         content.setPadding(new javafx.geometry.Insets(8));
         dialog.getDialogPane().setContent(content);
         dialog.getDialogPane().setMinWidth(820);
@@ -104,6 +107,11 @@ public final class SaleDetailDialog {
         } catch (Exception e) {
             return value;
         }
+    }
+
+    /** Una venta sin cliente asociado es una venta de mostrador. */
+    static String safeCustomer(String customerName) {
+        return customerName == null || customerName.isBlank() ? "Consumidor final" : customerName;
     }
 
     static String safePayment(String paymentMethod) {

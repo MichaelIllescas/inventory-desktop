@@ -15,6 +15,8 @@ public class SaleDetailRow {
     private double subtotal;
     private double saleTotal;
     private String paymentMethod;
+    /** Nombre del cliente de la venta; null o vacio si fue a consumidor final. */
+    private String customerName;
 
     public SaleDetailRow(int saleId, String saleDate, String productCode, String productName,
                          double quantity, double unitPrice, double subtotal, double saleTotal, String paymentMethod) {
@@ -64,4 +66,7 @@ public class SaleDetailRow {
 
     public String getPaymentMethod() { return paymentMethod; }
     public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+
+    public String getCustomerName() { return customerName; }
+    public void setCustomerName(String customerName) { this.customerName = customerName; }
 }

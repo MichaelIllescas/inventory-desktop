@@ -32,13 +32,14 @@
                         <Button text="- Quitar" onAction="#onRemoveLine" styleClass="sales-toolbar-button" style="-fx-background-color: #dc2626; -fx-text-fill: white; -fx-font-weight: bold;"/>
                         <ComboBox fx:id="paymentMethodCombo" prefWidth="170" minWidth="140" styleClass="sales-payment-combo"/>
                         <Button text="Registrar" onAction="#onRegisterSale" styleClass="sales-toolbar-button" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                        <Button fx:id="assignCustomerButton" text="+ Cliente" onAction="#onToggleCustomerBox" styleClass="sales-toolbar-button" style="-fx-background-color: #0f172a; -fx-text-fill: white; -fx-font-weight: bold;"/>
                         <Button text="Limpiar" onAction="#onClear" styleClass="sales-toolbar-button" style="-fx-background-color: #6b7280; -fx-text-fill: white; -fx-font-weight: bold;"/>
                     </children>
                 </FlowPane>
 
                 <VBox fx:id="customerBox" spacing="8" managed="false" visible="false" styleClass="sales-customer-card">
                     <children>
-                        <Label text="Cliente de cuenta corriente" styleClass="sales-customer-title"/>
+                        <Label fx:id="customerBoxTitle" text="Cliente de cuenta corriente" styleClass="sales-customer-title"/>
                         <FlowPane hgap="8" vgap="6" alignment="CENTER_LEFT">
                             <children>
                                 <TextField fx:id="customerSearchField" promptText="Buscar cliente por nombre o apellido" prefWidth="320" prefHeight="34" onAction="#onSearchCustomer"/>

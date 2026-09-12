@@ -309,8 +309,10 @@ public class SQLiteSaleRepository implements SaleRepository {
 
     private static final String SALE_DETAIL_SELECT =
             "SELECT s.id AS sale_id, s.date AS sale_date, p.id AS product_id, p.code, p.name, si.quantity, si.price, " +
-            "(si.quantity * si.price) AS subtotal, s.total AS sale_total, s.payment_method " +
-            "FROM sales s JOIN sale_items si ON s.id = si.sale_id JOIN products p ON si.product_id = p.id ";
+            "(si.quantity * si.price) AS subtotal, s.total AS sale_total, s.payment_method, " +
+            "c.name AS customer_name " +
+            "FROM sales s JOIN sale_items si ON s.id = si.sale_id JOIN products p ON si.product_id = p.id " +
+            "LEFT JOIN customers c ON c.id = s.customer_id ";
 
     private static List<SaleDetailRow> readSaleDetails(PreparedStatement stmt) throws SQLException {
         try (ResultSet rs = stmt.executeQuery()) {
@@ -318,7 +320,7 @@ public class SQLiteSaleRepository implements SaleRepository {
             while (rs.next()) {
                 String code = rs.getString("code");
                 if (code == null) code = "";
-                list.add(new SaleDetailRow(
+                SaleDetailRow row = new SaleDetailRow(
                         rs.getInt("sale_id"),
                         rs.getInt("product_id"),
                         rs.getString("sale_date"),
@@ -329,7 +331,9 @@ public class SQLiteSaleRepository implements SaleRepository {
                         rs.getDouble("subtotal"),
                         rs.getDouble("sale_total"),
                         rs.getString("payment_method")
-                ));
+                );
+                row.setCustomerName(rs.getString("customer_name"));
+                list.add(row);
             }
             return list;
         }

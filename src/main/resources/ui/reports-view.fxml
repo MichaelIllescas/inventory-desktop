@@ -167,7 +167,7 @@
                 <columns>
                     <TableColumn fx:id="colCcCustomer" text="Cliente" prefWidth="200" minWidth="160"/>
                     <TableColumn fx:id="colCcSales" text="Ventas CC ($)" prefWidth="115" minWidth="100" styleClass="numeric-column"/>
-                    <TableColumn fx:id="colCcPayments" text="Pagos CC ($)" prefWidth="105" minWidth="92" styleClass="numeric-column"/>
+                    <TableColumn fx:id="colCcPayments" text="Cobrado CC ($)" prefWidth="105" minWidth="92" styleClass="numeric-column"/>
                     <TableColumn fx:id="colCcFinalDebt" text="Saldo final ($)" prefWidth="110" minWidth="96" styleClass="numeric-column"/>
                     <TableColumn fx:id="colCcExport" text="Comprobante" prefWidth="190" minWidth="180"/>
                 </columns>

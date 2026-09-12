@@ -356,6 +356,16 @@ public class CurrentAccountService {
         }
     }
 
+    /**
+     * Repara inconsistencias entre las dos vistas de la cuenta corriente:
+     * los movimientos (customer_account_movements) y las imputaciones
+     * (customer_payments + customer_payment_applications).
+     *
+     * Regla: un pago registrado NUNCA se borra acá. Si le falta su movimiento
+     * CREDITO (porque una version anterior lo eliminaba al anular la venta a la
+     * que estaba aplicado), se repone. Un pago sin aplicaciones es valido: es
+     * saldo a favor del cliente.
+     */
     public int cleanupOrphanedCreditMovements() {
         Connection conn = DatabaseManager.getConnection();
         try {
@@ -370,19 +380,16 @@ public class CurrentAccountService {
                 total += n;
             }
 
-            // 2. Borrar aplicaciones que apuntan a pagos sin movimiento CREDITO
-            //    (pagos fantasma que quedaron después de una limpieza anterior)
-            String cleanAppsPhantom = "DELETE FROM customer_payment_applications " +
-                    "WHERE payment_id NOT IN (" +
-                    "  SELECT DISTINCT payment_id FROM customer_account_movements " +
-                    "  WHERE payment_id IS NOT NULL AND type = 'CREDITO')";
-            try (PreparedStatement stmt = conn.prepareStatement(cleanAppsPhantom)) {
+            // 2. Borrar aplicaciones que apuntan a pagos que ya no existen
+            String cleanAppsPayments = "DELETE FROM customer_payment_applications " +
+                    "WHERE payment_id NOT IN (SELECT id FROM customer_payments)";
+            try (PreparedStatement stmt = conn.prepareStatement(cleanAppsPayments)) {
                 int n = stmt.executeUpdate();
-                if (n > 0) AppLogger.info("CurrentAccountService", "cleanup", "Apps de pagos fantasma eliminadas: " + n);
+                if (n > 0) AppLogger.info("CurrentAccountService", "cleanup", "Apps de pagos inexistentes: " + n);
                 total += n;
             }
 
-            // 3. Borrar movimientos CREDITO cuyo payment_id no existe en customer_payments (registro de pago eliminado)
+            // 3. Borrar movimientos CREDITO cuyo pago ya no existe
             String cleanMovements = "DELETE FROM customer_account_movements " +
                     "WHERE type = 'CREDITO' AND payment_id IS NOT NULL " +
                     "AND payment_id NOT IN (SELECT id FROM customer_payments)";
@@ -392,22 +399,25 @@ public class CurrentAccountService {
                 total += n;
             }
 
-            // 4. Borrar registros de customer_payments sin movimiento CREDITO
-            //    (evita que applyAvailableCreditsToSale los aplique como saldo disponible)
-            String cleanPhantomPayments = "DELETE FROM customer_payments " +
-                    "WHERE id NOT IN (" +
-                    "  SELECT DISTINCT payment_id FROM customer_account_movements " +
-                    "  WHERE payment_id IS NOT NULL AND type = 'CREDITO')";
-            try (PreparedStatement stmt = conn.prepareStatement(cleanPhantomPayments)) {
+            // 4. Reponer el movimiento CREDITO de todo pago que lo haya perdido
+            String restoreMovements = "INSERT INTO customer_account_movements" +
+                    "(customer_id, date, type, amount, sale_id, payment_id, notes) " +
+                    "SELECT cp.customer_id, cp.date, 'CREDITO', cp.amount, NULL, cp.id, " +
+                    "       COALESCE(NULLIF(TRIM(cp.notes), ''), 'Pago de cuenta corriente') " +
+                    "FROM customer_payments cp " +
+                    "WHERE NOT EXISTS (" +
+                    "  SELECT 1 FROM customer_account_movements m " +
+                    "  WHERE m.payment_id = cp.id AND m.type = 'CREDITO')";
+            try (PreparedStatement stmt = conn.prepareStatement(restoreMovements)) {
                 int n = stmt.executeUpdate();
-                if (n > 0) AppLogger.info("CurrentAccountService", "cleanup", "Pagos fantasma eliminados: " + n);
+                if (n > 0) AppLogger.info("CurrentAccountService", "cleanup", "Movimientos CREDITO repuestos: " + n);
                 total += n;
             }
 
             return total;
         } catch (SQLException e) {
             AppLogger.error("CurrentAccountService", "cleanupOrphanedCreditMovements",
-                    "Error al limpiar movimientos huerfanos", e);
+                    "Error al reparar movimientos de cuenta corriente", e);
             throw new RuntimeException("Error al limpiar movimientos de cuenta corriente", e);
         }
     }

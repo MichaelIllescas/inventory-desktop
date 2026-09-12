@@ -16,6 +16,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
@@ -89,6 +90,15 @@ public class SalesController {
     @FXML private VBox barcodeBox;
     @FXML private HBox bottomMainRow;
     @FXML private VBox customerBox;
+    @FXML private Label customerBoxTitle;
+    @FXML private Button assignCustomerButton;
+
+    /**
+     * El usuario pidio asociar un cliente a una venta que no es de cuenta corriente
+     * (solo para dejar registro de a quien se le vendio). En cuenta corriente el panel
+     * se muestra siempre porque ahi el cliente es obligatorio.
+     */
+    private boolean customerRequestedManually;
 
     private final SaleService saleService;
     private final SQLiteProductRepository productRepository;
@@ -780,7 +790,7 @@ public class SalesController {
             showWarning("El módulo de cuentas corrientes no está habilitado en esta edición.");
             return;
         }
-        Integer customerId = resolveCurrentAccountCustomerId(payment);
+        Integer customerId = resolveSaleCustomerId(payment);
         if (PAYMENT_CURRENT_ACCOUNT.equals(payment) && customerId == null) {
             return;
         }
@@ -820,8 +830,9 @@ public class SalesController {
             AppLogger.info("SalesController", "confirmAndRegisterSale", "Venta registrada correctamente");
             items.clear();
             if (paymentReceivedField != null) paymentReceivedField.clear();
-            if (customerSearchField != null) customerSearchField.clear();
-            if (customerCombo != null) customerCombo.getSelectionModel().clearSelection();
+            clearSelectedCustomer();
+            customerRequestedManually = false;
+            updateCustomerSelectorState();
             syncingTotal = true;
             totalField.setText(formatTotal(0));
             syncingTotal = false;
@@ -846,8 +857,9 @@ public class SalesController {
     private void onClear() {
         items.clear();
         scanField.clear();
-        if (customerSearchField != null) customerSearchField.clear();
-        if (customerCombo != null) customerCombo.getSelectionModel().clearSelection();
+        clearSelectedCustomer();
+        customerRequestedManually = false;
+        updateCustomerSelectorState();
         if (paymentReceivedField != null) paymentReceivedField.clear();
         syncingTotal = true;
         totalField.setText(formatTotal(0));
@@ -941,9 +953,20 @@ public class SalesController {
     private void updateCustomerSelectorState() {
         if (customerCombo == null || paymentMethodCombo == null || customerBox == null) return;
         boolean isCurrentAccount = PAYMENT_CURRENT_ACCOUNT.equals(paymentMethodCombo.getValue());
-        customerBox.setVisible(isCurrentAccount);
-        customerBox.setManaged(isCurrentAccount);
-        customerCombo.setDisable(!isCurrentAccount);
+        boolean showCustomer = isCurrentAccount || customerRequestedManually;
+        customerBox.setVisible(showCustomer);
+        customerBox.setManaged(showCustomer);
+        customerCombo.setDisable(!showCustomer);
+        if (customerBoxTitle != null) {
+            customerBoxTitle.setText(isCurrentAccount
+                    ? "Cliente de cuenta corriente"
+                    : "Cliente de la venta (opcional)");
+        }
+        if (assignCustomerButton != null) {
+            // En cuenta corriente el cliente es obligatorio, el boton no aporta nada.
+            assignCustomerButton.setDisable(isCurrentAccount);
+            assignCustomerButton.setText(showCustomer ? "- Cliente" : "+ Cliente");
+        }
         if (paymentReceivedField != null) {
             paymentReceivedField.setDisable(isCurrentAccount);
             if (isCurrentAccount) {
@@ -955,22 +978,48 @@ public class SalesController {
             cashBox.setOpacity(isCurrentAccount ? 0.6 : 1.0);
         }
         updateChangePreview();
-        if (!isCurrentAccount) {
-            customerCombo.getSelectionModel().clearSelection();
-            if (customerSearchField != null) customerSearchField.clear();
-            updateSelectedCustomerPreview(null);
+        if (!showCustomer) {
+            clearSelectedCustomer();
         }
     }
 
-    private Integer resolveCurrentAccountCustomerId(String paymentMethod) {
+    @FXML
+    private void onToggleCustomerBox() {
+        // En cuenta corriente el panel es obligatorio: no se puede ocultar.
+        if (PAYMENT_CURRENT_ACCOUNT.equals(paymentMethodCombo == null ? null : paymentMethodCombo.getValue())) {
+            return;
+        }
+        customerRequestedManually = !customerRequestedManually;
+        if (!customerRequestedManually) {
+            clearSelectedCustomer();
+        }
+        updateCustomerSelectorState();
+        if (customerRequestedManually && customerSearchField != null) {
+            customerSearchField.requestFocus();
+        }
+    }
+
+    private void clearSelectedCustomer() {
+        if (customerCombo != null) customerCombo.getSelectionModel().clearSelection();
+        if (customerSearchField != null) customerSearchField.clear();
+        updateSelectedCustomerPreview(null);
+    }
+
+    /**
+     * Cliente de la venta. En cuenta corriente es obligatorio; en el resto de los medios
+     * de pago es opcional y solo sirve para dejar registro de a quien se le vendio.
+     */
+    private Integer resolveSaleCustomerId(String paymentMethod) {
+        Customer selected = customerCombo == null
+                ? null : customerCombo.getSelectionModel().getSelectedItem();
+
         if (!PAYMENT_CURRENT_ACCOUNT.equals(paymentMethod)) {
-            return null;
+            return selected == null ? null : selected.getId();
         }
         if (customerCombo == null) {
             showWarning("No se pudo seleccionar cliente para cuenta corriente.");
             return null;
         }
-        Customer selected = customerCombo.getSelectionModel().getSelectedItem();
         if (selected != null && selected.getId() != null) {
             return selected.getId();
         }

@@ -596,19 +596,18 @@ public class ReportsController {
                                       String extra1Title, String extra1Val,
                                       String extra2Title, String extra2Val) {
         sCard1Title.setText("Total vendido");    sCard1Value.setText(formatCurrency(totalVendido));
-        sCard2Title.setText("Cobrado");   sCard2Value.setText(formatCurrency(totalCobrado));
         // Sin cuentas corrientes no hay ventas fiadas, asi que lo cobrado es siempre
-        // igual a lo vendido: la tarjeta repetiria el numero de al lado.
-        setCardVisible(sCard2, licenseService.isCurrentAccountsEnabled());
-        if (licenseService.isCurrentAccountsEnabled()) {
-            sCard3Title.setText("Ventas CC");        sCard3Value.setText(formatCurrency(totalVentasCC));
-            sCard4Title.setText("Pagos CC");         sCard4Value.setText(formatCurrency(totalPagosCC));
-            setCardVisible(sCard3, true);
-            setCardVisible(sCard4, true);
-        } else {
-            setCardVisible(sCard3, false);
-            setCardVisible(sCard4, false);
+        // igual a lo vendido: las tarjetas repetirian el numero de al lado.
+        boolean ccEnabled = licenseService.isCurrentAccountsEnabled();
+        if (ccEnabled) {
+            sCard2Title.setText("Ventas CC");        sCard2Value.setText(formatCurrency(totalVentasCC));
+            // "Cobrado" y "Cobrado CC" van juntos para poder compararlos de un vistazo.
+            sCard3Title.setText("Cobrado");          sCard3Value.setText(formatCurrency(totalCobrado));
+            sCard4Title.setText("Cobrado CC");       sCard4Value.setText(formatCurrency(totalPagosCC));
         }
+        setCardVisible(sCard2, ccEnabled);
+        setCardVisible(sCard3, ccEnabled);
+        setCardVisible(sCard4, ccEnabled);
         sCard5Title.setText(extra1Title);        sCard5Value.setText(extra1Val);
         sCard6Title.setText(extra2Title);        sCard6Value.setText(extra2Val);
         sCard6.setVisible(true);
@@ -625,7 +624,7 @@ public class ReportsController {
                                         double finalDebt, double totalCurrentBalance,
                                         int customerCount) {
         sCard1Title.setText("Ventas CC");        sCard1Value.setText(formatCurrency(ccSales));
-        sCard2Title.setText("Pagos CC");         sCard2Value.setText(formatCurrency(ccPayments));
+        sCard2Title.setText("Cobrado CC");       sCard2Value.setText(formatCurrency(ccPayments));
 
         if (totalCurrentBalance < -0.005) {
             sCard3Title.setText("Total a favor (clientes)");
